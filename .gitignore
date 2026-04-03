@@ -5,4 +5,5 @@ backend/middag.db
 backend/middag.db-shm
 backend/middag.db-wal
 dist/
+.vite/
 .env
