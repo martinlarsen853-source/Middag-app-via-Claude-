@@ -1,108 +1,163 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { login } from '../api.js';
+import { login, register } from '../api.js';
+
+const TEST_EMAIL = 'test@tallerken.no';
+const TEST_PASS  = 'test1234';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
+  const [testLoading, setTestLoading] = useState(false);
+  const navigate  = useNavigate();
+  const location  = useLocation();
   const from = location.state?.from?.pathname || '/app';
+
+  async function doLogin(em, pw) {
+    const data = await login(em, pw);
+    localStorage.setItem('middag_token', data.token);
+    localStorage.setItem('middag_user', JSON.stringify(data.user));
+    navigate(from, { replace: true });
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    setError(''); setLoading(true);
+    try { await doLogin(email, password); }
+    catch (err) { setError(err.message); }
+    finally { setLoading(false); }
+  }
 
+  async function handleTestLogin() {
+    setError(''); setTestLoading(true);
     try {
-      const data = await login(email, password);
-      localStorage.setItem('middag_token', data.token);
-      localStorage.setItem('middag_user', JSON.stringify(data.user));
-      navigate(from, { replace: true });
+      // Opprett testbruker om den ikke finnes, ignorer feil hvis den allerede finnes
+      try { await register('Testbruker', TEST_EMAIL, TEST_PASS, 2); } catch {}
+      await doLogin(TEST_EMAIL, TEST_PASS);
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      setTestLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f1a] flex items-center justify-center p-4">
-      {/* Background gradient orbs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-green-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl" />
-      </div>
+    <div style={s.page}>
+      <div style={s.wrap}>
 
-      <div className="w-full max-w-md relative">
         {/* Logo */}
-        <div className="text-center mb-8 animate-[fade-up_0.5s_ease-out]">
-          <div className="text-6xl mb-4">🍽️</div>
-          <h1 className="text-4xl font-bold text-white mb-2">Middagshjulet</h1>
-          <p className="text-gray-400 text-lg">Slut med matpanikk</p>
+        <div style={s.logoArea}>
+          <span style={s.logoEmoji}>🍽</span>
+          <h1 style={s.appName}>Tallerken</h1>
+          <p style={s.tagline}>Aldri lure på hva du skal lage</p>
         </div>
 
-        {/* Card */}
-        <div className="glass-strong rounded-3xl p-8 animate-[fade-up_0.5s_ease-out_0.1s_both]">
-          <h2 className="text-2xl font-bold text-white mb-6">Logg inn</h2>
+        {/* Test-knapp */}
+        <button
+          onClick={handleTestLogin}
+          disabled={testLoading}
+          style={s.testBtn}
+        >
+          {testLoading ? 'Logger inn…' : '⚡ Logg inn som testbruker'}
+        </button>
 
-          {error && (
-            <div className="bg-red-500/20 border border-red-500/30 rounded-2xl p-4 mb-6 text-red-300 text-sm">
-              {error}
-            </div>
-          )}
+        <div style={s.divider}>
+          <span style={s.dividerLine} />
+          <span style={s.dividerText}>eller logg inn manuelt</span>
+          <span style={s.dividerLine} />
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-gray-300 text-sm font-medium mb-2">
-                E-postadresse
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                placeholder="din@epost.no"
-                className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
-              />
-            </div>
+        {/* Skjema */}
+        <div style={s.card}>
+          {error && <div style={s.error}>{error}</div>}
 
-            <div>
-              <label className="block text-gray-300 text-sm font-medium mb-2">
-                Passord
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-                placeholder="••••••••"
-                className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
-              />
-            </div>
+          <form onSubmit={handleSubmit}>
+            <label style={s.label}>E-post</label>
+            <input
+              type="email" value={email} onChange={e => setEmail(e.target.value)}
+              required placeholder="din@epost.no"
+              style={s.input}
+              onFocus={e => e.target.style.borderColor = '#c2410c'}
+              onBlur={e => e.target.style.borderColor = '#e7e5e2'}
+            />
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-green-500 hover:bg-green-400 disabled:bg-green-500/50 text-white font-semibold py-3 rounded-2xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] mt-2"
-            >
-              {loading ? 'Logger inn...' : 'Logg inn'}
+            <label style={{ ...s.label, marginTop: 14 }}>Passord</label>
+            <input
+              type="password" value={password} onChange={e => setPassword(e.target.value)}
+              required placeholder="••••••••"
+              style={s.input}
+              onFocus={e => e.target.style.borderColor = '#c2410c'}
+              onBlur={e => e.target.style.borderColor = '#e7e5e2'}
+            />
+
+            <button type="submit" disabled={loading} style={s.submitBtn}>
+              {loading ? 'Logger inn…' : 'Logg inn'}
             </button>
           </form>
 
-          <p className="text-center text-gray-400 mt-6 text-sm">
-            Har du ikke konto?{' '}
-            <Link to="/register" className="text-green-400 hover:text-green-300 font-medium transition-colors">
-              Registrer deg her
-            </Link>
+          <p style={s.registerLink}>
+            Ingen konto?{' '}
+            <Link to="/register" style={s.link}>Registrer deg</Link>
           </p>
         </div>
       </div>
     </div>
   );
 }
+
+const s = {
+  page: {
+    minHeight: '100vh', background: '#faf8f5',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    padding: '24px', fontFamily: 'system-ui, sans-serif',
+  },
+  wrap: { width: '100%', maxWidth: 400 },
+  logoArea: { textAlign: 'center', marginBottom: 32 },
+  logoEmoji: { fontSize: '3rem', display: 'block', marginBottom: 8 },
+  appName: {
+    fontFamily: 'Georgia, serif', fontSize: '2.4rem', fontWeight: 800,
+    color: '#1c1917', margin: '0 0 6px', letterSpacing: '-0.03em',
+  },
+  tagline: { color: '#78716c', fontSize: '1rem', margin: 0 },
+
+  testBtn: {
+    width: '100%', background: '#c2410c', color: '#fff',
+    border: 'none', borderRadius: 14, padding: '16px',
+    fontSize: '1rem', fontWeight: 700, cursor: 'pointer',
+    marginBottom: 20, transition: 'background 0.2s',
+    boxShadow: '0 4px 20px rgba(194,65,12,0.25)',
+  },
+
+  divider: {
+    display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20,
+  },
+  dividerLine: { flex: 1, height: 1, background: '#e7e5e2' },
+  dividerText: { color: '#a8a29e', fontSize: '0.8rem', whiteSpace: 'nowrap' },
+
+  card: {
+    background: '#fff', borderRadius: 20, padding: 28,
+    border: '1px solid #f0ede9',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.04), 0 12px 40px rgba(0,0,0,0.06)',
+  },
+  error: {
+    background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10,
+    padding: '10px 14px', color: '#b91c1c', fontSize: '0.88rem', marginBottom: 16,
+  },
+  label: { display: 'block', color: '#44403c', fontSize: '0.88rem', fontWeight: 600, marginBottom: 6 },
+  input: {
+    width: '100%', boxSizing: 'border-box',
+    background: '#faf8f5', border: '1.5px solid #e7e5e2', borderRadius: 10,
+    padding: '11px 14px', fontSize: '1rem', color: '#1c1917',
+    outline: 'none', transition: 'border-color 0.2s',
+  },
+  submitBtn: {
+    width: '100%', background: '#1c1917', color: '#fff',
+    border: 'none', borderRadius: 10, padding: '13px',
+    fontSize: '1rem', fontWeight: 600, cursor: 'pointer', marginTop: 20,
+    transition: 'background 0.2s',
+  },
+  registerLink: { textAlign: 'center', color: '#78716c', fontSize: '0.88rem', marginTop: 16, marginBottom: 0 },
+  link: { color: '#c2410c', fontWeight: 600, textDecoration: 'none' },
+};

@@ -49,7 +49,7 @@ export default function LandingPage() {
       {/* ── NAV ── */}
       <nav className="landing-nav">
         <div className="nav-inner">
-          <span className="nav-logo">🍽 Middagshjulet</span>
+          <span className="nav-logo">🍽 Tallerken</span>
           <div className="nav-links">
             {token ? (
               <button className="btn-primary" onClick={() => navigate('/app')}>Åpne appen</button>
@@ -166,7 +166,7 @@ export default function LandingPage() {
         </Reveal>
       </section>
 
-      <footer className="landing-footer">© 2025 Middagshjulet</footer>
+      <footer className="landing-footer">© 2025 Tallerken</footer>
 
       <style>{`
         /* ── TOKENS ── */

@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import Login from './components/Login.jsx';
 import Register from './components/Register.jsx';
 import LandingPage from './components/LandingPage.jsx';
-import MealWheel from './components/MealWheel.jsx';
+import MealList from './components/MealList.jsx';
 import MealDetail from './components/MealDetail.jsx';
 import StoreSelector from './components/StoreSelector.jsx';
 import ShoppingList from './components/ShoppingList.jsx';
@@ -38,7 +38,7 @@ export default function App() {
           path="/app"
           element={
             <ProtectedRoute>
-              <MealWheel />
+              <MealList />
             </ProtectedRoute>
           }
         />

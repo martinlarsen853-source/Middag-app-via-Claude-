@@ -59,7 +59,7 @@ export default function Navbar() {
       <nav className="glass border-b border-white/10 px-4 py-3 flex items-center justify-between sticky top-0 z-40 no-print">
         <Link to="/" className="flex items-center gap-2 text-white hover:text-green-400 transition-colors">
           <span className="text-2xl">🍽️</span>
-          <span className="font-bold text-lg hidden sm:block">Middagshjulet</span>
+          <span className="font-bold text-lg hidden sm:block">Tallerken</span>
         </Link>
 
         <div className="flex items-center gap-2">
