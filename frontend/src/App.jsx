@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Login from './components/Login.jsx';
 import Register from './components/Register.jsx';
+import LandingPage from './components/LandingPage.jsx';
 import MealWheel from './components/MealWheel.jsx';
 import MealDetail from './components/MealDetail.jsx';
 import StoreSelector from './components/StoreSelector.jsx';
@@ -13,7 +14,7 @@ function ProtectedRoute({ children }) {
   const location = useLocation();
 
   if (!token) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location.pathname === '/app' ? location : { pathname: '/app' } }} replace />;
   }
 
   return (
@@ -30,10 +31,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route
-          path="/"
+          path="/app"
           element={
             <ProtectedRoute>
               <MealWheel />

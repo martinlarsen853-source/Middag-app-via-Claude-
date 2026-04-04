@@ -26,7 +26,7 @@ export default function Register() {
       const data = await register(name, email, password, persons);
       localStorage.setItem('middag_token', data.token);
       localStorage.setItem('middag_user', JSON.stringify(data.user));
-      navigate('/', { replace: true });
+      navigate('/app', { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
