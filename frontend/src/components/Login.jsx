@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { login, register } from '../api.js';
+import * as mock from '../mockApi.js';
 
 const TEST_EMAIL = 'test@tallerken.no';
 const TEST_PASS  = 'test1234';
@@ -33,10 +34,15 @@ export default function Login() {
   async function handleTestLogin() {
     setError(''); setTestLoading(true);
     try {
-      // Opprett testbruker om den ikke finnes, ignorer feil hvis den allerede finnes
-      try { await register('Testbruker', TEST_EMAIL, TEST_PASS, 2); } catch {}
-      await doLogin(TEST_EMAIL, TEST_PASS);
+      // Alltid bruk mock for testknappen — omgår Supabase e-postbekreftelse
+      localStorage.setItem('middag_demo_session', 'true');
+      try { await mock.register('Testbruker', TEST_EMAIL, TEST_PASS, 2); } catch {}
+      const data = await mock.login(TEST_EMAIL, TEST_PASS);
+      localStorage.setItem('middag_token', data.token);
+      localStorage.setItem('middag_user', JSON.stringify(data.user));
+      navigate(from, { replace: true });
     } catch (err) {
+      localStorage.removeItem('middag_demo_session');
       setError(err.message);
     } finally {
       setTestLoading(false);

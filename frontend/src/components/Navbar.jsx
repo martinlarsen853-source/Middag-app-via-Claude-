@@ -28,6 +28,7 @@ export default function Navbar() {
   function handleLogout() {
     localStorage.removeItem('middag_token');
     localStorage.removeItem('middag_user');
+    localStorage.removeItem('middag_demo_session');
     navigate('/login', { replace: true });
   }
 

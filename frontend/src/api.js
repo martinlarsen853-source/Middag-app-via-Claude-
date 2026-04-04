@@ -3,7 +3,7 @@ import * as mock from './mockApi.js';
 
 // --- Auth ---
 export async function login(email, password) {
-  if (isDemoMode) return mock.login(email, password);
+  if (isDemoMode()) return mock.login(email, password);
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw new Error(error.message);
   const profile = await getOrCreateProfile(data.user);
@@ -11,7 +11,7 @@ export async function login(email, password) {
 }
 
 export async function register(name, email, password, default_persons = 2) {
-  if (isDemoMode) return mock.register(name, email, password, default_persons);
+  if (isDemoMode()) return mock.register(name, email, password, default_persons);
   const { data, error } = await supabase.auth.signUp({
     email, password,
     options: { data: { name, default_persons } }
@@ -28,7 +28,7 @@ export async function register(name, email, password, default_persons = 2) {
 }
 
 export async function logout() {
-  if (isDemoMode) return;
+  if (isDemoMode()) return;
   await supabase.auth.signOut();
 }
 
@@ -39,7 +39,7 @@ async function getOrCreateProfile(user) {
 
 // --- Meals ---
 export async function getMeals(sort = '') {
-  if (isDemoMode) return mock.getMeals(sort);
+  if (isDemoMode()) return mock.getMeals(sort);
 
   let query = supabase.from('meals').select('id, name, emoji, description, time_minutes, price_level, category');
 
@@ -85,7 +85,7 @@ export async function getMeals(sort = '') {
 }
 
 export async function getMeal(id) {
-  if (isDemoMode) return mock.getMeal(id);
+  if (isDemoMode()) return mock.getMeal(id);
   const { data, error } = await supabase
     .from('meals')
     .select('*, meal_ingredients(*)')
@@ -96,7 +96,7 @@ export async function getMeal(id) {
 }
 
 export async function markEaten(id) {
-  if (isDemoMode) return mock.markEaten(id);
+  if (isDemoMode()) return mock.markEaten(id);
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
   await supabase.from('meal_history').insert({ user_id: user.id, meal_id: id });
@@ -105,7 +105,7 @@ export async function markEaten(id) {
 
 // --- Stores ---
 export async function getStores() {
-  if (isDemoMode) return mock.getStores();
+  if (isDemoMode()) return mock.getStores();
   const { data, error } = await supabase.from('stores').select('*').order('id');
   if (error) throw new Error(error.message);
   return data.map(s => ({ ...s, section_order: s.section_order || [] }));
@@ -113,7 +113,7 @@ export async function getStores() {
 
 // --- Shopping list ---
 export async function getShoppingList(mealId, storeId, persons = 2) {
-  if (isDemoMode) return mock.getShoppingList(mealId, storeId, persons);
+  if (isDemoMode()) return mock.getShoppingList(mealId, storeId, persons);
 
   const BASE_PERSONS = 4;
   const scale = persons / BASE_PERSONS;
@@ -149,7 +149,7 @@ export async function getShoppingList(mealId, storeId, persons = 2) {
 
 // --- Household ---
 export async function getHousehold() {
-  if (isDemoMode) return mock.getHousehold();
+  if (isDemoMode()) return mock.getHousehold();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Ikke innlogget');
 
@@ -166,7 +166,7 @@ export async function getHousehold() {
 }
 
 export async function joinHousehold(invite_code) {
-  if (isDemoMode) return mock.joinHousehold(invite_code);
+  if (isDemoMode()) return mock.joinHousehold(invite_code);
   const { data: household, error } = await supabase
     .from('households')
     .select('id')
@@ -179,7 +179,7 @@ export async function joinHousehold(invite_code) {
 }
 
 export async function updatePersons(default_persons) {
-  if (isDemoMode) return mock.updatePersons(default_persons);
+  if (isDemoMode()) return mock.updatePersons(default_persons);
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
   await supabase.from('user_profiles').update({ default_persons }).eq('id', user.id);
