@@ -1,14 +1,10 @@
 {
-  "buildCommand": "npm install && cd frontend && npm install && npm run build",
+  "version": 2,
+  "installCommand": "npm install",
+  "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index" },
-    { "source": "/((?!api).*)", "destination": "/index.html" }
-  ],
-  "env": {
-    "SUPABASE_URL": "@supabase_url",
-    "SUPABASE_SERVICE_KEY": "@supabase_service_key",
-    "VITE_SUPABASE_URL": "@supabase_url",
-    "VITE_SUPABASE_ANON_KEY": "@supabase_anon_key"
-  }
+    { "source": "/api/:path*", "destination": "/api/index" },
+    { "source": "/:path*", "destination": "/index.html" }
+  ]
 }
