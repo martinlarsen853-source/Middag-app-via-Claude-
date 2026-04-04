@@ -7,3 +7,5 @@ backend/middag.db-wal
 dist/
 .vite/
 .env
+frontend/.env
+frontend/.env.local
