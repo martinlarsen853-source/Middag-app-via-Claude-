@@ -2,13 +2,12 @@
 
 ## Deployment
 - **Production URL:** https://middag-app-via-claude.vercel.app
-- **Vercel deploys from the `gh-pages` branch**
-- ALL changes MUST be pushed to `gh-pages` to appear on the live site
+- **Vercel deploys from the `main` branch**
+- ALL changes MUST be pushed to `main` to appear on the live site
 
 ## Git Workflow
-- Always push final changes to `gh-pages`: `git push origin gh-pages`
-- If working on a feature branch, merge/push to `gh-pages` when done
-- The `gh-pages` branch contains full source code (not pre-built files)
+- Always push final changes to `main`: `git push origin main`
+- If working on a feature branch, merge/push to `main` when done
 
 ## Project Structure
 - `frontend/` - React (Vite) frontend
