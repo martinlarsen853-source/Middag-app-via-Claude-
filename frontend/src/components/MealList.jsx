@@ -232,6 +232,15 @@ export default function MealList() {
         </div>
 
         <div style={s.toolRow}>
+          {/* Create meal button */}
+          <button
+            onClick={() => navigate('/meals/new')}
+            style={s.createBtn}
+            title="Lag ny middag"
+          >
+            +
+          </button>
+
           {/* Filter button */}
           {(() => {
             const activeCount = selectedTags.size + (timeRange.min > 10 || timeRange.max < 100 ? 1 : 0) + (priceRange.min > 50 || priceRange.max < 1500 ? 1 : 0);
@@ -473,6 +482,13 @@ const s = {
   personLabel: { color: '#a8a29e', fontSize: '0.78rem' },
 
   toolRow: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 0 },
+  createBtn: {
+    flexShrink: 0, width: 36, height: 36, borderRadius: '50%',
+    background: '#c2410c', color: '#fff', border: 'none',
+    fontSize: '1.2rem', fontWeight: 700, cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    boxShadow: '0 2px 8px rgba(194, 65, 12, 0.3)', transition: 'all 0.15s',
+  },
   filterBtn: {
     flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
     padding: '6px 12px', borderRadius: 999,

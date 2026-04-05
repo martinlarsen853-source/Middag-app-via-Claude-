@@ -8,6 +8,8 @@ import MealDetail from './components/MealDetail.jsx';
 import StoreSelector from './components/StoreSelector.jsx';
 import ShoppingList from './components/ShoppingList.jsx';
 import Navbar from './components/Navbar.jsx';
+import MealCreatePage from './components/MealCreatePage.jsx';
+import IngredientListPage from './components/IngredientListPage.jsx';
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('middag_token');
@@ -63,6 +65,22 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ShoppingList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/meals/new"
+          element={
+            <ProtectedRoute>
+              <MealCreatePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ingredients"
+          element={
+            <ProtectedRoute>
+              <IngredientListPage />
             </ProtectedRoute>
           }
         />

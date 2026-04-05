@@ -147,6 +147,199 @@ export async function getShoppingList(mealId, storeId, persons = 2) {
   return { meal: { id: meal.id, name: meal.name, emoji: meal.emoji }, store: { id: store.id, name: store.name }, persons, sections };
 }
 
+// --- Ingredients (NEW) ---
+export async function getIngredients(category = null, search = null, limit = 50, offset = 0) {
+  if (isDemoMode()) return { data: [], count: 0 };
+
+  let query = supabase.from('ingredients').select('*', { count: 'exact' });
+
+  if (category) query = query.eq('category', category);
+  if (search) query = query.ilike('name', `%${search}%`);
+
+  const { data, error, count } = await query
+    .order('category', { ascending: true })
+    .order('name', { ascending: true })
+    .range(offset, offset + limit - 1);
+
+  if (error) throw new Error(error.message);
+  return { data, count, limit, offset };
+}
+
+export async function getIngredientCategories() {
+  if (isDemoMode()) return [];
+
+  const { data, error } = await supabase
+    .from('ingredient_categories')
+    .select('*')
+    .order('name');
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function getIngredientsByCategory(category) {
+  return getIngredients(category, null, 500, 0);
+}
+
+export async function createIngredient(data) {
+  if (isDemoMode()) return {};
+
+  const { data: result, error } = await supabase
+    .from('ingredients')
+    .insert([data])
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return result;
+}
+
+export async function updateIngredient(id, data) {
+  if (isDemoMode()) return {};
+
+  const { data: result, error } = await supabase
+    .from('ingredients')
+    .update(data)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return result;
+}
+
+export async function deleteIngredient(id) {
+  if (isDemoMode()) return { ok: true };
+
+  const { error } = await supabase
+    .from('ingredients')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
+
+// --- Meals CRUD (NEW) ---
+export async function createMeal(mealData) {
+  if (isDemoMode()) return {};
+
+  const { name, emoji, description, time_minutes, category, ingredients } = mealData;
+
+  // Insert meal
+  const { data: meal, error: mealError } = await supabase
+    .from('meals')
+    .insert([{
+      name,
+      emoji: emoji || '🍽',
+      description: description || '',
+      time_minutes: time_minutes || 30,
+      price_level: 2,
+      category: category || 'Annet',
+    }])
+    .select()
+    .single();
+
+  if (mealError) throw new Error(mealError.message);
+
+  // Insert ingredients if provided
+  if (ingredients && Array.isArray(ingredients) && ingredients.length > 0) {
+    const ingredientsData = ingredients.map(ing => ({
+      meal_id: meal.id,
+      ingredient_id: ing.ingredient_id || null,
+      ingredient_name: ing.name,
+      quantity: ing.quantity || 1,
+      unit: ing.unit || 'g',
+      section: ing.section || 'Diverse',
+    }));
+
+    const { error: ingError } = await supabase
+      .from('meal_ingredients')
+      .insert(ingredientsData);
+
+    if (ingError) throw new Error(ingError.message);
+  }
+
+  return meal;
+}
+
+export async function updateMeal(id, mealData) {
+  if (isDemoMode()) return {};
+
+  const { name, emoji, description, time_minutes, category } = mealData;
+
+  const { data, error } = await supabase
+    .from('meals')
+    .update({
+      name,
+      emoji,
+      description,
+      time_minutes,
+      category,
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function deleteMeal(id) {
+  if (isDemoMode()) return { ok: true };
+
+  const { error } = await supabase
+    .from('meals')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
+
+// --- Meal Ingredients ---
+export async function addMealIngredient(mealId, ingredientData) {
+  if (isDemoMode()) return {};
+
+  const { data, error } = await supabase
+    .from('meal_ingredients')
+    .insert([{
+      meal_id: mealId,
+      ingredient_id: ingredientData.ingredient_id || null,
+      ingredient_name: ingredientData.name,
+      quantity: ingredientData.quantity || 1,
+      unit: ingredientData.unit || 'g',
+      section: ingredientData.section || 'Diverse',
+    }])
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function removeMealIngredient(ingredientId) {
+  if (isDemoMode()) return { ok: true };
+
+  const { error } = await supabase
+    .from('meal_ingredients')
+    .delete()
+    .eq('id', ingredientId);
+
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
+
+// --- Price Calculation ---
+export function calculateMealPrice(ingredients) {
+  if (!Array.isArray(ingredients)) return 0;
+  return ingredients.reduce((total, ing) => {
+    const price = ing.ingredient?.price || 0;
+    const quantity = ing.quantity || 0;
+    return total + (price * quantity);
+  }, 0);
+}
+
 // --- Household ---
 export async function getHousehold() {
   if (isDemoMode()) return mock.getHousehold();
