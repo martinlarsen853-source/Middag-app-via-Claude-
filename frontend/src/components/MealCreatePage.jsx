@@ -22,9 +22,19 @@ export default function MealCreatePage() {
   useEffect(() => {
     loadCategories();
     if (step === 2) {
-      loadIngredients();
+      // Load all ingredients on step 2
+      loadIngredients('');
     }
   }, [step]);
+
+  // Debounce search
+  useEffect(() => {
+    if (search.length >= 2) {
+      loadIngredients(search);
+    } else if (search.length === 0) {
+      loadIngredients('');
+    }
+  }, [search]);
 
   async function loadCategories() {
     try {
@@ -206,32 +216,35 @@ export default function MealCreatePage() {
             type="text"
             placeholder="Søk ingrediens..."
             value={search}
-            onChange={e => {
-              setSearch(e.target.value);
-              if (e.target.value.length > 0) loadIngredients(e.target.value);
-            }}
+            onChange={e => setSearch(e.target.value)}
             style={s.input}
           />
 
           {/* Ingredient list */}
-          {search && (
+          {availableIngredients.length > 0 ? (
             <div style={s.ingredientList}>
-              {Object.entries(groupedByCategory).map(([category, items]) => (
-                <div key={category}>
-                  <h4 style={s.categoryLabel}>{category}</h4>
-                  {items.map(ing => (
-                    <button
-                      key={ing.id}
-                      onClick={() => handleAddIngredient(ing)}
-                      style={s.ingredientOption}
-                    >
-                      <span>{ing.name}</span>
-                      <span style={s.price}>{ing.price} kr/{ing.unit}</span>
-                    </button>
-                  ))}
-                </div>
-              ))}
+              {Object.entries(groupedByCategory).length > 0 ? (
+                Object.entries(groupedByCategory).map(([category, items]) => (
+                  <div key={category}>
+                    <h4 style={s.categoryLabel}>{category}</h4>
+                    {items.map(ing => (
+                      <button
+                        key={ing.id}
+                        onClick={() => handleAddIngredient(ing)}
+                        style={s.ingredientOption}
+                      >
+                        <span>{ing.name}</span>
+                        <span style={s.price}>{ing.price} kr/{ing.unit}</span>
+                      </button>
+                    ))}
+                  </div>
+                ))
+              ) : (
+                <p style={s.noResults}>Ingen ingredienser funnet</p>
+              )}
             </div>
+          ) : (
+            <p style={s.loading}>Laster ingredienser...</p>
           )}
 
           {/* Added ingredients */}
@@ -337,8 +350,10 @@ const s = {
   subtitle: { fontSize: '1rem', fontWeight: 700, color: '#1c1917', margin: '0 0 12px' },
   ingredientList: { border: '1px solid #e7e5e2', borderRadius: 8, maxHeight: 300, overflowY: 'auto', background: '#fff' },
   categoryLabel: { fontSize: '0.85rem', fontWeight: 700, color: '#a8a29e', textTransform: 'uppercase', padding: '8px 12px 4px', margin: 0 },
-  ingredientOption: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '10px 12px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '0.9rem', color: '#1c1917', transition: 'background 0.15s' },
+  ingredientOption: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '10px 12px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '0.9rem', color: '#1c1917', transition: 'background 0.15s', borderBottom: '1px solid #f0ede9' },
   price: { fontSize: '0.8rem', color: '#c2410c', fontWeight: 600 },
+  noResults: { padding: '20px 12px', color: '#a8a29e', fontSize: '0.9rem', textAlign: 'center' },
+  loading: { padding: '20px 12px', color: '#a8a29e', fontSize: '0.9rem', textAlign: 'center' },
   addedIngredients: { display: 'flex', flexDirection: 'column', gap: 8 },
   addedIngredientRow: { display: 'flex', alignItems: 'center', gap: 8, padding: '10px', background: '#fff', borderRadius: 8, border: '1px solid #e7e5e2' },
   ingInfo: { flex: 1, display: 'flex', flexDirection: 'column' },
