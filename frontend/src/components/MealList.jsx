@@ -560,21 +560,5 @@ const s = {
     position: 'absolute', top: 0, left: 0, right: 0, height: 28,
     pointerEvents: 'none', background: 'none', border: 'none', outline: 'none',
     WebkitAppearance: 'none', appearance: 'none', zIndex: 3,
-    '&::-webkit-slider-thumb': {
-      WebkitAppearance: 'none',
-      appearance: 'none',
-      pointerEvents: 'auto',
-      width: 20, height: 20, borderRadius: '50%',
-      background: '#c2410c', border: '2px solid #fff',
-      boxShadow: '0 2px 8px rgba(194,65,12,0.3)',
-      cursor: 'pointer',
-    },
-    '&::-moz-range-thumb': {
-      pointerEvents: 'auto',
-      width: 20, height: 20, borderRadius: '50%',
-      background: '#c2410c', border: '2px solid #fff',
-      boxShadow: '0 2px 8px rgba(194,65,12,0.3)',
-      cursor: 'pointer',
-    },
   },
 };
