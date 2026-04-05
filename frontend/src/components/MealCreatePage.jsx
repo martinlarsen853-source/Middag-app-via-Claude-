@@ -15,7 +15,7 @@ export default function MealCreatePage() {
   const [ingredients, setIngredients] = useState([]);
   const [availableIngredients, setAvailableIngredients] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState('');
@@ -252,23 +252,52 @@ export default function MealCreatePage() {
             )}
           </div>
 
-          {/* Search */}
-          <input
-            type="text"
-            placeholder="Søk ingrediens..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={s.input}
-          />
+          {/* Category tabs */}
+          {availableIngredients.length > 0 && (
+            <>
+              <div style={s.categoryTabs}>
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  style={{
+                    ...s.categoryTab,
+                    ...(selectedCategory === null ? s.categoryTabActive : {}),
+                  }}
+                >
+                  Alle
+                </button>
+                {categories.map(cat => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.name)}
+                    style={{
+                      ...s.categoryTab,
+                      ...(selectedCategory === cat.name ? s.categoryTabActive : {}),
+                    }}
+                  >
+                    {cat.emoji} {cat.name}
+                  </button>
+                ))}
+              </div>
 
-          {/* Ingredient list */}
-          {availableIngredients.length > 0 ? (
-            <div style={s.ingredientList}>
-              {Object.entries(groupedByCategory).length > 0 ? (
-                Object.entries(groupedByCategory).map(([category, items]) => (
-                  <div key={category}>
-                    <h4 style={s.categoryLabel}>{category}</h4>
-                    {items.map(ing => (
+              {/* Ingredient list */}
+              <div style={s.ingredientList}>
+                {selectedCategory === null
+                  ? Object.entries(groupedByCategory).map(([category, items]) => (
+                      <div key={category}>
+                        <h4 style={s.categoryLabel}>{category}</h4>
+                        {items.map(ing => (
+                          <button
+                            key={ing.id}
+                            onClick={() => handleAddIngredient(ing)}
+                            style={s.ingredientOption}
+                          >
+                            <span>{ing.name}</span>
+                            <span style={s.price}>{ing.price} kr/{ing.unit}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ))
+                  : (groupedByCategory[selectedCategory] || []).map(ing => (
                       <button
                         key={ing.id}
                         onClick={() => handleAddIngredient(ing)}
@@ -278,13 +307,11 @@ export default function MealCreatePage() {
                         <span style={s.price}>{ing.price} kr/{ing.unit}</span>
                       </button>
                     ))}
-                  </div>
-                ))
-              ) : (
-                <p style={s.noResults}>Ingen ingredienser funnet</p>
-              )}
-            </div>
-          ) : (
+              </div>
+            </>
+          )}
+
+          {availableIngredients.length === 0 && (
             <p style={s.loading}>Laster ingredienser...</p>
           )}
 
@@ -387,6 +414,9 @@ const s = {
   step3: { display: 'flex', flexDirection: 'column', gap: 16 },
   stepHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   syncBtn: { padding: '6px 12px', borderRadius: 8, background: '#c2410c', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' },
+  categoryTabs: { display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, marginBottom: 8, borderBottom: '1px solid #e7e5e2' },
+  categoryTab: { padding: '6px 12px', borderRadius: 999, border: 'none', background: '#fff', color: '#78716c', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.15s' },
+  categoryTabActive: { background: '#c2410c', color: '#fff', borderColor: '#c2410c' },
   label: { display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.9rem', fontWeight: 600, color: '#1c1917' },
   input: { padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e7e5e2', fontSize: '1rem', fontFamily: 'inherit' },
   textarea: { padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e7e5e2', fontSize: '1rem', fontFamily: 'inherit' },
