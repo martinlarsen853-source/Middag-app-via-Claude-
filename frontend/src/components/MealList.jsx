@@ -2,6 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMeals, markEaten, updatePersons } from '../api.js';
 
+// Range input styling
+const rangeInputCSS = `
+  input[type='range'].dual-range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    pointer-events: auto;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #c2410c;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 8px rgba(194, 65, 12, 0.3);
+    cursor: pointer;
+  }
+
+  input[type='range'].dual-range-input::-moz-range-thumb {
+    pointer-events: auto;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #c2410c;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 8px rgba(194, 65, 12, 0.3);
+    cursor: pointer;
+  }
+
+  input[type='range'].dual-range-input::-moz-range-track {
+    background: transparent;
+    border: none;
+  }
+`;
+
 const SORT_OPTIONS = [
   { key: 'random', label: '🎲 Tilfeldig' },
   { key: 'time',   label: '⏱ Raskest' },
@@ -25,12 +57,24 @@ export default function MealList() {
   const [sort, setSort]             = useState('random');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedTags, setSelectedTags] = useState(new Set());
+  const [timeRange, setTimeRange]   = useState({ min: 10, max: 100 });
+  const [priceRange, setPriceRange] = useState({ min: 50, max: 1500 });
   const [persons, setPersons] = useState(() => {
     try { return JSON.parse(localStorage.getItem('middag_user') || '{}').default_persons || 2; }
     catch { return 2; }
   });
 
   useEffect(() => { loadMeals(sort); }, [sort]);
+
+  // Inject range input styles
+  useEffect(() => {
+    if (!document.getElementById('range-input-styles')) {
+      const style = document.createElement('style');
+      style.id = 'range-input-styles';
+      style.textContent = rangeInputCSS;
+      document.head.appendChild(style);
+    }
+  }, []);
 
   // Prevent body scroll when drawer is open
   useEffect(() => {
@@ -53,11 +97,29 @@ export default function MealList() {
     });
   }
 
-  function clearFilters() { setSelectedTags(new Set()); }
+  function clearFilters() {
+    setSelectedTags(new Set());
+    setTimeRange({ min: 10, max: 100 });
+    setPriceRange({ min: 50, max: 1500 });
+  }
 
-  const filtered = selectedTags.size === 0
-    ? meals
-    : meals.filter(m => m.tags?.some(t => selectedTags.has(t)));
+  // Map price_level to estimated price range
+  function getMealPrice(meal) {
+    if (meal.price && typeof meal.price === 'number') return meal.price;
+    // Temporary mapping until Oda scraping is implemented
+    const priceMap = { 1: 100, 2: 350, 3: 900 };
+    return priceMap[meal.price_level] || 500;
+  }
+
+  // Check if meal matches active filters
+  function isFilterMatch(meal) {
+    const tagMatch = selectedTags.size === 0 || meal.tags?.some(t => selectedTags.has(t));
+    const timeMatch = meal.time_minutes >= timeRange.min && meal.time_minutes <= timeRange.max;
+    const priceMatch = getMealPrice(meal) >= priceRange.min && getMealPrice(meal) <= priceRange.max;
+    return tagMatch && timeMatch && priceMatch;
+  }
+
+  const filtered = meals.filter(isFilterMatch);
 
   function handleSelect(meal) {
     markEaten(meal.id).catch(() => {});
@@ -93,6 +155,30 @@ export default function MealList() {
         </div>
 
         <div style={s.drawerBody}>
+          {/* Range Filters */}
+          <DualRangeSlider
+            label="⏱ Tid"
+            min={10}
+            max={100}
+            step={5}
+            value={timeRange}
+            onChange={setTimeRange}
+            formatLabel={(min, max) => `${min}-${max} min`}
+          />
+          <DualRangeSlider
+            label="💰 Pris"
+            min={50}
+            max={1500}
+            step={50}
+            value={priceRange}
+            onChange={setPriceRange}
+            formatLabel={(min, max) => `${min}-${max} kr`}
+          />
+
+          {/* Divider */}
+          <div style={{ borderTop: '1px solid #f0ede9', margin: '24px 0 16px', opacity: 0.5 }} />
+
+          {/* Tag Filters */}
           {FILTER_GROUPS.map(group => (
             <div key={group.label} style={s.filterGroup}>
               <p style={s.groupLabel}>{group.label}</p>
@@ -115,9 +201,12 @@ export default function MealList() {
         </div>
 
         <div style={s.drawerFooter}>
-          {selectedTags.size > 0 && (
-            <button onClick={clearFilters} style={s.clearBtn}>Nullstill</button>
-          )}
+          {(() => {
+            const hasActiveFilters = selectedTags.size > 0 || timeRange.min > 10 || timeRange.max < 100 || priceRange.min > 50 || priceRange.max < 1500;
+            return hasActiveFilters && (
+              <button onClick={clearFilters} style={s.clearBtn}>Nullstill</button>
+            );
+          })()}
           <button
             onClick={() => setDrawerOpen(false)}
             style={s.showBtn}
@@ -144,18 +233,23 @@ export default function MealList() {
 
         <div style={s.toolRow}>
           {/* Filter button */}
-          <button
-            onClick={() => setDrawerOpen(true)}
-            style={{ ...s.filterBtn, ...(selectedTags.size > 0 ? s.filterBtnActive : {}) }}
-          >
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M1 3h14v1.5l-5 5V15l-4-2V9.5L1 4.5V3z"/>
-            </svg>
-            Filter
-            {selectedTags.size > 0 && (
-              <span style={s.badge}>{selectedTags.size}</span>
-            )}
-          </button>
+          {(() => {
+            const activeCount = selectedTags.size + (timeRange.min > 10 || timeRange.max < 100 ? 1 : 0) + (priceRange.min > 50 || priceRange.max < 1500 ? 1 : 0);
+            return (
+              <button
+                onClick={() => setDrawerOpen(true)}
+                style={{ ...s.filterBtn, ...(activeCount > 0 ? s.filterBtnActive : {}) }}
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M1 3h14v1.5l-5 5V15l-4-2V9.5L1 4.5V3z"/>
+                </svg>
+                Filter
+                {activeCount > 0 && (
+                  <span style={s.badge}>{activeCount}</span>
+                )}
+              </button>
+            );
+          })()}
 
           {/* Sort pills */}
           <div style={s.sortRow}>
@@ -200,6 +294,62 @@ export default function MealList() {
         ) : filtered.map((meal, i) => (
           <MealCard key={meal.id} meal={meal} index={i} onSelect={() => handleSelect(meal)} />
         ))}
+      </div>
+    </div>
+  );
+}
+
+function DualRangeSlider({ label, min, max, step, value, onChange, formatLabel }) {
+  const handleMinChange = (e) => {
+    const newMin = Math.min(parseInt(e.target.value), value.max);
+    onChange({ ...value, min: newMin });
+  };
+
+  const handleMaxChange = (e) => {
+    const newMax = Math.max(parseInt(e.target.value), value.min);
+    onChange({ ...value, max: newMax });
+  };
+
+  const minPercent = ((value.min - min) / (max - min)) * 100;
+  const maxPercent = ((value.max - min) / (max - min)) * 100;
+
+  return (
+    <div style={s.rangeSliderGroup}>
+      <p style={s.groupLabel}>{label}</p>
+      <p style={s.rangeValue}>{formatLabel(value.min, value.max)}</p>
+
+      <div style={s.rangeSliderContainer}>
+        <div style={{
+          ...s.rangeTrack,
+          background: `linear-gradient(to right, #e7e5e2 0%, #e7e5e2 ${minPercent}%, #c2410c ${minPercent}%, #c2410c ${maxPercent}%, #e7e5e2 ${maxPercent}%, #e7e5e2 100%)`
+        }} />
+
+        <input
+          type="range"
+          className="dual-range-input"
+          min={min}
+          max={max}
+          step={step}
+          value={value.min}
+          onChange={handleMinChange}
+          style={{
+            ...s.rangeInput,
+            zIndex: value.min > max - (max - min) * 0.1 ? 5 : 3,
+          }}
+        />
+        <input
+          type="range"
+          className="dual-range-input"
+          min={min}
+          max={max}
+          step={step}
+          value={value.max}
+          onChange={handleMaxChange}
+          style={{
+            ...s.rangeInput,
+            zIndex: 4,
+          }}
+        />
       </div>
     </div>
   );
@@ -391,5 +541,24 @@ const s = {
     background: '#c2410c', color: '#fff', border: 'none',
     borderRadius: 10, padding: '10px 20px', fontSize: '0.9rem',
     fontWeight: 600, cursor: 'pointer',
+  },
+
+  // Range Slider
+  rangeSliderGroup: { marginBottom: 24 },
+  rangeValue: {
+    fontSize: '0.9rem', fontWeight: 600, color: '#44403c',
+    margin: '8px 0 12px', fontFamily: 'system-ui, sans-serif',
+  },
+  rangeSliderContainer: {
+    position: 'relative', height: 28, marginBottom: 4,
+  },
+  rangeTrack: {
+    position: 'absolute', top: 11, left: 0, right: 0, height: 6,
+    borderRadius: 3, pointerEvents: 'none',
+  },
+  rangeInput: {
+    position: 'absolute', top: 0, left: 0, right: 0, height: 28,
+    pointerEvents: 'none', background: 'none', border: 'none', outline: 'none',
+    WebkitAppearance: 'none', appearance: 'none', zIndex: 3,
   },
 };
