@@ -258,8 +258,8 @@ app.get('/api/ingredients/:id', auth, async (req, res) => {
 // POST /api/sync-ingredients — Sync ingredients from Kassalapp (admin only)
 app.post('/api/sync-ingredients', auth, async (req, res) => {
   try {
-    // Import sync service dynamically
-    const { syncIngredientsFromKassalapp } = await import('../backend/services/kassaappSync.js');
+    // Import sync service from same directory
+    const { syncIngredientsFromKassalapp } = await import('./kassaappSync.js');
 
     const result = await syncIngredientsFromKassalapp(req.body);
     res.json({ ok: true, ...result });
