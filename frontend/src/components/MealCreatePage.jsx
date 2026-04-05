@@ -40,6 +40,8 @@ export default function MealCreatePageWrapper() {
   );
 }
 
+// Cleaned version - no external dependencies
+
 function MealCreatePage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
