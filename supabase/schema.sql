@@ -377,3 +377,80 @@ BEGIN
 
   END IF;
 END $$;
+
+-- ============================================================================
+-- INGREDIENTS MANAGEMENT SYSTEM
+-- ============================================================================
+
+-- Ingredient categories (dropdown options)
+CREATE TABLE IF NOT EXISTS ingredient_categories (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  name TEXT NOT NULL UNIQUE,
+  emoji TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Seed ingredient categories
+INSERT INTO ingredient_categories (name, emoji) VALUES
+  ('Kjøtt', '🥩'),
+  ('Fisk', '🐟'),
+  ('Meieri', '🥛'),
+  ('Grønnsaker', '🥦'),
+  ('Frukt', '🍎'),
+  ('Tørrmat', '🌾'),
+  ('Bakeri', '🍞'),
+  ('Krydder & sauser', '🫙'),
+  ('Diverse', '🛒')
+ON CONFLICT DO NOTHING;
+
+-- Centralized ingredient list (synced from Kassalapp)
+CREATE TABLE IF NOT EXISTS ingredients (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  name TEXT NOT NULL UNIQUE,
+  category TEXT NOT NULL,
+  price DECIMAL(8, 2) NOT NULL,
+  unit TEXT NOT NULL DEFAULT 'g',
+  section TEXT,
+  ean TEXT UNIQUE,
+  external_id TEXT UNIQUE,
+  brand TEXT,
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Index for quick lookups
+CREATE INDEX IF NOT EXISTS idx_ingredients_category ON ingredients(category);
+CREATE INDEX IF NOT EXISTS idx_ingredients_ean ON ingredients(ean);
+CREATE INDEX IF NOT EXISTS idx_ingredients_external_id ON ingredients(external_id);
+CREATE INDEX IF NOT EXISTS idx_ingredients_name ON ingredients(name);
+
+-- Add ingredient_id reference to meal_ingredients (nullable for backward compatibility)
+ALTER TABLE meal_ingredients ADD COLUMN IF NOT EXISTS ingredient_id BIGINT REFERENCES ingredients(id) ON DELETE SET NULL;
+
+-- Enable RLS for new tables
+ALTER TABLE ingredient_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ingredients ENABLE ROW LEVEL SECURITY;
+
+-- Policies: Everyone can read ingredients
+CREATE POLICY IF NOT EXISTS "Authenticated can read ingredient_categories" ON ingredient_categories FOR SELECT TO authenticated USING (true);
+CREATE POLICY IF NOT EXISTS "Authenticated can read ingredients" ON ingredients FOR SELECT TO authenticated USING (true);
+
+-- Admin can manage ingredients (insert, update, delete)
+-- For now, allow all authenticated users; can be restricted to admins later
+CREATE POLICY IF NOT EXISTS "Authenticated can insert ingredients" ON ingredients FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY IF NOT EXISTS "Authenticated can update ingredients" ON ingredients FOR UPDATE TO authenticated USING (true);
+CREATE POLICY IF NOT EXISTS "Authenticated can delete ingredients" ON ingredients FOR DELETE TO authenticated USING (true);
+
+-- Table to track sync status
+CREATE TABLE IF NOT EXISTS ingredient_sync_log (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  sync_timestamp TIMESTAMPTZ DEFAULT NOW(),
+  total_synced INT,
+  total_updated INT,
+  total_errors INT,
+  error_details JSONB,
+  sync_duration_seconds INT
+);
+
+CREATE INDEX IF NOT EXISTS idx_sync_log_timestamp ON ingredient_sync_log(sync_timestamp);

@@ -201,5 +201,164 @@ app.put('/api/household/persons', auth, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ─── Ingredients ──────────────────────────────────────────────────────────────────
+
+// GET /api/ingredients — List all ingredients with optional filtering
+app.get('/api/ingredients', auth, async (req, res) => {
+  try {
+    const { category, search, limit = 50, offset = 0 } = req.query;
+    let query = req.sb.from('ingredients').select('*');
+
+    if (category) query = query.eq('category', category);
+    if (search) query = query.ilike('name', `%${search}%`);
+
+    const { data, error, count } = await query
+      .range(offset, offset + parseInt(limit) - 1)
+      .order('category', { ascending: true })
+      .order('name', { ascending: true });
+
+    if (error) throw error;
+    res.json({ data, count, limit: parseInt(limit), offset: parseInt(offset) });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /api/ingredient-categories — List ingredient categories
+app.get('/api/ingredient-categories', auth, async (req, res) => {
+  try {
+    const { data, error } = await req.sb
+      .from('ingredient_categories')
+      .select('*')
+      .order('name');
+
+    if (error) throw error;
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /api/ingredients/:id — Get single ingredient
+app.get('/api/ingredients/:id', auth, async (req, res) => {
+  try {
+    const { data, error } = await req.sb
+      .from('ingredients')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (error || !data) return res.status(404).json({ error: 'Ingrediens ikke funnet' });
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/sync-ingredients — Sync ingredients from Kassalapp (admin only)
+app.post('/api/sync-ingredients', auth, async (req, res) => {
+  try {
+    // Import sync service dynamically
+    const { syncIngredientsFromKassalapp } = await import('../backend/services/kassaappSync.js');
+
+    const result = await syncIngredientsFromKassalapp(req.body);
+    res.json({ ok: true, ...result });
+  } catch (e) {
+    console.error('Sync error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── Meals (CRUD) ─────────────────────────────────────────────────────────────────
+
+// POST /api/meals — Create new meal from scratch
+app.post('/api/meals', auth, async (req, res) => {
+  try {
+    const { name, emoji, description, time_minutes, category, ingredients } = req.body;
+
+    if (!name) return res.status(400).json({ error: 'Meal name is required' });
+
+    // Insert meal
+    const { data: meal, error: mealError } = await req.sb
+      .from('meals')
+      .insert([{
+        name,
+        emoji: emoji || '🍽',
+        description: description || '',
+        time_minutes: time_minutes || 30,
+        price_level: 2, // Default to medium
+        category: category || 'Annet',
+      }])
+      .select()
+      .single();
+
+    if (mealError) throw mealError;
+
+    // Insert ingredients
+    if (ingredients && Array.isArray(ingredients) && ingredients.length > 0) {
+      const ingredientsData = ingredients.map(ing => ({
+        meal_id: meal.id,
+        ingredient_id: ing.ingredient_id,
+        ingredient_name: ing.name,
+        quantity: ing.quantity || 1,
+        unit: ing.unit || 'g',
+        section: ing.section || 'Diverse',
+      }));
+
+      const { error: ingError } = await req.sb
+        .from('meal_ingredients')
+        .insert(ingredientsData);
+
+      if (ingError) throw ingError;
+    }
+
+    res.status(201).json(meal);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// PUT /api/meals/:id — Update meal
+app.put('/api/meals/:id', auth, async (req, res) => {
+  try {
+    const { name, emoji, description, time_minutes, category } = req.body;
+
+    const { data, error } = await req.sb
+      .from('meals')
+      .update({
+        name,
+        emoji,
+        description,
+        time_minutes,
+        category,
+      })
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    if (!data) return res.status(404).json({ error: 'Meal not found' });
+
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// DELETE /api/meals/:id — Delete meal
+app.delete('/api/meals/:id', auth, async (req, res) => {
+  try {
+    const { error } = await req.sb
+      .from('meals')
+      .delete()
+      .eq('id', req.params.id);
+
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Vercel eksporterer Express-appen direkte
 module.exports = app;
