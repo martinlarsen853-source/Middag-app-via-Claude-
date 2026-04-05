@@ -1,7 +1,46 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function MealCreatePage() {
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('MealCreatePage error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '20px', background: '#faf8f5', minHeight: '100vh' }}>
+          <h1 style={{ color: '#c2410c' }}>❌ Feil i komponenten</h1>
+          <pre style={{ background: '#fff', padding: '16px', borderRadius: '8px', overflow: 'auto', fontSize: '0.85rem' }}>
+            {this.state.error?.toString()}
+            {this.state.error?.stack}
+          </pre>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export default function MealCreatePageWrapper() {
+  return (
+    <ErrorBoundary>
+      <MealCreatePage />
+    </ErrorBoundary>
+  );
+}
+
+function MealCreatePage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [mealData, setMealData] = useState({
