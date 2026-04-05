@@ -16,6 +16,7 @@ export default function MealCreatePage() {
   const [availableIngredients, setAvailableIngredients] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState('');
