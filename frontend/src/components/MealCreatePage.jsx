@@ -35,9 +35,9 @@ export default function MealCreatePage() {
     }
   }
 
-  async function loadIngredients() {
+  async function loadIngredients(searchTerm = '') {
     try {
-      const { data } = await getIngredients(null, search, 500);
+      const { data } = await getIngredients(null, searchTerm || search, 500);
       setAvailableIngredients(data || []);
     } catch (e) {
       setError(e.message);
@@ -208,7 +208,7 @@ export default function MealCreatePage() {
             value={search}
             onChange={e => {
               setSearch(e.target.value);
-              if (e.target.value.length > 0) loadIngredients();
+              if (e.target.value.length > 0) loadIngredients(e.target.value);
             }}
             style={s.input}
           />
@@ -322,7 +322,7 @@ export default function MealCreatePage() {
 }
 
 const s = {
-  page: { padding: '16px 16px 32px', minHeight: '100vh', background: '#faf8f5', maxWidth: 600, margin: '0 auto' },
+  page: { padding: '16px', minHeight: '100vh', background: '#faf8f5', maxWidth: '100%', margin: '0 auto' },
   header: { marginBottom: 24 },
   title: { fontFamily: 'Georgia, serif', fontSize: '1.5rem', fontWeight: 800, color: '#1c1917', margin: '0 0 16px' },
   stepIndicator: { display: 'flex', gap: 12 },
