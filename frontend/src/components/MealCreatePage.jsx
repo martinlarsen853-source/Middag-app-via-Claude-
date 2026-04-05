@@ -17,6 +17,7 @@ export default function MealCreatePage() {
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -78,6 +79,35 @@ export default function MealCreatePage() {
 
   function calculateTotalPrice() {
     return ingredients.reduce((sum, ing) => sum + (ing.price * ing.quantity), 0).toFixed(2);
+  }
+
+  async function handleSyncIngredients() {
+    try {
+      setSyncing(true);
+      const token = localStorage.getItem('middag_token');
+      const response = await fetch('/api/sync-ingredients', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
+      const result = await response.json();
+      if (result.ok) {
+        setError(`✓ Synkronisert! ${result.synced} nye, ${result.updated} oppdatert`);
+        setTimeout(() => {
+          setError('');
+          loadIngredients('');
+        }, 2000);
+      } else {
+        setError('Sync feilet: ' + result.error);
+      }
+    } catch (e) {
+      setError('Sync feilet: ' + e.message);
+    } finally {
+      setSyncing(false);
+    }
   }
 
   async function handleCreateMeal() {
@@ -209,7 +239,18 @@ export default function MealCreatePage() {
       {/* Step 2: Ingredients */}
       {step === 2 && (
         <div style={s.step2}>
-          <h2 style={s.subtitle}>Legg til ingredienser</h2>
+          <div style={s.stepHeader}>
+            <h2 style={s.subtitle}>Legg til ingredienser</h2>
+            {availableIngredients.length === 0 && (
+              <button
+                onClick={handleSyncIngredients}
+                disabled={syncing}
+                style={{ ...s.syncBtn, ...(syncing ? { opacity: 0.6 } : {}) }}
+              >
+                {syncing ? '⟳ Synker...' : '⟳ Sync'}
+              </button>
+            )}
+          </div>
 
           {/* Search */}
           <input
@@ -344,6 +385,8 @@ const s = {
   step1: { display: 'flex', flexDirection: 'column', gap: 16 },
   step2: { display: 'flex', flexDirection: 'column', gap: 16 },
   step3: { display: 'flex', flexDirection: 'column', gap: 16 },
+  stepHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
+  syncBtn: { padding: '6px 12px', borderRadius: 8, background: '#c2410c', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' },
   label: { display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.9rem', fontWeight: 600, color: '#1c1917' },
   input: { padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e7e5e2', fontSize: '1rem', fontFamily: 'inherit' },
   textarea: { padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e7e5e2', fontSize: '1rem', fontFamily: 'inherit' },
