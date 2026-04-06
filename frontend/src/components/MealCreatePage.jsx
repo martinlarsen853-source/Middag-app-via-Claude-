@@ -2,9 +2,62 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getIngredients, getIngredientCategories, createMeal } from '../api.js';
 
-const EMOJI_PRESETS = ['🍝', '🥩', '🐟', '🍲', '🥗', '🍳', '🌮', '🍕'];
+const EMOJI_PRESETS = ['🍝', '🥩', '🐟', '🍲', '🥗', '🍳', '🌮', '🍕', '🍔', '🌯', '🥘', '🍛'];
 
 const QUICK_TIMES = [15, 30, 45, 60, 90];
+
+// Smart emoji guesser based on meal name
+function guessEmojiFromName(name) {
+  if (!name) return '🍽';
+
+  const lower = name.toLowerCase();
+
+  // Fish & seafood
+  if (lower.match(/laks|sei|torsk|fisk|reker|scampi|tun|makrell|sardiner|fiskegrateng|fiskekaker|ceviche|gravlaks|fiskestew|skalldyr|blekksprut|kamskjell/)) return '🐟';
+
+  // Pasta
+  if (lower.match(/pasta|spaghetti|penne|bolognese|carbonara|lasagne|tortellini|ravioli|fettuccine|tagliatelle/)) return '🍝';
+
+  // Meat (beef, pork)
+  if (lower.match(/kjøtt|steak|entrecôte|biff|kjøttboller|karbonader|grillpølse|pølse|bacon|prøjekt|pulled pork|ribs|kyllingkjøtt/)) return '🍖';
+
+  // Chicken
+  if (lower.match(/kylling|kyllingfilet|kyllingsuppe|kyllingwok|kylling|chicken|nuggets/)) return '🍗';
+
+  // Soup & stew
+  if (lower.match(/suppe|stew|gryte|gryterett|fårikål|kjøttsupe|grønnsakssuppe|minestrone|tomatsuppe|løksuppe/)) return '🍲';
+
+  // Salad
+  if (lower.match(/salat|cesar|greek|coleslaw|rucola|spinat|salad|dressing/)) return '🥗';
+
+  // Egg dishes
+  if (lower.match(/omelett|egg|scrambled|frittata|røromelett|stekte egg|pochert/)) return '🍳';
+
+  // Tacos & Mexican
+  if (lower.match(/taco|burrito|fajita|enchilada|quesadilla|chili|nacho|mexikansk/)) return '🌮';
+
+  // Pizza
+  if (lower.match(/pizza|margherita|hawaiian|pepperoni|quattro formaggi/)) return '🍕';
+
+  // Burger
+  if (lower.match(/burger|hamburger|kjøttkaker|smørbrød|sandwich/)) return '🍔';
+
+  // Rice & Asian
+  if (lower.match(/ris|risotto|wok|asiatisk|thai|asian|pad thai|teriyaki|sushi|ramen|nudler|noodles/)) return '🍛';
+
+  // Bread & bakery
+  if (lower.match(/brød|rundstykker|bagel|focaccia|fladbrød|pannekaker|pancakes|waffles/)) return '🍞';
+
+  // Default
+  return '🍽';
+}
+
+function updateMealName(name) {
+  return {
+    name,
+    emoji: guessEmojiFromName(name),
+  };
+}
 
 const CATEGORY_EMOJIS = {
   'Grønnsaker': '🥬',
@@ -151,11 +204,14 @@ export default function MealCreatePage() {
           <p style={{ color: '#a8a29e', fontSize: '0.9rem', marginBottom: '24px', margin: 0 }}>Hva skal vi lage?</p>
 
           {/* Name input - BIG and prominent */}
-          <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '16px' }}>
             <input
               type="text"
               value={mealData.name}
-              onChange={e => setMealData({ ...mealData, name: e.target.value })}
+              onChange={e => {
+                const { name, emoji } = updateMealName(e.target.value);
+                setMealData({ ...mealData, name, emoji });
+              }}
               placeholder="Navn på måltid"
               autoFocus
               style={{
@@ -173,22 +229,24 @@ export default function MealCreatePage() {
             />
           </div>
 
-          {/* Emoji picker - quick select */}
+          {/* Auto emoji display + override options */}
           <div style={{ marginBottom: '20px' }}>
-            <p style={{ color: '#78716c', fontSize: '0.85rem', fontWeight: '500', marginBottom: '8px' }}>Velg emoji:</p>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <p style={{ color: '#78716c', fontSize: '0.8rem', fontWeight: '500', marginBottom: '10px' }}>
+              {mealData.name ? 'Endre emoji (valgfritt):' : 'Velg emoji:'}
+            </p>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {EMOJI_PRESETS.map(emoji => (
                 <button
                   key={emoji}
                   onClick={() => setMealData({ ...mealData, emoji })}
                   style={{
-                    flex: '1 1 calc(25% - 6px)',
-                    minWidth: '60px',
-                    padding: '12px',
+                    flex: '1 1 calc(25% - 5px)',
+                    minWidth: '54px',
+                    padding: '10px',
                     borderRadius: '10px',
                     background: mealData.emoji === emoji ? '#c2410c' : '#fff',
                     border: mealData.emoji === emoji ? '2px solid #c2410c' : '1px solid #e7e5e2',
-                    fontSize: '1.8rem',
+                    fontSize: '1.6rem',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                   }}
@@ -197,6 +255,11 @@ export default function MealCreatePage() {
                 </button>
               ))}
             </div>
+            {mealData.name && (
+              <p style={{ color: '#a8a29e', fontSize: '0.75rem', marginTop: '8px', fontStyle: 'italic' }}>
+                💡 Emoji valgt automatisk basert på navn
+              </p>
+            )}
           </div>
 
           {/* Buttons */}
