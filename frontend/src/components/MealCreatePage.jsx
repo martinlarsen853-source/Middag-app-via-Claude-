@@ -6,8 +6,26 @@ const EMOJI_PRESETS = ['🍝', '🥩', '🐟', '🍲', '🥗', '🍳', '🌮', '
 
 const QUICK_TIMES = [15, 30, 45, 60, 90];
 
-// Smart emoji guesser based on meal name
-function guessEmojiFromName(name) {
+// Most commonly used ingredients (ordered by frequency)
+const MOST_USED_INGREDIENTS = [
+  'Melk',
+  'Kjøttdeig',
+  'Løk',
+  'Hvitløk',
+  'Smør',
+  'Egg',
+  'Ost',
+  'Tomat',
+  'Hermetiske tomater',
+  'Olivenolje',
+  'Salt',
+  'Pepper',
+];
+
+function getIngredientFrequency(name) {
+  const idx = MOST_USED_INGREDIENTS.indexOf(name);
+  return idx >= 0 ? idx : 999;
+}
   if (!name) return '🍽';
 
   const lower = name.toLowerCase();
@@ -137,7 +155,22 @@ export default function MealCreatePage() {
       visible = visible.filter(ing => ing.name.toLowerCase().includes(search));
     }
 
+    // Sort: Most used first, then alphabetically
+    visible = visible.sort((a, b) => {
+      const freqA = getIngredientFrequency(a.name);
+      const freqB = getIngredientFrequency(b.name);
+      if (freqA !== freqB) return freqA - freqB;
+      return a.name.localeCompare(b.name);
+    });
+
     return visible;
+  }
+
+  function getMostUsedIngredients() {
+    // Get the most frequently used ingredients that are available
+    return allIngredients
+      .filter(ing => MOST_USED_INGREDIENTS.includes(ing.name))
+      .sort((a, b) => getIngredientFrequency(a.name) - getIngredientFrequency(b.name));
   }
 
   function toggleIngredientSelection(ingredientId) {
@@ -464,48 +497,111 @@ export default function MealCreatePage() {
             ) : visibleIngredients.length === 0 ? (
               <p style={{ color: '#a8a29e', textAlign: 'center', padding: '20px' }}>Ingen ingredienser funnet</p>
             ) : (
-              visibleIngredients.map(ing => {
-                const isSelected = selectedForAdding.has(ing.id);
-                return (
-                  <button
-                    key={ing.id}
-                    onClick={() => toggleIngredientSelection(ing.id)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      width: '100%',
-                      padding: '12px',
-                      marginBottom: '6px',
-                      borderRadius: '10px',
-                      background: isSelected ? '#fff7ed' : '#fff',
-                      border: isSelected ? '2px solid #c2410c' : '1px solid #e7e5e2',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      transition: 'all 0.2s',
-                      position: 'relative',
-                    }}
-                  >
-                    {isSelected && (
-                      <div style={{
-                        position: 'absolute',
-                        left: '0',
-                        top: '0',
-                        bottom: '0',
-                        width: '4px',
-                        background: '#c2410c',
-                        borderRadius: '10px 0 0 10px',
-                      }} />
-                    )}
-                    <div style={{ flex: 1, paddingLeft: isSelected ? '12px' : '0' }}>
-                      <div style={{ fontWeight: '600', color: '#1c1917', fontSize: '0.95rem' }}>{ing.name}</div>
-                      <div style={{ fontSize: '0.8rem', color: '#a8a29e' }}>{ing.unit}</div>
-                    </div>
-                    {isSelected && (
-                      <span style={{ color: '#c2410c', fontSize: '1.2rem', fontWeight: 'bold' }}>✓</span>
-                    )}
-                  </button>
-                );
-              })
+              <>
+                {/* Most used section - only when not filtering */}
+                {!searchTerm && !selectedCategory && getMostUsedIngredients().length > 0 && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <h3 style={{ color: '#78716c', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', marginBottom: '8px', marginTop: '0' }}>Klassikerne</h3>
+                    {getMostUsedIngredients().map(ing => {
+                      const isSelected = selectedForAdding.has(ing.id);
+                      return (
+                        <button
+                          key={ing.id}
+                          onClick={() => toggleIngredientSelection(ing.id)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            width: '100%',
+                            padding: '12px',
+                            marginBottom: '6px',
+                            borderRadius: '10px',
+                            background: isSelected ? '#fff7ed' : '#fff',
+                            border: isSelected ? '2px solid #c2410c' : '1px solid #e7e5e2',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'all 0.2s',
+                            position: 'relative',
+                          }}
+                        >
+                          {isSelected && (
+                            <div style={{
+                              position: 'absolute',
+                              left: '0',
+                              top: '0',
+                              bottom: '0',
+                              width: '4px',
+                              background: '#c2410c',
+                              borderRadius: '10px 0 0 10px',
+                            }} />
+                          )}
+                          <div style={{ flex: 1, paddingLeft: isSelected ? '12px' : '0' }}>
+                            <div style={{ fontWeight: '600', color: '#1c1917', fontSize: '0.95rem' }}>{ing.name}</div>
+                            <div style={{ fontSize: '0.8rem', color: '#a8a29e' }}>{ing.unit}</div>
+                          </div>
+                          {isSelected && (
+                            <span style={{ color: '#c2410c', fontSize: '1.2rem', fontWeight: 'bold' }}>✓</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                    <div style={{ height: '8px' }} />
+                  </div>
+                )}
+
+                {/* Rest of ingredients */}
+                <div>
+                  {!searchTerm && !selectedCategory && (
+                    <h3 style={{ color: '#78716c', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', marginBottom: '8px', marginTop: '0' }}>Alle</h3>
+                  )}
+                  {visibleIngredients.map(ing => {
+                    const isSelected = selectedForAdding.has(ing.id);
+                    const isMostUsed = MOST_USED_INGREDIENTS.includes(ing.name);
+
+                    // Skip most used items when showing "all" list (they're already shown above)
+                    if (!searchTerm && !selectedCategory && isMostUsed) return null;
+
+                    return (
+                      <button
+                        key={ing.id}
+                        onClick={() => toggleIngredientSelection(ing.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          width: '100%',
+                          padding: '12px',
+                          marginBottom: '6px',
+                          borderRadius: '10px',
+                          background: isSelected ? '#fff7ed' : '#fff',
+                          border: isSelected ? '2px solid #c2410c' : '1px solid #e7e5e2',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'all 0.2s',
+                          position: 'relative',
+                        }}
+                      >
+                        {isSelected && (
+                          <div style={{
+                            position: 'absolute',
+                            left: '0',
+                            top: '0',
+                            bottom: '0',
+                            width: '4px',
+                            background: '#c2410c',
+                            borderRadius: '10px 0 0 10px',
+                          }} />
+                        )}
+                        <div style={{ flex: 1, paddingLeft: isSelected ? '12px' : '0' }}>
+                          <div style={{ fontWeight: '600', color: '#1c1917', fontSize: '0.95rem' }}>{ing.name}</div>
+                          <div style={{ fontSize: '0.8rem', color: '#a8a29e' }}>{ing.unit}</div>
+                        </div>
+                        {isSelected && (
+                          <span style={{ color: '#c2410c', fontSize: '1.2rem', fontWeight: 'bold' }}>✓</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
 
