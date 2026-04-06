@@ -2,14 +2,16 @@ import { createClient } from '@supabase/supabase-js';
 import * as kassaappClient from './kassaappClient.js';
 import * as transformer from './kassaappTransformer.js';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  console.warn('⚠️  Supabase credentials not configured in .env');
+  console.warn('⚠️  Supabase credentials not configured. Set SUPABASE_URL and SUPABASE_SERVICE_KEY');
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: { persistSession: false }
+});
 
 /**
  * Sync ingredients from Kassalapp API to Supabase
