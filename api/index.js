@@ -255,16 +255,29 @@ app.get('/api/ingredients/:id', auth, async (req, res) => {
   }
 });
 
-// POST /api/sync-ingredients — Sync ingredients from Kassalapp (admin only)
-app.post('/api/sync-ingredients', auth, async (req, res) => {
+// POST /api/sync-ingredients — Sync ingredients from Kassalapp
+// Kan kalles fra ekstern cron-tjeneste eller fra frontend
+app.post('/api/sync-ingredients', async (req, res) => {
   try {
-    // Import sync service from same directory
+    // Sikkerhet: Sjekk API-nøkkel hvis den er satt
+    const syncKey = process.env.SYNC_API_KEY;
+    const providedKey = req.headers['x-sync-key'] || req.body.sync_key;
+
+    if (syncKey && syncKey !== providedKey) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid sync key' });
+    }
+
+    console.log('📦 Starting ingredient sync...');
+
+    // Import sync service
     const { syncIngredientsFromKassalapp } = await import('./kassaappSync.js');
 
     const result = await syncIngredientsFromKassalapp(req.body);
+    console.log('✅ Sync completed:', result);
+
     res.json({ ok: true, ...result });
   } catch (e) {
-    console.error('Sync error:', e);
+    console.error('❌ Sync error:', e);
     res.status(500).json({ error: e.message });
   }
 });
