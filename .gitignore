@@ -9,3 +9,4 @@ dist/
 .env
 frontend/.env
 frontend/.env.local
+.claude/
