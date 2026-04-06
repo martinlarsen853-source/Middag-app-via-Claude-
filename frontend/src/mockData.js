@@ -309,3 +309,64 @@ export const MEALS = [
     ]
   }
 ];
+
+// Extract all unique ingredients from meals and assign IDs
+function extractUniqueIngredients() {
+  const ingredientMap = new Map();
+  let id = 1;
+
+  MEALS.forEach(meal => {
+    (meal.ingredients || []).forEach(ing => {
+      const key = ing.name.toLowerCase();
+      if (!ingredientMap.has(key)) {
+        ingredientMap.set(key, {
+          id: id++,
+          name: ing.name,
+          category: getCategoryFromSection(ing.section),
+          price: getDefaultPrice(ing.name),
+          unit: ing.unit,
+          section: ing.section,
+        });
+      }
+    });
+  });
+
+  return Array.from(ingredientMap.values());
+}
+
+function getCategoryFromSection(section) {
+  const categoryMap = {
+    'Frukt & grønt': 'Grønnsaker',
+    'Bakeri': 'Bakeri',
+    'Kjøtt & fisk': 'Kjøtt',
+    'Meieri': 'Meieri',
+    'Tørrmat': 'Tørrmat',
+    'Krydder & sauser': 'Krydder & sauser',
+    'Frys': 'Fisk',
+    'Diverse': 'Diverse'
+  };
+  return categoryMap[section] || 'Diverse';
+}
+
+function getDefaultPrice(ingredientName) {
+  // Estimate prices based on ingredient type
+  const name = ingredientName.toLowerCase();
+  if (name.includes('kjøtt') || name.includes('kjøttdeig') || name.includes('entrecôte') || name.includes('fisk') || name.includes('laks') || name.includes('kylling') || name.includes('torsk') || name.includes('reker') || name.includes('bacon') || name.includes('pølse') || name.includes('karbonader')) return 100;
+  if (name.includes('ost') || name.includes('fløte') || name.includes('smør') || name.includes('melk') || name.includes('egg') || name.includes('rømme')) return 30;
+  if (name.includes('pasta') || name.includes('ris') || name.includes('mel') || name.includes('brød')) return 20;
+  if (name.includes('vin') || name.includes('øl') || name.includes('drikk')) return 50;
+  return 15; // Default for vegetables, spices, etc.
+}
+
+export const INGREDIENTS = extractUniqueIngredients();
+
+export const INGREDIENT_CATEGORIES = [
+  { id: 1, name: 'Grønnsaker', emoji: '🥬' },
+  { id: 2, name: 'Kjøtt', emoji: '🍖' },
+  { id: 3, name: 'Fisk', emoji: '🐟' },
+  { id: 4, name: 'Meieri', emoji: '🧀' },
+  { id: 5, name: 'Bakeri', emoji: '🍞' },
+  { id: 6, name: 'Tørrmat', emoji: '🌾' },
+  { id: 7, name: 'Krydder & sauser', emoji: '🌶️' },
+  { id: 8, name: 'Diverse', emoji: '📦' }
+];

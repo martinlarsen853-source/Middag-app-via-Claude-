@@ -149,7 +149,7 @@ export async function getShoppingList(mealId, storeId, persons = 2) {
 
 // --- Ingredients (NEW) ---
 export async function getIngredients(category = null, search = null, limit = 50, offset = 0) {
-  if (isDemoMode()) return { data: [], count: 0 };
+  if (isDemoMode()) return mock.getIngredients(category, search, limit, offset);
 
   let query = supabase.from('ingredients').select('*', { count: 'exact' });
 
@@ -166,7 +166,7 @@ export async function getIngredients(category = null, search = null, limit = 50,
 }
 
 export async function getIngredientCategories() {
-  if (isDemoMode()) return [];
+  if (isDemoMode()) return mock.getIngredientCategories();
 
   const { data, error } = await supabase
     .from('ingredient_categories')

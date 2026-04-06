@@ -1,5 +1,5 @@
 // Full localStorage-based API for GitHub Pages / demo mode (no backend needed)
-import { MEALS, STORES } from './mockData.js';
+import { MEALS, STORES, INGREDIENTS, INGREDIENT_CATEGORIES } from './mockData.js';
 
 const BASE_PERSONS = 4; // seed data quantities are based on 4 persons
 
@@ -147,4 +147,27 @@ export async function updatePersons(default_persons) {
   currentUser.default_persons = default_persons;
   localStorage.setItem('middag_user', JSON.stringify(currentUser));
   return { ok: true };
+}
+
+// --- Ingredients (MOCK) ---
+export async function getIngredients(category = null, search = null, limit = 50, offset = 0) {
+  let filtered = [...INGREDIENTS];
+
+  if (category) {
+    filtered = filtered.filter(ing => ing.category === category);
+  }
+
+  if (search) {
+    const searchLower = search.toLowerCase();
+    filtered = filtered.filter(ing => ing.name.toLowerCase().includes(searchLower));
+  }
+
+  const total = filtered.length;
+  const paginated = filtered.slice(offset, offset + limit);
+
+  return { data: paginated, count: total, limit, offset };
+}
+
+export async function getIngredientCategories() {
+  return INGREDIENT_CATEGORIES;
 }
