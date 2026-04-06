@@ -61,6 +61,7 @@ export default function Navbar() {
         <Link to="/" className="flex items-center gap-2 text-white hover:text-green-400 transition-colors">
           <span className="text-2xl">🍽️</span>
           <span className="font-bold text-lg hidden sm:block">Tallerken</span>
+          <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full hidden sm:block">v2</span>
         </Link>
 
         <div className="flex items-center gap-2">
