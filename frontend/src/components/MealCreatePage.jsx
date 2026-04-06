@@ -26,6 +26,8 @@ function getIngredientFrequency(name) {
   const idx = MOST_USED_INGREDIENTS.indexOf(name);
   return idx >= 0 ? idx : 999;
 }
+
+function guessEmojiFromName(name) {
   if (!name) return '🍽';
 
   const lower = name.toLowerCase();
