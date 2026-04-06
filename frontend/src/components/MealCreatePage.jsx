@@ -1,400 +1,843 @@
 import React, { useState, useEffect } from 'react';
-import { createMeal, getIngredients, getIngredientCategories } from '../api.js';
 import { useNavigate } from 'react-router-dom';
+import { getIngredients, getIngredientCategories, createMeal } from '../api.js';
+
+const EMOJI_PRESETS = ['🍝', '🥩', '🐟', '🍲', '🥗', '🍳', '🌮', '🍕', '🍔', '🌯', '🥘', '🍛'];
+
+const QUICK_TIMES = [15, 30, 45, 60, 90];
+
+// Most commonly used ingredients (ordered by frequency)
+const MOST_USED_INGREDIENTS = [
+  'Melk',
+  'Kjøttdeig',
+  'Løk',
+  'Hvitløk',
+  'Smør',
+  'Egg',
+  'Ost',
+  'Tomat',
+  'Hermetiske tomater',
+  'Olivenolje',
+  'Salt',
+  'Pepper',
+];
+
+function getIngredientFrequency(name) {
+  const idx = MOST_USED_INGREDIENTS.indexOf(name);
+  return idx >= 0 ? idx : 999;
+}
+
+function guessEmojiFromName(name) {
+  if (!name) return '🍽';
+
+  const lower = name.toLowerCase();
+
+  // Fish & seafood
+  if (lower.match(/laks|sei|torsk|fisk|reker|scampi|tun|makrell|sardiner|fiskegrateng|fiskekaker|ceviche|gravlaks|fiskestew|skalldyr|blekksprut|kamskjell/)) return '🐟';
+
+  // Pasta
+  if (lower.match(/pasta|spaghetti|penne|bolognese|carbonara|lasagne|tortellini|ravioli|fettuccine|tagliatelle/)) return '🍝';
+
+  // Meat (beef, pork)
+  if (lower.match(/kjøtt|steak|entrecôte|biff|kjøttboller|karbonader|grillpølse|pølse|bacon|prøjekt|pulled pork|ribs|kyllingkjøtt/)) return '🍖';
+
+  // Chicken
+  if (lower.match(/kylling|kyllingfilet|kyllingsuppe|kyllingwok|kylling|chicken|nuggets/)) return '🍗';
+
+  // Soup & stew
+  if (lower.match(/suppe|stew|gryte|gryterett|fårikål|kjøttsupe|grønnsakssuppe|minestrone|tomatsuppe|løksuppe/)) return '🍲';
+
+  // Salad
+  if (lower.match(/salat|cesar|greek|coleslaw|rucola|spinat|salad|dressing/)) return '🥗';
+
+  // Egg dishes
+  if (lower.match(/omelett|egg|scrambled|frittata|røromelett|stekte egg|pochert/)) return '🍳';
+
+  // Tacos & Mexican
+  if (lower.match(/taco|burrito|fajita|enchilada|quesadilla|chili|nacho|mexikansk/)) return '🌮';
+
+  // Pizza
+  if (lower.match(/pizza|margherita|hawaiian|pepperoni|quattro formaggi/)) return '🍕';
+
+  // Burger
+  if (lower.match(/burger|hamburger|kjøttkaker|smørbrød|sandwich/)) return '🍔';
+
+  // Rice & Asian
+  if (lower.match(/ris|risotto|wok|asiatisk|thai|asian|pad thai|teriyaki|sushi|ramen|nudler|noodles/)) return '🍛';
+
+  // Bread & bakery
+  if (lower.match(/brød|rundstykker|bagel|focaccia|fladbrød|pannekaker|pancakes|waffles/)) return '🍞';
+
+  // Default
+  return '🍽';
+}
+
+function updateMealName(name) {
+  return {
+    name,
+    emoji: guessEmojiFromName(name),
+  };
+}
+
+const CATEGORY_EMOJIS = {
+  'Grønnsaker': '🥬',
+  'Kjøtt': '🍖',
+  'Fisk': '🐟',
+  'Meieri': '🧀',
+  'Bakeri': '🍞',
+  'Tørrmat': '🌾',
+  'Krydder & sauser': '🌶️',
+  'Diverse': '📦',
+};
 
 export default function MealCreatePage() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1: meal info, 2: ingredients, 3: review
+  const [step, setStep] = useState(1);
   const [mealData, setMealData] = useState({
     name: '',
     emoji: '🍽',
-    description: '',
     time_minutes: 30,
     category: '',
   });
-  const [ingredients, setIngredients] = useState([]);
-  const [availableIngredients, setAvailableIngredients] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [selectedIngredients, setSelectedIngredients] = useState([]);
+  const [selectedForAdding, setSelectedForAdding] = useState(new Set());
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [search, setSearch] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [allIngredients, setAllIngredients] = useState([]);
+  const [ingredientsByCategory, setIngredientsByCategory] = useState({});
   const [loading, setLoading] = useState(false);
-  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    loadCategories();
-    if (step === 2) {
-      // Load all ingredients on step 2
-      loadIngredients('');
-    }
-  }, [step]);
+    loadData();
+  }, []);
 
-  // Debounce search
-  useEffect(() => {
-    if (search.length >= 2) {
-      loadIngredients(search);
-    } else if (search.length === 0) {
-      loadIngredients('');
-    }
-  }, [search]);
-
-  async function loadCategories() {
-    try {
-      const data = await getIngredientCategories();
-      setCategories(data);
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  async function loadIngredients(searchTerm = '') {
-    try {
-      const { data } = await getIngredients(null, searchTerm || search, 500);
-      setAvailableIngredients(data || []);
-    } catch (e) {
-      setError(e.message);
-    }
-  }
-
-  function handleAddIngredient(ing) {
-    setIngredients([...ingredients, {
-      ingredient_id: ing.id,
-      name: ing.name,
-      price: ing.price,
-      quantity: 1,
-      unit: ing.unit,
-      category: ing.category,
-    }]);
-    setSearch('');
-  }
-
-  function handleRemoveIngredient(index) {
-    setIngredients(ingredients.filter((_, i) => i !== index));
-  }
-
-  function handleQuantityChange(index, quantity) {
-    const updated = [...ingredients];
-    updated[index].quantity = parseFloat(quantity) || 1;
-    setIngredients(updated);
-  }
-
-  function calculateTotalPrice() {
-    return ingredients.reduce((sum, ing) => sum + (ing.price * ing.quantity), 0).toFixed(2);
-  }
-
-  async function handleSyncIngredients() {
-    try {
-      setSyncing(true);
-      const token = localStorage.getItem('middag_token');
-      const response = await fetch('/api/sync-ingredients', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({}),
-      });
-      const result = await response.json();
-      if (result.ok) {
-        setError(`✓ Synkronisert! ${result.synced} nye, ${result.updated} oppdatert`);
-        setTimeout(() => {
-          setError('');
-          loadIngredients('');
-        }, 2000);
-      } else {
-        setError('Sync feilet: ' + result.error);
-      }
-    } catch (e) {
-      setError('Sync feilet: ' + e.message);
-    } finally {
-      setSyncing(false);
-    }
-  }
-
-  async function handleCreateMeal() {
-    if (!mealData.name) {
-      setError('Navn på måltid er påkrevd');
-      return;
-    }
-
+  async function loadData() {
     try {
       setLoading(true);
-      await createMeal({
-        ...mealData,
-        ingredients,
+      setError('');
+
+      const cats = await getIngredientCategories();
+      setCategories(cats || []);
+
+      const { data: ingredients } = await getIngredients(null, null, 1000);
+      setAllIngredients(ingredients || []);
+
+      const grouped = {};
+      (ingredients || []).forEach(ing => {
+        if (!grouped[ing.category]) {
+          grouped[ing.category] = [];
+        }
+        grouped[ing.category].push(ing);
       });
-      navigate('/app');
+
+      setIngredientsByCategory(grouped);
+
+      if (cats && cats.length > 0) {
+        setSelectedCategory(cats[0].name);
+      }
     } catch (e) {
-      setError(e.message);
+      setError('Feil ved lasting av ingredienser: ' + e.message);
+      console.error(e);
     } finally {
       setLoading(false);
     }
   }
 
-  const groupedByCategory = availableIngredients.reduce((acc, ing) => {
-    if (!acc[ing.category]) acc[ing.category] = [];
-    acc[ing.category].push(ing);
-    return acc;
-  }, {});
+  function getVisibleIngredients() {
+    let visible = allIngredients;
+
+    if (selectedCategory) {
+      visible = visible.filter(ing => ing.category === selectedCategory);
+    }
+
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      visible = visible.filter(ing => ing.name.toLowerCase().includes(search));
+    }
+
+    // Sort: Most used first, then alphabetically
+    visible = visible.sort((a, b) => {
+      const freqA = getIngredientFrequency(a.name);
+      const freqB = getIngredientFrequency(b.name);
+      if (freqA !== freqB) return freqA - freqB;
+      return a.name.localeCompare(b.name);
+    });
+
+    return visible;
+  }
+
+  function getMostUsedIngredients() {
+    // Get the most frequently used ingredients that are available
+    return allIngredients
+      .filter(ing => MOST_USED_INGREDIENTS.includes(ing.name))
+      .sort((a, b) => getIngredientFrequency(a.name) - getIngredientFrequency(b.name));
+  }
+
+  function toggleIngredientSelection(ingredientId) {
+    const newSet = new Set(selectedForAdding);
+    if (newSet.has(ingredientId)) {
+      newSet.delete(ingredientId);
+    } else {
+      newSet.add(ingredientId);
+    }
+    setSelectedForAdding(newSet);
+  }
+
+  function addSelectedIngredients() {
+    const ingredientsToAdd = allIngredients.filter(ing => selectedForAdding.has(ing.id));
+    const newIngredients = ingredientsToAdd.map(ing => ({
+      ...ing,
+      quantity: 1,
+    }));
+    setSelectedIngredients([...selectedIngredients, ...newIngredients]);
+    setSelectedForAdding(new Set());
+    setStep(4);
+  }
+
+  function removeIngredient(index) {
+    setSelectedIngredients(selectedIngredients.filter((_, i) => i !== index));
+  }
+
+  function updateQuantity(index, quantity) {
+    const updated = [...selectedIngredients];
+    updated[index].quantity = Math.max(0.1, parseFloat(quantity) || 1);
+    setSelectedIngredients(updated);
+  }
+
+  function calculateTotalPrice() {
+    return selectedIngredients.reduce((sum, ing) => sum + ((ing.price || 0) * ing.quantity), 0).toFixed(2);
+  }
+
+  async function saveMeal() {
+    if (!mealData.name.trim()) {
+      alert('Vennligst skriv inn navn på måltid');
+      return;
+    }
+
+    try {
+      await createMeal({
+        ...mealData,
+        ingredients: selectedIngredients,
+      });
+      alert(`✅ Måltid "${mealData.name}" lagret!\n\nPris: ${calculateTotalPrice()} kr`);
+      navigate('/app');
+    } catch (e) {
+      alert('Feil ved lagring: ' + e.message);
+    }
+  }
+
+  const visibleIngredients = getVisibleIngredients();
 
   return (
-    <div style={s.page}>
-      <div style={s.header}>
-        <h1 style={s.title}>Lag ny måltid</h1>
-        <div style={s.stepIndicator}>
-          {[1, 2, 3].map(num => (
-            <div
-              key={num}
-              style={{
-                ...s.step,
-                ...(step === num ? s.stepActive : {}),
-              }}
-              onClick={() => num < step && setStep(num)}
-            >
-              {num}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {error && <p style={s.error}>{error}</p>}
-
-      {/* Step 1: Meal Info */}
+    <div style={{ padding: '0', background: '#faf8f5', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* ========== STEP 1: Navn + Emoji ========== */}
       {step === 1 && (
-        <div style={s.step1}>
-          <label style={s.label}>
-            Emoji
-            <input
-              type="text"
-              maxLength="2"
-              value={mealData.emoji}
-              onChange={e => setMealData({ ...mealData, emoji: e.target.value })}
-              style={s.input}
-            />
-          </label>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px' }}>
+          <h1 style={{ color: '#1c1917', fontSize: '1.2rem', fontWeight: '600', marginBottom: '4px', marginTop: '12px' }}>Nytt måltid</h1>
+          <p style={{ color: '#a8a29e', fontSize: '0.9rem', marginBottom: '24px', margin: 0 }}>Hva skal vi lage?</p>
 
-          <label style={s.label}>
-            Navn på måltid *
+          {/* Name input - BIG and prominent */}
+          <div style={{ marginBottom: '16px' }}>
             <input
               type="text"
               value={mealData.name}
-              onChange={e => setMealData({ ...mealData, name: e.target.value })}
-              placeholder="F.eks. Fårikål"
-              style={s.input}
+              onChange={e => {
+                const { name, emoji } = updateMealName(e.target.value);
+                setMealData({ ...mealData, name, emoji });
+              }}
+              placeholder="Navn på måltid"
+              autoFocus
+              style={{
+                padding: '16px 12px',
+                borderRadius: '12px',
+                border: 'none',
+                background: '#fff',
+                width: '100%',
+                boxSizing: 'border-box',
+                fontSize: '1.1rem',
+                fontWeight: '500',
+                color: '#1c1917',
+                outline: 'none',
+              }}
             />
-          </label>
-
-          <label style={s.label}>
-            Beskrivelse
-            <textarea
-              value={mealData.description}
-              onChange={e => setMealData({ ...mealData, description: e.target.value })}
-              placeholder="Kort beskrivelse av måltid..."
-              style={s.textarea}
-              rows="4"
-            />
-          </label>
-
-          <label style={s.label}>
-            Tidsforbruk (minutter)
-            <input
-              type="number"
-              value={mealData.time_minutes}
-              onChange={e => setMealData({ ...mealData, time_minutes: parseInt(e.target.value) })}
-              min="5"
-              max="180"
-              style={s.input}
-            />
-          </label>
-
-          <label style={s.label}>
-            Kategori
-            <select
-              value={mealData.category}
-              onChange={e => setMealData({ ...mealData, category: e.target.value })}
-              style={s.input}
-            >
-              <option value="">Velg kategori</option>
-              <option value="Pasta">Pasta</option>
-              <option value="Fisk">Fisk</option>
-              <option value="Kjøtt">Kjøtt</option>
-              <option value="Suppe">Suppe</option>
-              <option value="Salat">Salat</option>
-              <option value="Meksikansk">Meksikansk</option>
-              <option value="Asiatisk">Asiatisk</option>
-              <option value="Annet">Annet</option>
-            </select>
-          </label>
-
-          <div style={s.buttonRow}>
-            <button onClick={() => navigate('/app')} style={s.buttonSecondary}>
-              Avbryt
-            </button>
-            <button onClick={() => setStep(2)} style={s.buttonPrimary}>
-              Neste: Ingredienser
-            </button>
           </div>
-        </div>
-      )}
 
-      {/* Step 2: Ingredients */}
-      {step === 2 && (
-        <div style={s.step2}>
-          <div style={s.stepHeader}>
-            <h2 style={s.subtitle}>Legg til ingredienser</h2>
-            {availableIngredients.length === 0 && (
-              <button
-                onClick={handleSyncIngredients}
-                disabled={syncing}
-                style={{ ...s.syncBtn, ...(syncing ? { opacity: 0.6 } : {}) }}
-              >
-                {syncing ? '⟳ Synker...' : '⟳ Sync'}
-              </button>
+          {/* Auto emoji display + override options */}
+          <div style={{ marginBottom: '20px' }}>
+            <p style={{ color: '#78716c', fontSize: '0.8rem', fontWeight: '500', marginBottom: '10px' }}>
+              {mealData.name ? 'Endre emoji (valgfritt):' : 'Velg emoji:'}
+            </p>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {EMOJI_PRESETS.map(emoji => (
+                <button
+                  key={emoji}
+                  onClick={() => setMealData({ ...mealData, emoji })}
+                  style={{
+                    flex: '1 1 calc(25% - 5px)',
+                    minWidth: '54px',
+                    padding: '10px',
+                    borderRadius: '10px',
+                    background: mealData.emoji === emoji ? '#c2410c' : '#fff',
+                    border: mealData.emoji === emoji ? '2px solid #c2410c' : '1px solid #e7e5e2',
+                    fontSize: '1.6rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+            {mealData.name && (
+              <p style={{ color: '#a8a29e', fontSize: '0.75rem', marginTop: '8px', fontStyle: 'italic' }}>
+                💡 Emoji valgt automatisk basert på navn
+              </p>
             )}
           </div>
 
-          {/* Category tabs */}
-          {availableIngredients.length > 0 && (
-            <>
-              <div style={s.categoryTabs}>
-                <button
-                  onClick={() => setSelectedCategory(null)}
-                  style={{
-                    ...s.categoryTab,
-                    ...(selectedCategory === null ? s.categoryTabActive : {}),
-                  }}
-                >
-                  Alle
-                </button>
-                {categories.map(cat => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.name)}
-                    style={{
-                      ...s.categoryTab,
-                      ...(selectedCategory === cat.name ? s.categoryTabActive : {}),
-                    }}
-                  >
-                    {cat.emoji} {cat.name}
-                  </button>
-                ))}
-              </div>
-
-              {/* Ingredient list */}
-              <div style={s.ingredientList}>
-                {selectedCategory === null
-                  ? Object.entries(groupedByCategory).map(([category, items]) => (
-                      <div key={category}>
-                        <h4 style={s.categoryLabel}>{category}</h4>
-                        {items.map(ing => (
-                          <button
-                            key={ing.id}
-                            onClick={() => handleAddIngredient(ing)}
-                            style={s.ingredientOption}
-                          >
-                            <span>{ing.name}</span>
-                            <span style={s.price}>{ing.price} kr/{ing.unit}</span>
-                          </button>
-                        ))}
-                      </div>
-                    ))
-                  : (groupedByCategory[selectedCategory] || []).map(ing => (
-                      <button
-                        key={ing.id}
-                        onClick={() => handleAddIngredient(ing)}
-                        style={s.ingredientOption}
-                      >
-                        <span>{ing.name}</span>
-                        <span style={s.price}>{ing.price} kr/{ing.unit}</span>
-                      </button>
-                    ))}
-              </div>
-            </>
-          )}
-
-          {availableIngredients.length === 0 && (
-            <p style={s.loading}>Laster ingredienser...</p>
-          )}
-
-          {/* Added ingredients */}
-          <h3 style={s.subtitle}>Valgte ingredienser ({ingredients.length})</h3>
-          <div style={s.addedIngredients}>
-            {ingredients.map((ing, idx) => (
-              <div key={idx} style={s.addedIngredientRow}>
-                <div style={s.ingInfo}>
-                  <span style={s.ingName}>{ing.name}</span>
-                  <span style={s.ingPrice}>{(ing.price * ing.quantity).toFixed(2)} kr</span>
-                </div>
-                <div style={s.ingQuantity}>
-                  <input
-                    type="number"
-                    min="0.1"
-                    step="0.5"
-                    value={ing.quantity}
-                    onChange={e => handleQuantityChange(idx, e.target.value)}
-                    style={s.quantityInput}
-                  />
-                  <span style={s.unit}>{ing.unit}</span>
-                </div>
-                <button
-                  onClick={() => handleRemoveIngredient(idx)}
-                  style={s.deleteBtn}
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div style={s.buttonRow}>
-            <button onClick={() => setStep(1)} style={s.buttonSecondary}>
-              Tilbake
+          {/* Buttons */}
+          <div style={{ marginTop: 'auto', display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => navigate('/app')}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '10px',
+                background: 'transparent',
+                color: '#c2410c',
+                border: '1.5px solid #c2410c',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontSize: '1rem',
+              }}
+            >
+              Avbryt
             </button>
-            <button onClick={() => setStep(3)} style={s.buttonPrimary}>
-              Neste: Gjennomgang
+            <button
+              onClick={() => setStep(2)}
+              disabled={!mealData.name.trim()}
+              style={{
+                flex: 2,
+                padding: '14px',
+                borderRadius: '10px',
+                background: mealData.name.trim() ? '#c2410c' : '#d4a9a0',
+                color: '#fff',
+                border: 'none',
+                fontWeight: '600',
+                cursor: mealData.name.trim() ? 'pointer' : 'not-allowed',
+                fontSize: '1rem',
+              }}
+            >
+              Neste →
             </button>
           </div>
         </div>
       )}
 
-      {/* Step 3: Review */}
+      {/* ========== STEP 2: Tidsforbruk + Kategori ========== */}
+      {step === 2 && (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px' }}>
+          <h1 style={{ color: '#1c1917', fontSize: '1.2rem', fontWeight: '600', marginBottom: '4px', marginTop: '12px' }}>Hvor lang tid?</h1>
+          <p style={{ color: '#a8a29e', fontSize: '0.9rem', marginBottom: '16px', margin: 0 }}>2/4</p>
+
+          {/* Quick time select */}
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '12px' }}>
+              {QUICK_TIMES.map(time => (
+                <button
+                  key={time}
+                  onClick={() => setMealData({ ...mealData, time_minutes: time })}
+                  style={{
+                    flex: '0 0 auto',
+                    minWidth: '60px',
+                    padding: '10px 14px',
+                    borderRadius: '20px',
+                    background: mealData.time_minutes === time ? '#c2410c' : '#fff',
+                    color: mealData.time_minutes === time ? '#fff' : '#1c1917',
+                    border: mealData.time_minutes === time ? 'none' : '1px solid #e7e5e2',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {time}m
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Category select */}
+          <div style={{ marginBottom: '24px' }}>
+            <p style={{ color: '#78716c', fontSize: '0.85rem', fontWeight: '500', marginBottom: '8px' }}>Type rett (valgfritt):</p>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {['Pasta', 'Fisk', 'Kjøtt', 'Suppe', 'Salat', 'Annet'].map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setMealData({ ...mealData, category: mealData.category === cat ? '' : cat })}
+                  style={{
+                    flex: '1 1 calc(33% - 6px)',
+                    minWidth: '80px',
+                    padding: '10px',
+                    borderRadius: '8px',
+                    background: mealData.category === cat ? '#fff7ed' : '#fff',
+                    color: mealData.category === cat ? '#c2410c' : '#1c1917',
+                    border: mealData.category === cat ? '2px solid #c2410c' : '1px solid #e7e5e2',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div style={{ marginTop: 'auto', display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => setStep(1)}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '10px',
+                background: '#fff',
+                color: '#1c1917',
+                border: '1.5px solid #e7e5e2',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontSize: '1rem',
+              }}
+            >
+              ← Tilbake
+            </button>
+            <button
+              onClick={() => setStep(3)}
+              style={{
+                flex: 2,
+                padding: '14px',
+                borderRadius: '10px',
+                background: '#c2410c',
+                color: '#fff',
+                border: 'none',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontSize: '1rem',
+              }}
+            >
+              Neste →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========== STEP 3: Velg ingredienser (Multi-select) ========== */}
       {step === 3 && (
-        <div style={s.step3}>
-          <div style={s.reviewCard}>
-            <div style={s.reviewHeader}>
-              <span style={s.reviewEmoji}>{mealData.emoji}</span>
-              <div>
-                <h2 style={s.reviewName}>{mealData.name}</h2>
-                <p style={s.reviewDesc}>{mealData.description}</p>
-              </div>
-            </div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px', paddingBottom: '0' }}>
+          <h1 style={{ color: '#1c1917', fontSize: '1.2rem', fontWeight: '600', marginBottom: '4px', marginTop: '12px' }}>Legg til ingredienser</h1>
+          <p style={{ color: '#a8a29e', fontSize: '0.9rem', marginBottom: '16px', margin: 0 }}>3/4</p>
 
-            <div style={s.reviewMeta}>
-              <span>⏱ {mealData.time_minutes} min</span>
-              <span>📂 {mealData.category}</span>
-              <span style={s.totalPrice}>💰 {calculateTotalPrice()} kr</span>
+          {error && (
+            <div style={{ padding: '10px', background: '#fff7ed', color: '#c2410c', borderRadius: '8px', marginBottom: '12px', fontSize: '0.9rem' }}>
+              {error}
             </div>
+          )}
 
-            <h3 style={s.subtitle}>Ingredienser ({ingredients.length})</h3>
-            {ingredients.map((ing, idx) => (
-              <div key={idx} style={s.reviewIngredient}>
-                <span>{ing.name}</span>
-                <span>{ing.quantity} {ing.unit}</span>
-                <span style={s.price}>{(ing.price * ing.quantity).toFixed(2)} kr</span>
+          {/* Search */}
+          <div style={{ marginBottom: '12px' }}>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Søk ingrediens..."
+              style={{
+                padding: '12px 14px',
+                borderRadius: '10px',
+                border: '1px solid #e7e5e2',
+                background: '#fff',
+                width: '100%',
+                boxSizing: 'border-box',
+                fontSize: '1rem',
+                color: '#1c1917',
+              }}
+            />
+          </div>
+
+          {/* Category tabs */}
+          {!searchTerm && (
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', marginBottom: '12px', paddingBottom: '4px' }}>
+              {Object.keys(ingredientsByCategory).sort().map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+                  style={{
+                    flex: '0 0 auto',
+                    padding: '8px 12px',
+                    borderRadius: '20px',
+                    background: selectedCategory === cat ? '#c2410c' : '#fff',
+                    color: selectedCategory === cat ? '#fff' : '#1c1917',
+                    border: selectedCategory === cat ? 'none' : '1px solid #e7e5e2',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {CATEGORY_EMOJIS[cat] || '📦'} {cat}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Ingredients list - scrollable */}
+          <div style={{ flex: 1, overflowY: 'auto', marginBottom: '12px' }}>
+            {loading ? (
+              <p style={{ color: '#a8a29e', textAlign: 'center', padding: '20px' }}>Laster ingredienser...</p>
+            ) : visibleIngredients.length === 0 ? (
+              <p style={{ color: '#a8a29e', textAlign: 'center', padding: '20px' }}>Ingen ingredienser funnet</p>
+            ) : (
+              <>
+                {/* Most used section - only when not filtering */}
+                {!searchTerm && !selectedCategory && getMostUsedIngredients().length > 0 && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <h3 style={{ color: '#78716c', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', marginBottom: '8px', marginTop: '0' }}>Klassikerne</h3>
+                    {getMostUsedIngredients().map(ing => {
+                      const isSelected = selectedForAdding.has(ing.id);
+                      return (
+                        <button
+                          key={ing.id}
+                          onClick={() => toggleIngredientSelection(ing.id)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            width: '100%',
+                            padding: '12px',
+                            marginBottom: '6px',
+                            borderRadius: '10px',
+                            background: isSelected ? '#fff7ed' : '#fff',
+                            border: isSelected ? '2px solid #c2410c' : '1px solid #e7e5e2',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'all 0.2s',
+                            position: 'relative',
+                          }}
+                        >
+                          {isSelected && (
+                            <div style={{
+                              position: 'absolute',
+                              left: '0',
+                              top: '0',
+                              bottom: '0',
+                              width: '4px',
+                              background: '#c2410c',
+                              borderRadius: '10px 0 0 10px',
+                            }} />
+                          )}
+                          <div style={{ flex: 1, paddingLeft: isSelected ? '12px' : '0' }}>
+                            <div style={{ fontWeight: '600', color: '#1c1917', fontSize: '0.95rem' }}>{ing.name}</div>
+                            <div style={{ fontSize: '0.8rem', color: '#a8a29e' }}>{ing.unit}</div>
+                          </div>
+                          {isSelected && (
+                            <span style={{ color: '#c2410c', fontSize: '1.2rem', fontWeight: 'bold' }}>✓</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                    <div style={{ height: '8px' }} />
+                  </div>
+                )}
+
+                {/* Rest of ingredients */}
+                <div>
+                  {!searchTerm && !selectedCategory && (
+                    <h3 style={{ color: '#78716c', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', marginBottom: '8px', marginTop: '0' }}>Alle</h3>
+                  )}
+                  {visibleIngredients.map(ing => {
+                    const isSelected = selectedForAdding.has(ing.id);
+                    const isMostUsed = MOST_USED_INGREDIENTS.includes(ing.name);
+
+                    // Skip most used items when showing "all" list (they're already shown above)
+                    if (!searchTerm && !selectedCategory && isMostUsed) return null;
+
+                    return (
+                      <button
+                        key={ing.id}
+                        onClick={() => toggleIngredientSelection(ing.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          width: '100%',
+                          padding: '12px',
+                          marginBottom: '6px',
+                          borderRadius: '10px',
+                          background: isSelected ? '#fff7ed' : '#fff',
+                          border: isSelected ? '2px solid #c2410c' : '1px solid #e7e5e2',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'all 0.2s',
+                          position: 'relative',
+                        }}
+                      >
+                        {isSelected && (
+                          <div style={{
+                            position: 'absolute',
+                            left: '0',
+                            top: '0',
+                            bottom: '0',
+                            width: '4px',
+                            background: '#c2410c',
+                            borderRadius: '10px 0 0 10px',
+                          }} />
+                        )}
+                        <div style={{ flex: 1, paddingLeft: isSelected ? '12px' : '0' }}>
+                          <div style={{ fontWeight: '600', color: '#1c1917', fontSize: '0.95rem' }}>{ing.name}</div>
+                          <div style={{ fontSize: '0.8rem', color: '#a8a29e' }}>{ing.unit}</div>
+                        </div>
+                        {isSelected && (
+                          <span style={{ color: '#c2410c', fontSize: '1.2rem', fontWeight: 'bold' }}>✓</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: '10px', paddingBottom: '16px' }}>
+            <button
+              onClick={() => setStep(2)}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '10px',
+                background: '#fff',
+                color: '#1c1917',
+                border: '1.5px solid #e7e5e2',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontSize: '1rem',
+              }}
+            >
+              ← Tilbake
+            </button>
+            {selectedForAdding.size > 0 && (
+              <button
+                onClick={addSelectedIngredients}
+                style={{
+                  flex: 2,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  background: '#c2410c',
+                  color: '#fff',
+                  border: 'none',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                }}
+              >
+                Legg til {selectedForAdding.size} →
+              </button>
+            )}
+            {selectedForAdding.size === 0 && (
+              <button
+                onClick={() => setStep(5)}
+                style={{
+                  flex: 2,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  background: '#e7e5e2',
+                  color: '#78716c',
+                  border: 'none',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                }}
+              >
+                Hopp over →
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========== STEP 4: Rediger mengde ========== */}
+      {step === 4 && (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px', paddingBottom: '0' }}>
+          <h1 style={{ color: '#1c1917', fontSize: '1.2rem', fontWeight: '600', marginBottom: '4px', marginTop: '12px' }}>Mengde for hver ingrediens</h1>
+          <p style={{ color: '#a8a29e', fontSize: '0.9rem', marginBottom: '16px', margin: 0 }}>4/4</p>
+
+          {/* Ingredients with quantity editors */}
+          <div style={{ flex: 1, overflowY: 'auto', marginBottom: '12px' }}>
+            {selectedIngredients.map((ing, idx) => (
+              <div key={idx} style={{ marginBottom: '16px', background: '#fff', padding: '14px', borderRadius: '10px', border: '1px solid #e7e5e2' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <div>
+                    <div style={{ fontWeight: '600', color: '#c2410c', fontSize: '1rem' }}>{ing.name}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#a8a29e' }}>{ing.category}</div>
+                  </div>
+                  <button
+                    onClick={() => removeIngredient(idx)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#c2410c',
+                      fontSize: '1.4rem',
+                      cursor: 'pointer',
+                      padding: '0',
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#78716c', marginBottom: '4px', fontWeight: '500' }}>Mengde</label>
+                    <input
+                      type="number"
+                      min="0.1"
+                      step="0.5"
+                      value={ing.quantity}
+                      onChange={e => updateQuantity(idx, e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        borderRadius: '8px',
+                        border: '1px solid #e7e5e2',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        color: '#1c1917',
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: 0.8 }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#78716c', marginBottom: '4px', fontWeight: '500' }}>Enhet</label>
+                    <div style={{ fontSize: '0.95rem', color: '#1c1917', fontWeight: '500', padding: '10px', background: '#faf8f5', borderRadius: '8px' }}>
+                      {ing.unit}
+                    </div>
+                  </div>
+                  <div style={{ flex: 0.6, textAlign: 'right' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#78716c', marginBottom: '4px', fontWeight: '500' }}>Pris</label>
+                    <div style={{ fontSize: '0.95rem', color: '#c2410c', fontWeight: '600' }}>
+                      {((ing.price || 0) * ing.quantity).toFixed(0)} kr
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
 
-          <div style={s.buttonRow}>
-            <button onClick={() => setStep(2)} style={s.buttonSecondary}>
-              Tilbake
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: '10px', paddingBottom: '16px' }}>
+            <button
+              onClick={() => { setSelectedForAdding(new Set()); setStep(3); }}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '10px',
+                background: '#fff',
+                color: '#1c1917',
+                border: '1.5px solid #e7e5e2',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontSize: '1rem',
+              }}
+            >
+              ← Tilbake
             </button>
             <button
-              onClick={handleCreateMeal}
-              disabled={loading}
-              style={{ ...s.buttonPrimary, ...(loading ? { opacity: 0.6 } : {}) }}
+              onClick={() => setStep(5)}
+              style={{
+                flex: 2,
+                padding: '14px',
+                borderRadius: '10px',
+                background: '#c2410c',
+                color: '#fff',
+                border: 'none',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontSize: '1rem',
+              }}
             >
-              {loading ? 'Opprett...' : 'Lag måltid'}
+              Gjennomgang →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========== STEP 5: Gjennomgang & Lagring ========== */}
+      {step === 5 && (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px', paddingBottom: '0' }}>
+          <div style={{ background: '#fff', borderRadius: '12px', padding: '14px', border: '1px solid #e7e5e2', marginBottom: '16px', marginTop: '12px' }}>
+            <h2 style={{ color: '#1c1917', fontSize: '1.4rem', margin: '0 0 8px', fontWeight: '600' }}>
+              {mealData.emoji} {mealData.name}
+            </h2>
+            <div style={{ display: 'flex', gap: '12px', color: '#78716c', fontSize: '0.85rem', marginBottom: '12px', flexWrap: 'wrap' }}>
+              {mealData.time_minutes && <span>⏱ {mealData.time_minutes} min</span>}
+              {mealData.category && <span>📂 {mealData.category}</span>}
+            </div>
+
+            {selectedIngredients.length > 0 && (
+              <>
+                <h3 style={{ color: '#1c1917', marginBottom: '10px', marginTop: '12px', fontSize: '0.95rem', fontWeight: '600' }}>Ingredienser ({selectedIngredients.length})</h3>
+                <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                  {selectedIngredients.map((ing, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f0ede9', fontSize: '0.85rem' }}>
+                      <span>{ing.name}</span>
+                      <span style={{ textAlign: 'right' }}>
+                        <span style={{ marginRight: '12px' }}>{ing.quantity} {ing.unit}</span>
+                        <span style={{ fontWeight: '600', color: '#c2410c' }}>{((ing.price || 0) * ing.quantity).toFixed(0)} kr</span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <div style={{ marginTop: '12px', padding: '10px', background: '#fff7ed', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontWeight: '600', color: '#1c1917', fontSize: '0.9rem' }}>Totalpris:</span>
+              <span style={{ fontWeight: 'bold', color: '#c2410c', fontSize: '1.1rem' }}>{calculateTotalPrice()} kr</span>
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div style={{ marginTop: 'auto', display: 'flex', gap: '10px', paddingBottom: '16px' }}>
+            <button
+              onClick={() => setStep(selectedIngredients.length > 0 ? 4 : 3)}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '10px',
+                background: '#fff',
+                color: '#1c1917',
+                border: '1.5px solid #e7e5e2',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontSize: '1rem',
+              }}
+            >
+              ← Tilbake
+            </button>
+            <button
+              onClick={saveMeal}
+              style={{
+                flex: 2,
+                padding: '14px',
+                borderRadius: '10px',
+                background: '#c2410c',
+                color: '#fff',
+                border: 'none',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontSize: '1rem',
+              }}
+            >
+              Lag måltid ✓
             </button>
           </div>
         </div>
@@ -402,51 +845,3 @@ export default function MealCreatePage() {
     </div>
   );
 }
-
-const s = {
-  page: { padding: '16px', minHeight: '100vh', background: '#faf8f5', maxWidth: '100%', margin: '0 auto' },
-  header: { marginBottom: 24 },
-  title: { fontFamily: 'Georgia, serif', fontSize: '1.5rem', fontWeight: 800, color: '#1c1917', margin: '0 0 16px' },
-  stepIndicator: { display: 'flex', gap: 12 },
-  step: { width: 40, height: 40, borderRadius: '50%', border: '2px solid #e7e5e2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#a8a29e' },
-  stepActive: { background: '#c2410c', borderColor: '#c2410c', color: '#fff' },
-  step1: { display: 'flex', flexDirection: 'column', gap: 16 },
-  step2: { display: 'flex', flexDirection: 'column', gap: 16 },
-  step3: { display: 'flex', flexDirection: 'column', gap: 16 },
-  stepHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
-  syncBtn: { padding: '6px 12px', borderRadius: 8, background: '#c2410c', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' },
-  categoryTabs: { display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, marginBottom: 8, borderBottom: '1px solid #e7e5e2' },
-  categoryTab: { padding: '6px 12px', borderRadius: 999, border: 'none', background: '#fff', color: '#78716c', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.15s' },
-  categoryTabActive: { background: '#c2410c', color: '#fff', borderColor: '#c2410c' },
-  label: { display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.9rem', fontWeight: 600, color: '#1c1917' },
-  input: { padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e7e5e2', fontSize: '1rem', fontFamily: 'inherit' },
-  textarea: { padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e7e5e2', fontSize: '1rem', fontFamily: 'inherit' },
-  subtitle: { fontSize: '1rem', fontWeight: 700, color: '#1c1917', margin: '0 0 12px' },
-  ingredientList: { border: '1px solid #e7e5e2', borderRadius: 8, maxHeight: 300, overflowY: 'auto', background: '#fff' },
-  categoryLabel: { fontSize: '0.85rem', fontWeight: 700, color: '#a8a29e', textTransform: 'uppercase', padding: '8px 12px 4px', margin: 0 },
-  ingredientOption: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '10px 12px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '0.9rem', color: '#1c1917', transition: 'background 0.15s', borderBottom: '1px solid #f0ede9' },
-  price: { fontSize: '0.8rem', color: '#c2410c', fontWeight: 600 },
-  noResults: { padding: '20px 12px', color: '#a8a29e', fontSize: '0.9rem', textAlign: 'center' },
-  loading: { padding: '20px 12px', color: '#a8a29e', fontSize: '0.9rem', textAlign: 'center' },
-  addedIngredients: { display: 'flex', flexDirection: 'column', gap: 8 },
-  addedIngredientRow: { display: 'flex', alignItems: 'center', gap: 8, padding: '10px', background: '#fff', borderRadius: 8, border: '1px solid #e7e5e2' },
-  ingInfo: { flex: 1, display: 'flex', flexDirection: 'column' },
-  ingName: { fontSize: '0.9rem', fontWeight: 600, color: '#1c1917' },
-  ingPrice: { fontSize: '0.8rem', color: '#c2410c', fontWeight: 600 },
-  ingQuantity: { display: 'flex', alignItems: 'center', gap: 6 },
-  quantityInput: { width: 50, padding: '6px', borderRadius: 4, border: '1px solid #e7e5e2', fontSize: '0.9rem' },
-  unit: { fontSize: '0.8rem', color: '#a8a29e', minWidth: 30 },
-  deleteBtn: { width: 28, height: 28, borderRadius: 4, border: '1px solid #e7e5e2', background: '#faf8f5', cursor: 'pointer', fontSize: '0.9rem' },
-  buttonRow: { display: 'flex', gap: 10, marginTop: 16 },
-  buttonPrimary: { flex: 1, padding: '12px', borderRadius: 8, background: '#c2410c', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer' },
-  buttonSecondary: { flex: 1, padding: '12px', borderRadius: 8, background: '#fff', color: '#1c1917', border: '1.5px solid #e7e5e2', fontWeight: 700, cursor: 'pointer' },
-  reviewCard: { background: '#fff', borderRadius: 12, padding: 16, border: '1px solid #e7e5e2' },
-  reviewHeader: { display: 'flex', gap: 12, marginBottom: 16 },
-  reviewEmoji: { fontSize: '2.5rem' },
-  reviewName: { fontFamily: 'Georgia, serif', fontSize: '1.2rem', fontWeight: 700, color: '#1c1917', margin: 0 },
-  reviewDesc: { fontSize: '0.9rem', color: '#78716c', margin: '4px 0 0' },
-  reviewMeta: { display: 'flex', gap: 12, marginBottom: 16, fontSize: '0.9rem', color: '#78716c' },
-  totalPrice: { fontWeight: 700, color: '#c2410c' },
-  reviewIngredient: { display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f0ede9', fontSize: '0.9rem' },
-  error: { color: '#c2410c', background: '#fff7ed', padding: 12, borderRadius: 8, marginBottom: 16 },
-};
