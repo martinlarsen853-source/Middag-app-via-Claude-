@@ -1,8 +1,8 @@
 // Vercel serverless API — Express + Supabase (ingen SQLite)
 // Brukes i produksjon på Vercel. Lokalt brukes backend/ med SQLite.
-const express = require('express');
-const cors = require('cors');
-const { createClient } = require('@supabase/supabase-js');
+import express from 'express';
+import cors from 'cors';
+import { createClient } from '@supabase/supabase-js';
 
 const app = express();
 
@@ -35,6 +35,31 @@ async function auth(req, res, next) {
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', message: 'Middagshjulet API er oppe!' }));
+
+// ─── Cron Jobs ────────────────────────────────────────────────────────────────
+
+// POST /api/cron/sync-ingredients — Scheduled sync from Vercel cron (no auth required)
+app.post('/api/cron/sync-ingredients', async (req, res) => {
+  try {
+    // Verify Vercel cron secret header
+    const cronSecret = req.headers['x-vercel-cron-secret'];
+    if (cronSecret !== process.env.CRON_SECRET) {
+      return res.status(401).json({ error: 'Unauthorized cron request' });
+    }
+
+    const { syncIngredientsFromKassalapp } = await import('./kassaappSync.js');
+    const result = await syncIngredientsFromKassalapp();
+
+    res.json({
+      ok: true,
+      message: 'Ingredient sync completed',
+      ...result
+    });
+  } catch (e) {
+    console.error('Cron sync error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
@@ -361,4 +386,4 @@ app.delete('/api/meals/:id', auth, async (req, res) => {
 });
 
 // Vercel eksporterer Express-appen direkte
-module.exports = app;
+export default app;
