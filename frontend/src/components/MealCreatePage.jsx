@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getIngredients, getIngredientCategories, createMeal } from '../api.js';
+import { calculateIngredientCost, describeIngredientPricing, formatCurrency } from '../pricing.js';
 
 const EMOJI_PRESETS = ['🍝', '🥩', '🐟', '🍲', '🥗', '🍳', '🌮', '🍕', '🍔', '🌯', '🥘', '🍛'];
 
@@ -189,7 +190,9 @@ export default function MealCreatePage() {
     const ingredientsToAdd = allIngredients.filter(ing => selectedForAdding.has(ing.id));
     const newIngredients = ingredientsToAdd.map(ing => ({
       ...ing,
-      quantity: 1,
+      quantity: Number.isFinite(Number(ing.package_quantity)) && Number(ing.package_quantity) > 0 && ing.package_unit === ing.unit
+        ? Number(ing.package_quantity)
+        : 1,
     }));
     setSelectedIngredients([...selectedIngredients, ...newIngredients]);
     setSelectedForAdding(new Set());
@@ -206,8 +209,27 @@ export default function MealCreatePage() {
     setSelectedIngredients(updated);
   }
 
-  function calculateTotalPrice() {
-    return selectedIngredients.reduce((sum, ing) => sum + ((ing.price || 0) * ing.quantity), 0).toFixed(2);
+  function getPriceSummary() {
+    return selectedIngredients.reduce((summary, ing) => {
+      const pricing = calculateIngredientCost(ing, ing.quantity, ing.unit);
+      if (pricing.status === 'ok') {
+        summary.total += pricing.total;
+      } else {
+        summary.missing += 1;
+      }
+      return summary;
+    }, { total: 0, missing: 0 });
+  }
+
+  function formatTotalPriceSummary() {
+    const summary = getPriceSummary();
+    if (summary.missing === 0) {
+      return formatCurrency(summary.total);
+    }
+    if (summary.total > 0) {
+      return `${formatCurrency(summary.total)} + ${summary.missing} ukjent`;
+    }
+    return `${summary.missing} ukjent`;
   }
 
   async function saveMeal() {
@@ -221,7 +243,7 @@ export default function MealCreatePage() {
         ...mealData,
         ingredients: selectedIngredients,
       });
-      alert(`✅ Måltid "${mealData.name}" lagret!\n\nPris: ${calculateTotalPrice()} kr`);
+      alert(`✅ Måltid "${mealData.name}" lagret!\n\nPris: ${formatTotalPriceSummary()}`);
       navigate('/app');
     } catch (e) {
       alert('Feil ved lagring: ' + e.message);
@@ -724,7 +746,13 @@ export default function MealCreatePage() {
                   <div style={{ flex: 0.6, textAlign: 'right' }}>
                     <label style={{ display: 'block', fontSize: '0.8rem', color: '#78716c', marginBottom: '4px', fontWeight: '500' }}>Pris</label>
                     <div style={{ fontSize: '0.95rem', color: '#c2410c', fontWeight: '600' }}>
-                      {((ing.price || 0) * ing.quantity).toFixed(0)} kr
+                      {(() => {
+                        const pricing = calculateIngredientCost(ing, ing.quantity, ing.unit);
+                        return pricing.status === 'ok' ? formatCurrency(pricing.total) : 'Ukjent pris';
+                      })()}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#a8a29e', marginTop: '4px' }}>
+                      {describeIngredientPricing(ing)}
                     </div>
                   </div>
                 </div>
@@ -788,12 +816,17 @@ export default function MealCreatePage() {
                 <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                   {selectedIngredients.map((ing, idx) => (
                     <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f0ede9', fontSize: '0.85rem' }}>
-                      <span>{ing.name}</span>
-                      <span style={{ textAlign: 'right' }}>
-                        <span style={{ marginRight: '12px' }}>{ing.quantity} {ing.unit}</span>
-                        <span style={{ fontWeight: '600', color: '#c2410c' }}>{((ing.price || 0) * ing.quantity).toFixed(0)} kr</span>
-                      </span>
-                    </div>
+                        <span>{ing.name}</span>
+                        <span style={{ textAlign: 'right' }}>
+                          <span style={{ marginRight: '12px' }}>{ing.quantity} {ing.unit}</span>
+                          <span style={{ fontWeight: '600', color: '#c2410c' }}>
+                            {(() => {
+                              const pricing = calculateIngredientCost(ing, ing.quantity, ing.unit);
+                              return pricing.status === 'ok' ? formatCurrency(pricing.total) : 'Ukjent pris';
+                            })()}
+                          </span>
+                        </span>
+                      </div>
                   ))}
                 </div>
               </>
@@ -801,7 +834,7 @@ export default function MealCreatePage() {
 
             <div style={{ marginTop: '12px', padding: '10px', background: '#fff7ed', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontWeight: '600', color: '#1c1917', fontSize: '0.9rem' }}>Totalpris:</span>
-              <span style={{ fontWeight: 'bold', color: '#c2410c', fontSize: '1.1rem' }}>{calculateTotalPrice()} kr</span>
+              <span style={{ fontWeight: 'bold', color: '#c2410c', fontSize: '1.1rem' }}>{formatTotalPriceSummary()}</span>
             </div>
           </div>
 

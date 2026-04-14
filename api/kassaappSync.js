@@ -21,6 +21,7 @@ export async function syncIngredientsFromKassalapp(options = {}) {
   let syncedCount = 0;
   let updatedCount = 0;
   let errorCount = 0;
+  let missingPriceBasisCount = 0;
   const errors = [];
 
   try {
@@ -87,22 +88,28 @@ export async function syncIngredientsFromKassalapp(options = {}) {
 
       for (const ingredient of transformedIngredients) {
         try {
+          const { has_price_basis, ...dbIngredient } = ingredient;
+
+          if (!has_price_basis) {
+            missingPriceBasisCount++;
+          }
+
           // Try to find existing ingredient by EAN or external_id
           let existingId = null;
-          if (ingredient.ean) {
+          if (dbIngredient.ean) {
             const { data: existing } = await supabase
               .from('ingredients')
               .select('id')
-              .eq('ean', ingredient.ean)
+              .eq('ean', dbIngredient.ean)
               .single();
             existingId = existing?.id;
           }
 
-          if (!existingId && ingredient.external_id) {
+          if (!existingId && dbIngredient.external_id) {
             const { data: existing } = await supabase
               .from('ingredients')
               .select('id')
-              .eq('external_id', ingredient.external_id)
+              .eq('external_id', dbIngredient.external_id)
               .single();
             existingId = existing?.id;
           }
@@ -112,14 +119,14 @@ export async function syncIngredientsFromKassalapp(options = {}) {
             const { error } = await supabase
               .from('ingredients')
               .update({
-                ...ingredient,
+                ...dbIngredient,
                 updated_at: new Date(),
               })
               .eq('id', existingId);
 
             if (error) {
-              console.error(`Error updating ingredient ${ingredient.name}:`, error.message);
-              errors.push({ ingredient: ingredient.name, error: error.message });
+              console.error(`Error updating ingredient ${dbIngredient.name}:`, error.message);
+              errors.push({ ingredient: dbIngredient.name, error: error.message });
               errorCount++;
             } else {
               updatedCount++;
@@ -128,16 +135,16 @@ export async function syncIngredientsFromKassalapp(options = {}) {
             // Insert new ingredient
             const { error } = await supabase
               .from('ingredients')
-              .insert([ingredient]);
+              .insert([dbIngredient]);
 
             if (error) {
               // Might be duplicate by name, try to ignore
               if (error.code === '23505') {
-                console.log(`  Skipped duplicate: ${ingredient.name}`);
+                console.log(`  Skipped duplicate: ${dbIngredient.name}`);
                 updatedCount++;
               } else {
-                console.error(`Error inserting ingredient ${ingredient.name}:`, error.message);
-                errors.push({ ingredient: ingredient.name, error: error.message });
+                console.error(`Error inserting ingredient ${dbIngredient.name}:`, error.message);
+                errors.push({ ingredient: dbIngredient.name, error: error.message });
                 errorCount++;
               }
             } else {
@@ -159,6 +166,7 @@ export async function syncIngredientsFromKassalapp(options = {}) {
       synced: syncedCount,
       updated: updatedCount,
       errors: errorCount,
+      missing_price_basis: missingPriceBasisCount,
       total_processed: transformedIngredients.length,
       duration_seconds: duration,
     };
@@ -170,11 +178,15 @@ export async function syncIngredientsFromKassalapp(options = {}) {
       await supabase
         .from('ingredient_sync_log')
         .insert([{
+          sync_source: 'kassalapp',
+          sync_frequency: 'weekly',
           total_synced: syncedCount,
           total_updated: updatedCount,
           total_errors: errorCount,
+          total_missing_price_basis: missingPriceBasisCount,
           error_details: errors.length > 0 ? errors : null,
           sync_duration_seconds: duration,
+          finished_at: new Date(),
         }]);
     } catch (error) {
       console.warn('Could not log sync result:', error.message);
@@ -190,11 +202,15 @@ export async function syncIngredientsFromKassalapp(options = {}) {
       await supabase
         .from('ingredient_sync_log')
         .insert([{
+          sync_source: 'kassalapp',
+          sync_frequency: 'weekly',
           total_synced: 0,
           total_updated: 0,
           total_errors: 1,
+          total_missing_price_basis: missingPriceBasisCount,
           error_details: [{ error: error.message }],
           sync_duration_seconds: duration,
+          finished_at: new Date(),
         }]);
     } catch (logError) {
       console.warn('Could not log sync failure:', logError.message);
@@ -205,24 +221,26 @@ export async function syncIngredientsFromKassalapp(options = {}) {
 }
 
 /**
- * Schedule daily sync (to be called from a cron job or interval)
+ * Schedule weekly sync (to be called from a cron job or interval)
  */
-export async function scheduleDailySync() {
-  console.log('⏰ Scheduling daily ingredient sync...');
+export async function scheduleWeeklySync() {
+  console.log('⏰ Scheduling weekly ingredient sync...');
 
-  // Run sync every day at 02:00 UTC
+  // Run sync every week on Monday at 02:00 UTC
   const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-  tomorrow.setUTCHours(2, 0, 0, 0);
+  const nextRun = new Date(now);
+  const day = nextRun.getUTCDay();
+  const daysUntilMonday = (8 - day) % 7 || 7;
+  nextRun.setUTCDate(nextRun.getUTCDate() + daysUntilMonday);
+  nextRun.setUTCHours(2, 0, 0, 0);
 
-  const timeUntilNextSync = tomorrow.getTime() - now.getTime();
+  const timeUntilNextSync = nextRun.getTime() - now.getTime();
 
   setTimeout(() => {
     syncIngredientsFromKassalapp()
       .then(() => {
-        // Re-schedule for next day
-        const interval = 24 * 60 * 60 * 1000; // 24 hours
+        // Re-schedule for next week
+        const interval = 7 * 24 * 60 * 60 * 1000;
         setInterval(
           () => syncIngredientsFromKassalapp(),
           interval
@@ -231,9 +249,11 @@ export async function scheduleDailySync() {
       .catch(error => {
         console.error('Scheduled sync failed:', error);
         // Retry in 1 hour
-        setTimeout(scheduleDailySync, 60 * 60 * 1000);
+        setTimeout(scheduleWeeklySync, 60 * 60 * 1000);
       });
   }, timeUntilNextSync);
 
   console.log(`⏰ Next sync in ${Math.round(timeUntilNextSync / 1000 / 60)} minutes`);
 }
+
+export const scheduleDailySync = scheduleWeeklySync;

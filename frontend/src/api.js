@@ -1,5 +1,6 @@
 import { supabase, isDemoMode } from './supabase.js';
 import * as mock from './mockApi.js';
+import { calculateIngredientCost } from './pricing.js';
 
 // --- Auth ---
 export async function login(email, password) {
@@ -183,41 +184,17 @@ export async function getIngredientsByCategory(category) {
 
 export async function createIngredient(data) {
   if (isDemoMode()) return {};
-
-  const { data: result, error } = await supabase
-    .from('ingredients')
-    .insert([data])
-    .select()
-    .single();
-
-  if (error) throw new Error(error.message);
-  return result;
+  throw new Error('Ingredienspriser styres kun av Kassalapp-sync');
 }
 
 export async function updateIngredient(id, data) {
   if (isDemoMode()) return {};
-
-  const { data: result, error } = await supabase
-    .from('ingredients')
-    .update(data)
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) throw new Error(error.message);
-  return result;
+  throw new Error('Ingredienspriser styres kun av Kassalapp-sync');
 }
 
 export async function deleteIngredient(id) {
   if (isDemoMode()) return { ok: true };
-
-  const { error } = await supabase
-    .from('ingredients')
-    .delete()
-    .eq('id', id);
-
-  if (error) throw new Error(error.message);
-  return { ok: true };
+  throw new Error('Ingredienskatalogen er skrivebeskyttet. Endringer skjer via Kassalapp-sync.');
 }
 
 // --- Meals CRUD (NEW) ---
@@ -334,9 +311,8 @@ export async function removeMealIngredient(ingredientId) {
 export function calculateMealPrice(ingredients) {
   if (!Array.isArray(ingredients)) return 0;
   return ingredients.reduce((total, ing) => {
-    const price = ing.ingredient?.price || 0;
-    const quantity = ing.quantity || 0;
-    return total + (price * quantity);
+    const pricing = calculateIngredientCost(ing.ingredient || ing, ing.quantity || 0, ing.unit || ing.ingredient?.unit);
+    return pricing.status === 'ok' ? total + pricing.total : total;
   }, 0);
 }
 

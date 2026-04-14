@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getIngredients, getIngredientCategories, deleteIngredient } from '../api.js';
+import { getIngredients, getIngredientCategories } from '../api.js';
+import { describeIngredientPricing } from '../pricing.js';
 
 export default function IngredientListPage() {
   const [ingredients, setIngredients] = useState([]);
@@ -35,17 +36,6 @@ export default function IngredientListPage() {
     }
   }
 
-  async function handleDelete(id) {
-    if (confirm('Slett ingrediens?')) {
-      try {
-        await deleteIngredient(id);
-        loadIngredients();
-      } catch (e) {
-        alert('Error: ' + e.message);
-      }
-    }
-  }
-
   const grouped = ingredients.reduce((acc, ing) => {
     const cat = ing.category || 'Diverse';
     if (!acc[cat]) acc[cat] = [];
@@ -56,17 +46,16 @@ export default function IngredientListPage() {
   return (
     <div style={s.page}>
       <div style={s.header}>
-        <h1 style={s.title}>🥕 Ingredienser</h1>
+        <h1 style={s.title}>Ingredienser</h1>
         <input
           type="text"
-          placeholder="Søk ingrediens..."
+          placeholder="Sok ingrediens..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           style={s.search}
         />
       </div>
 
-      {/* Category filter */}
       <div style={s.categoryRow}>
         <button
           onClick={() => setSelectedCategory(null)}
@@ -102,16 +91,9 @@ export default function IngredientListPage() {
                     <div key={ing.id} style={s.ingredientCard}>
                       <div style={s.ingredientInfo}>
                         <h3 style={s.ingredientName}>{ing.name}</h3>
-                        <p style={s.ingredientPrice}>{ing.price} kr / {ing.unit}</p>
+                        <p style={s.ingredientPrice}>{describeIngredientPricing(ing)}</p>
                         {ing.brand && <p style={s.ingredientBrand}>{ing.brand}</p>}
                       </div>
-                      <button
-                        onClick={() => handleDelete(ing.id)}
-                        style={s.deleteBtn}
-                        title="Slett"
-                      >
-                        ✕
-                      </button>
                     </div>
                   ))}
                 </div>
@@ -185,8 +167,6 @@ const s = {
     padding: '12px 16px',
     borderRadius: 12,
     border: '1px solid #e7e5e2',
-    cursor: 'pointer',
-    transition: 'all 0.15s',
   },
   ingredientInfo: { flex: 1 },
   ingredientName: {
@@ -205,20 +185,6 @@ const s = {
     fontSize: '0.75rem',
     color: '#a8a29e',
     margin: '4px 0 0',
-  },
-  deleteBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 999,
-    border: '1.5px solid #e7e5e2',
-    background: '#faf8f5',
-    color: '#78716c',
-    fontSize: '1rem',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'all 0.15s',
   },
   error: {
     color: '#c2410c',

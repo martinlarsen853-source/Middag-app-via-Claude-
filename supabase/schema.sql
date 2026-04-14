@@ -408,7 +408,13 @@ CREATE TABLE IF NOT EXISTS ingredients (
   id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   name TEXT NOT NULL UNIQUE,
   category TEXT NOT NULL,
-  price DECIMAL(8, 2) NOT NULL,
+  package_price DECIMAL(10, 2),
+  package_quantity DECIMAL(10, 3),
+  package_unit TEXT,
+  unit_price DECIMAL(12, 6),
+  unit_price_unit TEXT,
+  price_source TEXT NOT NULL DEFAULT 'kassalapp',
+  price_last_synced_at TIMESTAMPTZ,
   unit TEXT NOT NULL DEFAULT 'g',
   section TEXT,
   ean TEXT UNIQUE,
@@ -416,8 +422,48 @@ CREATE TABLE IF NOT EXISTS ingredients (
   brand TEXT,
   description TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT ingredients_price_source_check CHECK (price_source IN ('kassalapp', 'legacy_manual'))
 );
+
+ALTER TABLE ingredients ADD COLUMN IF NOT EXISTS package_price DECIMAL(10, 2);
+ALTER TABLE ingredients ADD COLUMN IF NOT EXISTS package_quantity DECIMAL(10, 3);
+ALTER TABLE ingredients ADD COLUMN IF NOT EXISTS package_unit TEXT;
+ALTER TABLE ingredients ADD COLUMN IF NOT EXISTS unit_price DECIMAL(12, 6);
+ALTER TABLE ingredients ADD COLUMN IF NOT EXISTS unit_price_unit TEXT;
+ALTER TABLE ingredients ADD COLUMN IF NOT EXISTS price_source TEXT NOT NULL DEFAULT 'kassalapp';
+ALTER TABLE ingredients ADD COLUMN IF NOT EXISTS price_last_synced_at TIMESTAMPTZ;
+ALTER TABLE ingredients ADD COLUMN IF NOT EXISTS unit TEXT NOT NULL DEFAULT 'g';
+
+-- One-time migration from the removed legacy "price" column.
+-- This preserves old values for inspection, but they are marked as legacy and
+-- must not be treated as active runtime pricing.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'ingredients'
+      AND column_name = 'price'
+  ) THEN
+    EXECUTE $migrate$
+      UPDATE ingredients
+      SET
+        package_price = COALESCE(package_price, price),
+        package_quantity = COALESCE(package_quantity, 1),
+        package_unit = COALESCE(package_unit, unit),
+        unit_price = NULL,
+        unit_price_unit = NULL,
+        price_source = CASE
+          WHEN ean IS NOT NULL OR external_id IS NOT NULL THEN 'kassalapp'
+          ELSE 'legacy_manual'
+        END
+    $migrate$;
+  END IF;
+END $$;
+
+ALTER TABLE ingredients DROP COLUMN IF EXISTS price;
 
 -- Index for quick lookups
 CREATE INDEX IF NOT EXISTS idx_ingredients_category ON ingredients(category);
@@ -436,21 +482,25 @@ ALTER TABLE ingredients ENABLE ROW LEVEL SECURITY;
 CREATE POLICY IF NOT EXISTS "Authenticated can read ingredient_categories" ON ingredient_categories FOR SELECT TO authenticated USING (true);
 CREATE POLICY IF NOT EXISTS "Authenticated can read ingredients" ON ingredients FOR SELECT TO authenticated USING (true);
 
--- Admin can manage ingredients (insert, update, delete)
--- For now, allow all authenticated users; can be restricted to admins later
-CREATE POLICY IF NOT EXISTS "Authenticated can insert ingredients" ON ingredients FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY IF NOT EXISTS "Authenticated can update ingredients" ON ingredients FOR UPDATE TO authenticated USING (true);
-CREATE POLICY IF NOT EXISTS "Authenticated can delete ingredients" ON ingredients FOR DELETE TO authenticated USING (true);
+-- Pricing and ingredient catalog writes are service-role only.
+DROP POLICY IF EXISTS "Authenticated can insert ingredients" ON ingredients;
+DROP POLICY IF EXISTS "Authenticated can update ingredients" ON ingredients;
+DROP POLICY IF EXISTS "Authenticated can delete ingredients" ON ingredients;
 
 -- Table to track sync status
 CREATE TABLE IF NOT EXISTS ingredient_sync_log (
   id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   sync_timestamp TIMESTAMPTZ DEFAULT NOW(),
+  sync_source TEXT DEFAULT 'kassalapp',
+  sync_frequency TEXT DEFAULT 'weekly',
   total_synced INT,
   total_updated INT,
   total_errors INT,
+  total_missing_price_basis INT DEFAULT 0,
   error_details JSONB,
-  sync_duration_seconds INT
+  sync_duration_seconds INT,
+  started_at TIMESTAMPTZ DEFAULT NOW(),
+  finished_at TIMESTAMPTZ
 );
 
 CREATE INDEX IF NOT EXISTS idx_sync_log_timestamp ON ingredient_sync_log(sync_timestamp);

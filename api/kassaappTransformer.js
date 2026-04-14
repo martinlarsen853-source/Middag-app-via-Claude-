@@ -2,6 +2,18 @@
  * Transform Kassalapp product format to Middag ingredient format
  */
 
+function toNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function round(value, decimals) {
+  if (!Number.isFinite(value)) return null;
+  const factor = 10 ** decimals;
+  return Math.round(value * factor) / factor;
+}
+
 // Category mapping from Kassalapp categories to Middag categories
 const CATEGORY_MAPPINGS = {
   // Kjøtt & Fisk
@@ -105,39 +117,82 @@ export function mapUnit(weightUnit) {
     'l': 'l',
     'piece': 'stk',
     'stk': 'stk',
+    'can': 'boks',
+    'glass': 'glass',
+    'jar': 'glass',
+    'bag': 'pose',
+    'pose': 'pose',
     'pack': 'pakke',
     'pakke': 'pakke',
+    'package': 'pakke',
     'bunt': 'bunt',
+    'bottle': 'flaske',
+    'flaske': 'flaske',
+    'tube': 'tube',
     'box': 'boks',
     'boks': 'boks',
   };
 
   const normalized = (weightUnit || '').toLowerCase().trim();
-  return unitMap[normalized] || 'g';
+  return unitMap[normalized] || normalized || null;
 }
 
 /**
  * Infer the best unit and quantity for an ingredient
  */
 export function inferQuantity(kassalappProduct) {
-  const weight = kassalappProduct.weight || 0;
+  const weight = toNumber(kassalappProduct.weight) || 0;
   const unit = kassalappProduct.weight_unit || '';
+  const normalizedUnit = mapUnit(unit);
 
   // For packaged items, use "stk" (piece)
-  if (unit.toLowerCase() === 'piece') {
+  if (normalizedUnit === 'stk') {
     return { quantity: 1, unit: 'stk' };
   }
 
-  // For grams/ml, return the weight/unit
-  if (unit.toLowerCase() === 'g' || unit.toLowerCase() === 'gram') {
-    // If it's a standard package (200-500g), return 1 package
-    if (weight >= 200 && weight <= 500) {
-      return { quantity: 1, unit: 'pakke' };
-    }
-    return { quantity: weight, unit: 'g' };
+  if (weight > 0 && normalizedUnit) {
+    return { quantity: weight, unit: normalizedUnit };
   }
 
-  return { quantity: weight || 1, unit: mapUnit(unit) };
+  return { quantity: 1, unit: normalizedUnit || 'stk' };
+}
+
+export function extractPricing(kassalappProduct) {
+  const packagePrice = toNumber(kassalappProduct.current_price);
+  const packageUnit = mapUnit(kassalappProduct.weight_unit);
+  const packageQuantity = toNumber(kassalappProduct.weight)
+    ?? (['stk', 'boks', 'pose', 'glass', 'pakke', 'flaske', 'tube', 'bunt'].includes(packageUnit) ? 1 : null);
+
+  const hasPackageBasis = packagePrice !== null && packageQuantity !== null && packageQuantity > 0;
+  const hasPieceBasis = packagePrice !== null && packageUnit === 'stk';
+
+  let unitPrice = null;
+  let unitPriceUnit = null;
+
+  if (hasPackageBasis && !['stk', 'pakke', 'boks', 'pose', 'glass', 'flaske', 'tube', 'bunt'].includes(packageUnit)) {
+    unitPrice = round(packagePrice / packageQuantity, 6);
+    unitPriceUnit = packageUnit;
+  } else if (hasPieceBasis) {
+    unitPrice = packagePrice;
+    unitPriceUnit = 'stk';
+  }
+
+  return {
+    package_price: packagePrice,
+    package_quantity: packageQuantity,
+    package_unit: packageUnit || null,
+    unit_price: unitPrice,
+    unit_price_unit: unitPriceUnit,
+    price_source: 'kassalapp',
+    price_last_synced_at: new Date(),
+    has_price_basis: Boolean(
+      packagePrice !== null &&
+      (
+        hasPieceBasis ||
+        (packageQuantity !== null && packageQuantity > 0)
+      )
+    ),
+  };
 }
 
 /**
@@ -150,11 +205,18 @@ export function transformProduct(kassalappProduct) {
 
   const category = mapCategory(kassalappProduct.category);
   const { quantity, unit } = inferQuantity(kassalappProduct);
+  const pricing = extractPricing(kassalappProduct);
 
   return {
     name: kassalappProduct.name,
     category,
-    price: kassalappProduct.current_price || 0,
+    package_price: pricing.package_price,
+    package_quantity: pricing.package_quantity,
+    package_unit: pricing.package_unit,
+    unit_price: pricing.unit_price,
+    unit_price_unit: pricing.unit_price_unit,
+    price_source: pricing.price_source,
+    price_last_synced_at: pricing.price_last_synced_at,
     unit,
     section: 'Diverse', // Will be mapped to store sections later
     ean: kassalappProduct.ean,
