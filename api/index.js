@@ -33,6 +33,17 @@ async function auth(req, res, next) {
   }
 }
 
+// Hjelpefunksjon: hent husstand-ID for en bruker
+async function getUserHouseholdId(sb, userId) {
+  const { data: profile, error } = await sb
+    .from('user_profiles')
+    .select('household_id')
+    .eq('id', userId)
+    .single();
+  if (error || !profile?.household_id) throw new Error('Husstand ikke funnet');
+  return profile.household_id;
+}
+
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', message: 'Middagshjulet API er oppe!' }));
 
@@ -123,44 +134,63 @@ app.post('/api/auth/login', async (req, res) => {
 // ─── Middager ────────────────────────────────────────────────────────────────
 
 app.get('/api/meals', auth, async (req, res) => {
-  const sort = req.query.sort || '';
-  let query = req.sb.from('meals').select('id, name, emoji, description, time_minutes, price_level, category');
+  try {
+    const householdId = await getUserHouseholdId(req.sb, req.user.id);
+    const sort = req.query.sort || '';
 
-  if (sort === 'time') query = query.order('time_minutes', { ascending: true });
-  else if (sort === 'price') query = query.order('price_level', { ascending: true });
-  else query = query.order('name');
+    let query = req.sb
+      .from('meals')
+      .select('id, name, emoji, description, time_minutes, price_level, category')
+      .or(`household_id.is.null,household_id.eq.${householdId}`);
 
-  const { data, error } = await query;
-  if (error) return res.status(500).json({ error: error.message });
+    if (sort === 'time') query = query.order('time_minutes', { ascending: true });
+    else if (sort === 'price') query = query.order('price_level', { ascending: true });
+    else query = query.order('name');
 
-  let meals = data || [];
+    const { data, error } = await query;
+    if (error) return res.status(500).json({ error: error.message });
 
-  if (sort === 'random') {
-    for (let i = meals.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [meals[i], meals[j]] = [meals[j], meals[i]];
+    let meals = data || [];
+
+    if (sort === 'random') {
+      for (let i = meals.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [meals[i], meals[j]] = [meals[j], meals[i]];
+      }
+    } else if (sort === 'rarely') {
+      const { data: history } = await req.sb
+        .from('meal_history').select('meal_id, eaten_at')
+        .eq('user_id', req.user.id).order('eaten_at', { ascending: false });
+      const lastEaten = {};
+      (history || []).forEach(h => { if (!lastEaten[h.meal_id]) lastEaten[h.meal_id] = h.eaten_at; });
+      meals = meals
+        .map(m => ({ ...m, last_eaten: lastEaten[m.id] || null }))
+        .sort((a, b) => (a.last_eaten ? new Date(a.last_eaten).getTime() : 0) - (b.last_eaten ? new Date(b.last_eaten).getTime() : 0));
     }
-  } else if (sort === 'rarely') {
-    const { data: history } = await req.sb
-      .from('meal_history').select('meal_id, eaten_at')
-      .eq('user_id', req.user.id).order('eaten_at', { ascending: false });
-    const lastEaten = {};
-    (history || []).forEach(h => { if (!lastEaten[h.meal_id]) lastEaten[h.meal_id] = h.eaten_at; });
-    meals = meals
-      .map(m => ({ ...m, last_eaten: lastEaten[m.id] || null }))
-      .sort((a, b) => (a.last_eaten ? new Date(a.last_eaten).getTime() : 0) - (b.last_eaten ? new Date(b.last_eaten).getTime() : 0));
-  }
 
-  res.json(meals);
+    res.json(meals);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.get('/api/meals/:id', auth, async (req, res) => {
-  const { data, error } = await req.sb.from('meals').select('*, meal_ingredients(*)').eq('id', req.params.id).single();
-  if (error) return res.status(404).json({ error: 'Middag ikke funnet' });
-  res.json({
-    ...data,
-    ingredients: (data.meal_ingredients || []).map(i => ({ name: i.ingredient_name, quantity: i.quantity, unit: i.unit, section: i.section }))
-  });
+  try {
+    const householdId = await getUserHouseholdId(req.sb, req.user.id);
+    const { data, error } = await req.sb
+      .from('meals')
+      .select('*, meal_ingredients(*)')
+      .eq('id', req.params.id)
+      .or(`household_id.is.null,household_id.eq.${householdId}`)
+      .single();
+    if (error) return res.status(404).json({ error: 'Middag ikke funnet' });
+    res.json({
+      ...data,
+      ingredients: (data.meal_ingredients || []).map(i => ({ name: i.ingredient_name, quantity: i.quantity, unit: i.unit, section: i.section }))
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.put('/api/meals/:id/eaten', auth, async (req, res) => {
@@ -312,6 +342,7 @@ app.post('/api/sync-ingredients', async (req, res) => {
 // POST /api/meals — Create new meal from scratch
 app.post('/api/meals', auth, async (req, res) => {
   try {
+    const householdId = await getUserHouseholdId(req.sb, req.user.id);
     const { name, emoji, description, time_minutes, category, ingredients } = req.body;
 
     if (!name) return res.status(400).json({ error: 'Meal name is required' });
@@ -324,8 +355,9 @@ app.post('/api/meals', auth, async (req, res) => {
         emoji: emoji || '🍽',
         description: description || '',
         time_minutes: time_minutes || 30,
-        price_level: 2, // Default to medium
+        price_level: 2,
         category: category || 'Annet',
+        household_id: householdId,
       }])
       .select()
       .single();
@@ -359,17 +391,18 @@ app.post('/api/meals', auth, async (req, res) => {
 // PUT /api/meals/:id — Update meal
 app.put('/api/meals/:id', auth, async (req, res) => {
   try {
+    const householdId = await getUserHouseholdId(req.sb, req.user.id);
     const { name, emoji, description, time_minutes, category } = req.body;
+
+    const { data: existing } = await req.sb
+      .from('meals').select('household_id').eq('id', req.params.id).single();
+    if (!existing || existing.household_id !== householdId) {
+      return res.status(403).json({ error: 'Ingen tilgang til å redigere denne middagen' });
+    }
 
     const { data, error } = await req.sb
       .from('meals')
-      .update({
-        name,
-        emoji,
-        description,
-        time_minutes,
-        category,
-      })
+      .update({ name, emoji, description, time_minutes, category })
       .eq('id', req.params.id)
       .select()
       .single();
@@ -386,11 +419,15 @@ app.put('/api/meals/:id', auth, async (req, res) => {
 // DELETE /api/meals/:id — Delete meal
 app.delete('/api/meals/:id', auth, async (req, res) => {
   try {
-    const { error } = await req.sb
-      .from('meals')
-      .delete()
-      .eq('id', req.params.id);
+    const householdId = await getUserHouseholdId(req.sb, req.user.id);
 
+    const { data: existing } = await req.sb
+      .from('meals').select('household_id').eq('id', req.params.id).single();
+    if (!existing || existing.household_id !== householdId) {
+      return res.status(403).json({ error: 'Ingen tilgang til å slette denne middagen' });
+    }
+
+    const { error } = await req.sb.from('meals').delete().eq('id', req.params.id);
     if (error) throw error;
     res.json({ ok: true });
   } catch (e) {
