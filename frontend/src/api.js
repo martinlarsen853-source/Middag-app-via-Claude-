@@ -12,24 +12,22 @@ export async function login(email, password) {
 
 export async function register(name, email, password, default_persons = 2) {
   if (isDemoMode()) return mock.register(name, email, password, default_persons);
-  const { data, error } = await supabase.auth.signUp({
-    email, password,
-    options: { data: { name, default_persons } }
+  const res = await fetch('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email, password, default_persons }),
   });
-  if (error) throw new Error(error.message);
-  if (!data.user) throw new Error('Sjekk e-posten din for bekreftelseslenke');
-  // Wait briefly for trigger to create profile
-  await new Promise(r => setTimeout(r, 500));
-  const { data: profile } = await supabase.from('user_profiles').select('*').eq('id', data.user.id).single();
-  return {
-    token: data.session?.access_token || '',
-    user: { id: data.user.id, email, name, default_persons: profile?.default_persons || default_persons, household_id: profile?.household_id }
-  };
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Registrering mislyktes');
+  return data;
 }
 
 export async function logout() {
   if (isDemoMode()) return;
   await supabase.auth.signOut();
+  localStorage.removeItem('middag_token');
+  localStorage.removeItem('middag_user');
+  localStorage.removeItem('middag_demo_session');
 }
 
 async function getOrCreateProfile(user) {
@@ -226,6 +224,10 @@ export async function createMeal(mealData) {
 
   const { name, emoji, description, time_minutes, category, ingredients } = mealData;
 
+  const user = JSON.parse(localStorage.getItem('middag_user') || '{}');
+  const householdId = user.household_id;
+  if (!householdId) throw new Error('Husstand ikke funnet – logg inn på nytt');
+
   // Insert meal
   const { data: meal, error: mealError } = await supabase
     .from('meals')
@@ -236,6 +238,7 @@ export async function createMeal(mealData) {
       time_minutes: time_minutes || 30,
       price_level: 2,
       category: category || 'Annet',
+      household_id: householdId,
     }])
     .select()
     .single();
@@ -368,6 +371,9 @@ export async function joinHousehold(invite_code) {
   if (error || !household) throw new Error('Ugyldig invitasjonskode');
   const { data: { user } } = await supabase.auth.getUser();
   await supabase.from('user_profiles').update({ household_id: household.id }).eq('id', user.id);
+  const stored = JSON.parse(localStorage.getItem('middag_user') || '{}');
+  stored.household_id = household.id;
+  localStorage.setItem('middag_user', JSON.stringify(stored));
   return { ok: true };
 }
 
