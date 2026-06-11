@@ -62,7 +62,7 @@ export default function Register() {
 
         {/* Card */}
         <div style={{
-          background: colors.white,
+          background: colors.bgAlt,
           borderRadius: radius.xl,
           padding: '32px',
           border: `1px solid ${colors.border}`,

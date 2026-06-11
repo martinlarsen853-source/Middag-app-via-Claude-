@@ -170,7 +170,7 @@ export default function MealCreatePage() {
   const mostUsed = getMostUsedIngredients();
 
   // Shared styles
-  const btnBack = { flex: 1, padding: '12px', borderRadius: radius.md, background: colors.white, color: colors.text, border: `1.5px solid ${colors.border}`, fontWeight: '600', cursor: 'pointer', fontSize: '0.95rem' };
+  const btnBack = { flex: 1, padding: '12px', borderRadius: radius.md, background: colors.bgAlt, color: colors.text, border: `1.5px solid ${colors.border}`, fontWeight: '600', cursor: 'pointer', fontSize: '0.95rem' };
   const btnNext = (active = true) => ({ flex: 2, padding: '12px', borderRadius: radius.md, background: active ? colors.accent : colors.borderLight, color: active ? colors.white : colors.textTertiary, border: 'none', fontWeight: '600', cursor: active ? 'pointer' : 'not-allowed', fontSize: '0.95rem', boxShadow: active ? shadows.accent : 'none' });
 
   return (
@@ -195,7 +195,7 @@ export default function MealCreatePage() {
             autoFocus
             style={{
               padding: '14px 14px', borderRadius: radius.md, border: 'none',
-              background: colors.white, width: '100%', boxSizing: 'border-box',
+              background: colors.bgAlt, width: '100%', boxSizing: 'border-box',
               fontSize: '1.1rem', fontWeight: '500', color: colors.text, outline: 'none',
             }}
           />
@@ -210,7 +210,7 @@ export default function MealCreatePage() {
               placeholder="F.eks. Rask hverdagsfavoritt..."
               style={{
                 padding: '12px 14px', borderRadius: radius.md, border: `1.5px solid ${colors.border}`,
-                background: colors.white, width: '100%', boxSizing: 'border-box',
+                background: colors.bgAlt, width: '100%', boxSizing: 'border-box',
                 fontSize: '0.95rem', color: colors.text, outline: 'none',
                 fontFamily: 'inherit', minHeight: '80px', resize: 'none',
               }}
@@ -239,7 +239,7 @@ export default function MealCreatePage() {
             placeholder="Søk ingrediens..."
             style={{
               padding: '11px 14px', borderRadius: radius.md, border: `1.5px solid ${colors.border}`,
-              background: colors.white, width: '100%', boxSizing: 'border-box',
+              background: colors.bgAlt, width: '100%', boxSizing: 'border-box',
               fontSize: '0.95rem', color: colors.text, marginBottom: '10px', outline: 'none',
             }}
             onFocus={e => e.target.style.borderColor = colors.accent}
@@ -452,14 +452,14 @@ export default function MealCreatePage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <button onClick={() => setMealData({ ...mealData, persons: Math.max(1, mealData.persons - 1) })} style={{
                 width: '36px', height: '36px', borderRadius: radius.md, border: `1.5px solid ${colors.border}`,
-                background: colors.white, cursor: 'pointer', fontSize: '1.2rem', color: colors.accent, fontWeight: '700'
+                background: colors.bgAlt, cursor: 'pointer', fontSize: '1.2rem', color: colors.accent, fontWeight: '700'
               }}>−</button>
               <span style={{ fontSize: '1.1rem', fontWeight: '700', color: colors.text, minWidth: '20px', textAlign: 'center' }}>
                 {mealData.persons}
               </span>
               <button onClick={() => setMealData({ ...mealData, persons: mealData.persons + 1 })} style={{
                 width: '36px', height: '36px', borderRadius: radius.md, border: `1.5px solid ${colors.border}`,
-                background: colors.white, cursor: 'pointer', fontSize: '1.2rem', color: colors.accent, fontWeight: '700'
+                background: colors.bgAlt, cursor: 'pointer', fontSize: '1.2rem', color: colors.accent, fontWeight: '700'
               }}>+</button>
             </div>
           </div>
@@ -486,7 +486,7 @@ export default function MealCreatePage() {
 
           {/* Summary */}
           <div style={{
-            background: colors.white, borderRadius: radius.md, padding: '14px',
+            background: colors.bgAlt, borderRadius: radius.md, padding: '14px',
             border: `1px solid ${colors.border}`, marginBottom: '16px',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: selectedIngredients.length > 0 ? '10px' : '0' }}>

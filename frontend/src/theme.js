@@ -1,38 +1,38 @@
-// Warm & cozy color palette
+// Modern dark theme with vibrant accents
 export const colors = {
   // Backgrounds
-  bg: '#faf7f2',          // Main background (warm sand)
-  bgAlt: '#f3ede5',       // Alternative background
-  bgLight: '#e8dcc8',     // Light background (warm beige)
-  bgAccent: '#f5ede5',    // Light accent background for selected/hover states
+  bg: '#0f0f1a',          // Main background (deep dark)
+  bgAlt: '#1a1a2e',       // Alternative background
+  bgLight: '#252541',     // Light background (dark blue-gray)
+  bgAccent: '#1e3a5f',    // Light accent background for selected/hover states
 
   // Text
-  text: '#2d2520',        // Main text (dark brown)
-  textSecond: '#6b5d55',  // Secondary text
-  textTertiary: '#9a8d83', // Tertiary text
+  text: '#ffffff',        // Main text (white)
+  textSecond: '#b0b0c8',  // Secondary text (light gray-blue)
+  textTertiary: '#7a7a8e', // Tertiary text (muted)
 
   // Accents
-  accent: '#1d8659',      // Primary accent (natural green)
-  accentDark: '#158347',  // Darker accent on hover
-  accentAlt: '#c67c4e',   // Alt accent (terracotta)
-  accentAltLight: '#f5e5d5', // Light background for terracotta accent
+  accent: '#00d4ff',      // Primary accent (cyan/electric blue)
+  accentDark: '#00a8cc',  // Darker accent on hover
+  accentAlt: '#ff0080',   // Alt accent (hot pink)
+  accentAltLight: '#1a0a2e', // Dark background for alt accent
 
   // UI
-  border: '#d9cfc5',      // Borders (warm gray)
-  borderLight: '#ebe4da', // Light border
-  hairline: '#f0ede9',    // Very light border/dividers
+  border: '#2a2a42',      // Borders (dark)
+  borderLight: '#3a3a52', // Light border
+  hairline: '#1f1f33',    // Very light border/dividers
   white: '#fff',          // White
 
   // States
-  error: '#d32f2f',       // Error
-  success: '#1d8659',     // Success (same as accent)
+  error: '#ff4757',       // Error (bright red)
+  success: '#00d4ff',     // Success (cyan)
 };
 
 export const shadows = {
-  sm: '0 2px 6px rgba(45,37,32,0.08)',
-  md: '0 4px 12px rgba(45,37,32,0.1)',
-  lg: '0 8px 24px rgba(45,37,32,0.12)',
-  accent: '0 8px 32px rgba(29,134,89,0.2)',
+  sm: '0 2px 8px rgba(0,0,0,0.3)',
+  md: '0 4px 16px rgba(0,0,0,0.4)',
+  lg: '0 8px 32px rgba(0,0,0,0.5)',
+  accent: '0 0 20px rgba(0,212,255,0.3)',
 };
 
 export const radius = {

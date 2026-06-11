@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { login, register } from '../api.js';
 import * as mock from '../mockApi.js';
+import { colors, radius, shadows } from '../theme.js';
 
 const TEST_EMAIL = 'test@tallerken.no';
 const TEST_PASS  = 'test1234';
@@ -85,8 +86,8 @@ export default function Login() {
               type="email" value={email} onChange={e => setEmail(e.target.value)}
               required placeholder="din@epost.no"
               style={s.input}
-              onFocus={e => e.target.style.borderColor = '#c2410c'}
-              onBlur={e => e.target.style.borderColor = '#e7e5e2'}
+              onFocus={e => e.target.style.borderColor = colors.accent}
+              onBlur={e => e.target.style.borderColor = colors.border}
             />
 
             <label style={{ ...s.label, marginTop: 14 }}>Passord</label>
@@ -94,8 +95,8 @@ export default function Login() {
               type="password" value={password} onChange={e => setPassword(e.target.value)}
               required placeholder="••••••••"
               style={s.input}
-              onFocus={e => e.target.style.borderColor = '#c2410c'}
-              onBlur={e => e.target.style.borderColor = '#e7e5e2'}
+              onFocus={e => e.target.style.borderColor = colors.accent}
+              onBlur={e => e.target.style.borderColor = colors.border}
             />
 
             <button type="submit" disabled={loading} style={s.submitBtn}>
@@ -115,7 +116,7 @@ export default function Login() {
 
 const s = {
   page: {
-    minHeight: '100vh', background: '#faf8f5',
+    minHeight: '100vh', background: colors.bg,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: '24px', fontFamily: 'system-ui, sans-serif',
   },
@@ -124,12 +125,12 @@ const s = {
   logoEmoji: { fontSize: '3rem', display: 'block', marginBottom: 8 },
   appName: {
     fontFamily: 'Georgia, serif', fontSize: '2.4rem', fontWeight: 800,
-    color: '#1c1917', margin: '0 0 6px', letterSpacing: '-0.03em',
+    color: colors.text, margin: '0 0 6px', letterSpacing: '-0.03em',
   },
-  tagline: { color: '#78716c', fontSize: '1rem', margin: 0 },
+  tagline: { color: colors.textSecond, fontSize: '1rem', margin: 0 },
 
   testBtn: {
-    width: '100%', background: '#c2410c', color: '#fff',
+    width: '100%', background: colors.accent, color: '#fff',
     border: 'none', borderRadius: 14, padding: '16px',
     fontSize: '1rem', fontWeight: 700, cursor: 'pointer',
     marginBottom: 20, transition: 'background 0.2s',
@@ -139,13 +140,13 @@ const s = {
   divider: {
     display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20,
   },
-  dividerLine: { flex: 1, height: 1, background: '#e7e5e2' },
-  dividerText: { color: '#a8a29e', fontSize: '0.8rem', whiteSpace: 'nowrap' },
+  dividerLine: { flex: 1, height: 1, background: colors.border },
+  dividerText: { color: 'colors.textTertiary', fontSize: '0.8rem', whiteSpace: 'nowrap' },
 
   card: {
-    background: '#fff', borderRadius: 20, padding: 28,
-    border: '1px solid #f0ede9',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.04), 0 12px 40px rgba(0,0,0,0.06)',
+    background: colors.bgAlt, borderRadius: radius.xl, padding: 28,
+    border: `1px solid ${colors.border}`,
+    boxShadow: shadows.md,
   },
   error: {
     background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10,
@@ -154,16 +155,16 @@ const s = {
   label: { display: 'block', color: '#44403c', fontSize: '0.88rem', fontWeight: 600, marginBottom: 6 },
   input: {
     width: '100%', boxSizing: 'border-box',
-    background: '#faf8f5', border: '1.5px solid #e7e5e2', borderRadius: 10,
-    padding: '11px 14px', fontSize: '1rem', color: '#1c1917',
+    background: colors.bg, border: '1.5px solid #e7e5e2', borderRadius: 10,
+    padding: '11px 14px', fontSize: '1rem', color: 'colors.text',
     outline: 'none', transition: 'border-color 0.2s',
   },
   submitBtn: {
-    width: '100%', background: '#1c1917', color: '#fff',
+    width: '100%', background: 'colors.text', color: '#fff',
     border: 'none', borderRadius: 10, padding: '13px',
     fontSize: '1rem', fontWeight: 600, cursor: 'pointer', marginTop: 20,
     transition: 'background 0.2s',
   },
-  registerLink: { textAlign: 'center', color: '#78716c', fontSize: '0.88rem', marginTop: 16, marginBottom: 0 },
-  link: { color: '#c2410c', fontWeight: 600, textDecoration: 'none' },
+  registerLink: { textAlign: 'center', color: colors.textSecond, fontSize: '0.88rem', marginTop: 16, marginBottom: 0 },
+  link: { color: colors.accent, fontWeight: 600, textDecoration: 'none' },
 };

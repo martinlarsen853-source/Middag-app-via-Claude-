@@ -77,7 +77,7 @@ export default function StoreSelector() {
       {/* Meal reminder */}
       {meal && (
         <div style={{
-          background: colors.white,
+          background: colors.bgAlt,
           borderRadius: radius.md,
           padding: '12px 16px',
           display: 'flex',
@@ -113,7 +113,7 @@ export default function StoreSelector() {
               onClick={() => handleSelectStore(store.id)}
               style={{
                 width: '100%',
-                background: colors.white,
+                background: colors.bgAlt,
                 border: `1.5px solid ${colors.border}`,
                 borderRadius: radius.md,
                 padding: '16px',
@@ -130,7 +130,7 @@ export default function StoreSelector() {
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.borderColor = colors.border;
-                e.currentTarget.style.background = colors.white;
+                e.currentTarget.style.background = colors.bgAlt;
               }}
             >
               <div style={{ fontSize: '2.2rem' }}>{storeEmojis[store.name] || '🏪'}</div>

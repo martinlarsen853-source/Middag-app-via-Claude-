@@ -65,9 +65,9 @@ export default function Navbar() {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '14px 16px',
-        background: `rgba(250,247,242,0.9)`,
+        background: `rgba(15,15,26,0.95)`,
         backdropFilter: 'blur(12px)',
-        borderBottom: `1px solid ${colors.borderLight}`,
+        borderBottom: `1px solid ${colors.border}`,
         boxShadow: shadows.sm,
       }} className="no-print">
         <Link to="/" style={{
@@ -106,7 +106,7 @@ export default function Navbar() {
             onMouseLeave={e => Object.assign(e.target.style, { borderColor: colors.border, color: colors.textSecond })}
             title="Husholdning"
             style={{
-              background: colors.white,
+              background: colors.bgLight,
               border: `1.5px solid ${colors.border}`,
               borderRadius: radius.md,
               padding: '8px',
@@ -131,7 +131,7 @@ export default function Navbar() {
             onMouseLeave={e => Object.assign(e.target.style, { borderColor: colors.border, color: colors.textSecond })}
             title="Logg ut"
             style={{
-              background: colors.white,
+              background: colors.bgLight,
               border: `1.5px solid ${colors.border}`,
               borderRadius: radius.md,
               padding: '8px',

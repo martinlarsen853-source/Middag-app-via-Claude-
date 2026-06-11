@@ -412,7 +412,7 @@ const s = {
   drawer: {
     position: 'fixed', top: 0, left: 0, bottom: 0,
     width: 300, zIndex: 50,
-    background: colors.white, borderRight: `1px solid ${colors.hairline}`,
+    background: colors.bgAlt, borderRight: `1px solid ${colors.hairline}`,
     boxShadow: '4px 0 40px rgba(0,0,0,0.12)',
     display: 'flex', flexDirection: 'column',
     transition: 'transform 0.28s cubic-bezier(0.4,0,0.2,1)',
@@ -446,7 +446,7 @@ const s = {
     cursor: 'pointer', transition: 'all 0.15s',
   },
   chipActive: {
-    background: colors.accent, borderColor: '#c2410c', color: '#fff',
+    background: colors.accent, borderColor: '#c2410c', color: 'colors.white',
   },
   drawerFooter: {
     padding: '16px 20px', borderTop: `1px solid ${colors.hairline}`,
@@ -458,7 +458,7 @@ const s = {
     textDecoration: 'underline',
   },
   showBtn: {
-    background: colors.accent, color: '#fff', border: 'none',
+    background: colors.accent, color: 'colors.white', border: 'none',
     borderRadius: 12, padding: '14px', fontSize: '1rem', fontWeight: 700,
     cursor: 'pointer', boxShadow: '0 4px 16px rgba(194,65,12,0.25)',
   },
@@ -475,7 +475,7 @@ const s = {
   personBox: { display: 'flex', alignItems: 'center', gap: 6 },
   personBtn: {
     width: 28, height: 28, borderRadius: 8,
-    border: `1.5px solid ${colors.border}`, background: '#fff',
+    border: `1.5px solid ${colors.border}`, background: 'colors.white',
     color: colors.text, fontSize: '1rem', fontWeight: 700,
     cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
   },
@@ -485,7 +485,7 @@ const s = {
   toolRow: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 0 },
   createBtn: {
     flexShrink: 0, width: 36, height: 36, borderRadius: '50%',
-    background: colors.accent, color: '#fff', border: 'none',
+    background: colors.accent, color: 'colors.white', border: 'none',
     fontSize: '1.2rem', fontWeight: 700, cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     boxShadow: '0 2px 8px rgba(194, 65, 12, 0.3)', transition: 'all 0.15s',
@@ -493,14 +493,14 @@ const s = {
   filterBtn: {
     flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
     padding: '6px 12px', borderRadius: 999,
-    border: `1.5px solid ${colors.border}`, background: '#fff',
+    border: `1.5px solid ${colors.border}`, background: 'colors.white',
     color: colors.text, fontSize: '0.8rem', fontWeight: 700,
     cursor: 'pointer', transition: 'all 0.15s', position: 'relative',
   },
-  filterBtnActive: { background: '#1c1917', borderColor: '#1c1917', color: '#fff' },
+  filterBtnActive: { background: '#1c1917', borderColor: '#1c1917', color: 'colors.white' },
   badge: {
     minWidth: 18, height: 18, borderRadius: 999,
-    background: colors.accent, color: '#fff',
+    background: colors.accent, color: 'colors.white',
     fontSize: '0.7rem', fontWeight: 800,
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
     padding: '0 4px',
@@ -509,11 +509,11 @@ const s = {
   sortRow: { display: 'flex', gap: 6, overflowX: 'auto', flex: 1 },
   pill: {
     flexShrink: 0, padding: '6px 12px', borderRadius: 999,
-    border: `1.5px solid ${colors.border}`, background: '#fff',
+    border: `1.5px solid ${colors.border}`, background: 'colors.white',
     color: colors.textSecond, fontSize: '0.78rem', fontWeight: 600,
     cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s',
   },
-  pillActive: { background: '#c2410c', borderColor: '#c2410c', color: '#fff' },
+  pillActive: { background: '#c2410c', borderColor: '#c2410c', color: 'colors.white' },
 
   activeTagRow: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 10 },
   activeTagLabel: { fontSize: '0.72rem', color: colors.textTertiary, fontWeight: 600 },
@@ -528,7 +528,7 @@ const s = {
   list: { padding: '16px 16px 32px', display: 'flex', flexDirection: 'column', gap: 12 },
   card: {
     display: 'flex', alignItems: 'center', gap: 16,
-    background: colors.white, borderRadius: 20, padding: '18px 16px',
+    background: colors.bgAlt, borderRadius: 20, padding: '18px 16px',
     border: `1px solid ${colors.hairline}`,
     cursor: 'pointer', transition: 'transform 0.12s, box-shadow 0.12s',
     userSelect: 'none',
@@ -555,7 +555,7 @@ const s = {
   loadingEmoji: { fontSize: '3rem', display: 'block', marginBottom: 12 },
   loadingText: { color: colors.textTertiary, fontSize: '1rem', marginBottom: 16 },
   resetBtn: {
-    background: colors.accent, color: '#fff', border: 'none',
+    background: colors.accent, color: 'colors.white', border: 'none',
     borderRadius: 10, padding: '10px 20px', fontSize: '0.9rem',
     fontWeight: 600, cursor: 'pointer',
   },

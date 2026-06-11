@@ -5,15 +5,15 @@ import PersonCounter from './PersonCounter.jsx';
 import { colors, shadows, radius } from '../theme.js';
 
 const sectionColors = {
-  'Frukt & grønt': { bg: '#e0f7dd', text: '#1a6e3f' },
-  'Kjøtt & fisk': { bg: '#ffe0e0', text: '#8b2a2a' },
-  'Meieri': { bg: '#fff5e0', text: '#8b6f00' },
-  'Tørrmat': { bg: '#ffe8cc', text: '#8b4513' },
-  'Frys': { bg: '#e0f4ff', text: '#003d66' },
-  'Bakeri': { bg: '#fde8b8', text: '#8b7000' },
-  'Krydder & sauser': { bg: '#f3e0ff', text: '#663d99' },
-  'Drikkevarer': { bg: '#e0f5ff', text: '#00668b' },
-  'Diverse': { bg: '#f0ede9', text: '#78716c' }
+  'Frukt & grønt': { bg: '#1a3a2e', text: '#5cff9e' },
+  'Kjøtt & fisk': { bg: '#3a1a1a', text: '#ff6b6b' },
+  'Meieri': { bg: '#3a3a1a', text: '#ffd666' },
+  'Tørrmat': { bg: '#3a2a1a', text: '#ffb366' },
+  'Frys': { bg: '#1a3a4a', text: '#66d4ff' },
+  'Bakeri': { bg: '#3a3a2a', text: '#ffcc66' },
+  'Krydder & sauser': { bg: '#2a1a3a', text: '#dd99ff' },
+  'Drikkevarer': { bg: '#1a3a4a', text: '#66d4ff' },
+  'Diverse': { bg: '#2a2a3a', text: '#b0b0c8' }
 };
 
 function PriceDots({ level }) {
@@ -112,7 +112,7 @@ export default function MealDetail() {
 
       {/* Hero card */}
       <div style={{
-        background: colors.white,
+        background: colors.bgAlt,
         borderRadius: radius.xl,
         padding: '24px',
         textAlign: 'center',
@@ -170,7 +170,7 @@ export default function MealDetail() {
 
       {/* Persons selector */}
       <div style={{
-        background: colors.white,
+        background: colors.bgAlt,
         borderRadius: radius.xl,
         padding: '16px',
         border: `1px solid ${colors.border}`,
@@ -186,7 +186,7 @@ export default function MealDetail() {
 
       {/* Ingredients */}
       <div style={{
-        background: colors.white,
+        background: colors.bgAlt,
         borderRadius: radius.xl,
         padding: '16px',
         border: `1px solid ${colors.border}`,
