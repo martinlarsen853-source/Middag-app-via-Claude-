@@ -31,12 +31,12 @@ function Reveal({ children, delay = 0, className = '' }) {
 }
 
 const features = [
-  { emoji: '🎡', title: 'Spinnehjulet', desc: 'Scroll gjennom middager på sekunder. Ingen planlegging nødvendig.' },
+  { emoji: '🎲', title: '«Velg for meg»', desc: 'Ett trykk, så foreslår appen en middag dere ikke har spist på lenge.' },
+  { emoji: '💰', title: 'Ekte priser', desc: 'Hver rett viser hva den faktisk koster, med dagsferske butikkpriser.' },
   { emoji: '🛒', title: 'Handleliste etter hylle', desc: 'Lista er sortert etter din butikk. Bare følg rekkefølgen.' },
   { emoji: '👨‍👩‍👧', title: 'Del med husstanden', desc: 'Send en kode til samboeren. Dere ser det samme, alltid.' },
   { emoji: '⚖️', title: 'Skaler antall', desc: 'Trykk + eller −. Mengdene justeres automatisk.' },
-  { emoji: '⏱', title: 'Sorter etter tid', desc: 'Dårlig tid? Se de raskeste rettene først.' },
-  { emoji: '📅', title: 'Sjelden spist', desc: 'Appen husker. Få variasjon uten å tenke på det.' },
+  { emoji: '🏷', title: 'Smarte merker', desc: 'NYHET, RASK og BUDSJETTVINNER — appen merker rettene for deg.' },
 ];
 
 export default function LandingPage() {
@@ -49,7 +49,7 @@ export default function LandingPage() {
       {/* ── NAV ── */}
       <nav className="landing-nav">
         <div className="nav-inner">
-          <span className="nav-logo">🍽 Tallerken</span>
+          <span className="nav-logo">🍽️ Tallerken</span>
           <div className="nav-links">
             {token ? (
               <button className="btn-primary" onClick={() => navigate('/app')}>Åpne appen</button>
@@ -63,7 +63,7 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* ── HERO ── */}
+      {/* ── HERO (brand teal) ── */}
       <section className="hero">
         <div className="hero-inner">
           <div className="hero-badge">Gratis å bruke</div>
@@ -73,8 +73,8 @@ export default function LandingPage() {
             igjen
           </h1>
           <p className="hero-sub">
-            Snurr hjulet, velg middag, få handlelista sortert etter butikkens hyller.
-            Fra null til klar på under ett minutt.
+            Bla i rettene dine, trykk «Velg for meg», og få handlelista sortert
+            etter butikkens hyller — med ekte priser. Fra null til klar på under ett minutt.
           </p>
           <div className="hero-actions">
             <Link to="/register" className="btn-hero">Start gratis →</Link>
@@ -93,28 +93,30 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── WHEEL PREVIEW ── */}
+      {/* ── CARD PREVIEW (matches the in-app meal cards) ── */}
       <section className="preview-section">
         <Reveal>
           <div className="preview-card">
             <p className="preview-label">Slik ser det ut</p>
-            <div className="wheel-mock">
-              {[
-                { e: '🌮', n: 'Tacos', t: '30 min', dim: true },
-                { e: '🍝', n: 'Spaghetti Bolognese', t: '45 min', sel: true },
-                { e: '🐟', n: 'Laksepasta', t: '25 min', dim: true },
-              ].map(item => (
-                <div key={item.n} className={`mock-row ${item.sel ? 'mock-selected' : 'mock-dim'}`}>
-                  <span className="mock-emoji">{item.e}</span>
-                  <div>
-                    <p className="mock-name">{item.n}</p>
-                    <p className="mock-time">⏱ {item.t}</p>
-                  </div>
-                  {item.sel && <span className="mock-dot" />}
+
+            <div className="mock-meal">
+              <div className="mock-hero">
+                <span className="mock-hero-emoji">🍝</span>
+                <span className="mock-badge">NYHET</span>
+                <span className="mock-time">⏱ 45 min</span>
+              </div>
+              <div className="mock-body">
+                <p className="mock-name">Spaghetti Bolognese</p>
+                <p className="mock-desc">Klassikeren hele familien elsker</p>
+                <div className="mock-chips">
+                  <span className="mock-chip">Hverdags</span>
+                  <span className="mock-chip">Barnevennlig</span>
+                  <span className="mock-chip mock-chip-price">ca. 187 kr</span>
                 </div>
-              ))}
+              </div>
             </div>
-            <div className="mock-btn">Velg denne! 🍝</div>
+
+            <div className="mock-btn">🎲 Velg for meg</div>
           </div>
         </Reveal>
       </section>
@@ -125,7 +127,7 @@ export default function LandingPage() {
           <h2 className="section-title">Fire steg. Ingen stress.</h2>
         </Reveal>
         <div className="steps-grid">
-          {['Åpne appen i butikken', 'Snurr hjulet, velg middag', 'Velg butikk', 'Følg lista hyllevis'].map((text, i) => (
+          {['Åpne appen i butikken', 'Velg middag — eller la appen velge', 'Velg butikk', 'Følg lista hyllevis'].map((text, i) => (
             <Reveal key={text} delay={i * 80}>
               <div className="step-card">
                 <span className="step-num">{i + 1}</span>
@@ -158,7 +160,7 @@ export default function LandingPage() {
       <section className="cta-section">
         <Reveal>
           <div className="cta-box">
-            <span className="cta-emoji">🍽</span>
+            <span className="cta-emoji">🍽️</span>
             <h2 className="cta-title">Klar til å prøve?</h2>
             <p className="cta-sub">Gratis. Ingen kredittkort. Klar på 30 sekunder.</p>
             <Link to="/register" className="btn-hero">Opprett konto gratis →</Link>
@@ -166,14 +168,15 @@ export default function LandingPage() {
         </Reveal>
       </section>
 
-      <footer className="landing-footer">© 2025 Tallerken</footer>
+      <footer className="landing-footer">© 2026 Tallerken</footer>
 
       <style>{`
-        /* ── TOKENS ── */
+        /* ── TOKENS ──
+           Brand: deep teal #0e6b60 · apricot #e2772e · dark pills #1c1c1a */
         .landing {
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
-          background: #f6f6f8;
-          color: #17171c;
+          background: #ffffff;
+          color: #1c1c1a;
           overflow-x: hidden;
         }
 
@@ -191,70 +194,69 @@ export default function LandingPage() {
         /* ── NAV ── */
         .landing-nav {
           position: sticky; top: 0; z-index: 50;
-          background: rgba(255,255,255,0.85);
+          background: rgba(14,107,96,0.97);
           backdrop-filter: blur(12px);
-          border-bottom: 1px solid #e6e6ea;
         }
         .nav-inner {
           max-width: 1100px; margin: 0 auto;
-          padding: 18px 24px;
+          padding: 16px 24px;
           display: flex; align-items: center; justify-content: space-between;
         }
-        .nav-logo { font-size: 1.2rem; font-weight: 700; color: #17171c; letter-spacing: -0.01em; }
+        .nav-logo { font-size: 1.2rem; font-weight: 800; color: #fff; letter-spacing: -0.01em; }
         .nav-links { display: flex; align-items: center; gap: 12px; }
-        .nav-link { color: #5f5f68; font-family: system-ui, sans-serif; font-size: 0.95rem; text-decoration: none; padding: 6px 12px; border-radius: 8px; transition: color 0.2s; }
-        .nav-link:hover { color: #17171c; }
+        .nav-link { color: rgba(255,255,255,0.85); font-size: 0.95rem; text-decoration: none; padding: 6px 12px; border-radius: 8px; transition: color 0.2s; }
+        .nav-link:hover { color: #fff; }
 
         /* ── BUTTONS ── */
         .btn-primary {
-          background: #ff5a36; color: #fff;
-          font-family: system-ui, sans-serif; font-size: 0.95rem; font-weight: 600;
-          padding: 8px 20px; border-radius: 10px; border: none;
+          background: #fff; color: #0e6b60;
+          font-size: 0.95rem; font-weight: 700;
+          padding: 9px 20px; border-radius: 999px; border: none;
           text-decoration: none; cursor: pointer;
-          transition: background 0.2s, transform 0.15s;
+          transition: transform 0.15s, box-shadow 0.2s;
         }
-        .btn-primary:hover { background: #e64726; transform: scale(1.02); }
+        .btn-primary:hover { transform: scale(1.03); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
         .btn-hero {
-          background: #ff5a36; color: #fff;
-          font-family: system-ui, sans-serif; font-size: 1.1rem; font-weight: 700;
-          padding: 16px 36px; border-radius: 14px; border: none;
+          background: #1c1c1a; color: #fff;
+          font-size: 1.05rem; font-weight: 800;
+          padding: 16px 36px; border-radius: 999px; border: none;
           text-decoration: none; cursor: pointer; display: inline-block;
           transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-          box-shadow: 0 8px 32px rgba(255,90,54,0.25);
+          box-shadow: 0 8px 28px rgba(28,28,26,0.3);
         }
-        .btn-hero:hover { background: #e64726; transform: translateY(-2px); box-shadow: 0 12px 40px rgba(255,90,54,0.32); }
+        .btn-hero:hover { background: #333330; transform: translateY(-2px); }
         .btn-ghost {
-          color: #5f5f68; font-family: system-ui, sans-serif; font-size: 1rem;
-          padding: 14px 24px; border-radius: 14px; border: 2px solid #e6e6ea;
+          color: #fff; font-size: 1rem; font-weight: 600;
+          padding: 14px 24px; border-radius: 999px; border: 2px solid rgba(255,255,255,0.4);
           text-decoration: none; display: inline-block;
-          transition: border-color 0.2s, color 0.2s;
+          transition: border-color 0.2s, background 0.2s;
         }
-        .btn-ghost:hover { border-color: #9c9ca6; color: #17171c; }
+        .btn-ghost:hover { border-color: #fff; background: rgba(255,255,255,0.1); }
 
         /* ── HERO ── */
         .hero {
           position: relative;
-          max-width: 1100px; margin: 0 auto;
-          padding: 100px 24px 80px;
+          background: linear-gradient(170deg, #0e6b60 0%, #0a5048 100%);
+          padding: 90px 24px 180px;
           overflow: hidden;
         }
-        .hero-inner { position: relative; z-index: 2; max-width: 600px; }
+        .hero-inner { position: relative; z-index: 2; max-width: 1100px; margin: 0 auto; }
         .hero-badge {
           display: inline-block;
-          background: #fff1ec; color: #ff5a36; border: 1px solid #ffd0c2;
-          font-family: system-ui, sans-serif; font-size: 0.8rem; font-weight: 600;
+          background: rgba(255,255,255,0.14); color: #fff;
+          border: 1px solid rgba(255,255,255,0.25);
+          font-size: 0.78rem; font-weight: 700;
           padding: 5px 14px; border-radius: 999px; margin-bottom: 24px;
-          letter-spacing: 0.02em; text-transform: uppercase;
+          letter-spacing: 0.05em; text-transform: uppercase;
         }
         .hero-title {
           font-size: clamp(2.6rem, 6vw, 4.2rem);
-          font-weight: 800; line-height: 1.1;
+          font-weight: 800; line-height: 1.08; color: #fff;
           letter-spacing: -0.03em; margin: 0 0 24px;
         }
-        .hero-title em { font-style: italic; color: #ff5a36; }
+        .hero-title em { font-style: normal; color: #f4b173; }
         .hero-sub {
-          font-family: system-ui, sans-serif;
-          font-size: 1.15rem; color: #5f5f68; line-height: 1.7;
+          font-size: 1.12rem; color: rgba(255,255,255,0.85); line-height: 1.7;
           margin: 0 0 36px; max-width: 480px;
         }
         .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
@@ -264,70 +266,87 @@ export default function LandingPage() {
         .deco {
           position: absolute; font-size: 2.5rem;
           animation: float 6s ease-in-out infinite;
-          opacity: 0.18; filter: grayscale(0.2);
+          opacity: 0.25;
         }
-        .deco-1 { top: 10%; right: 8%;  animation-delay: 0s;    font-size: 3.5rem; opacity: 0.22; }
+        .deco-1 { top: 10%; right: 8%;  animation-delay: 0s;    font-size: 3.5rem; opacity: 0.3; }
         .deco-2 { top: 40%; right: 18%; animation-delay: 1.2s; }
         .deco-3 { top: 65%; right: 6%;  animation-delay: 0.6s;  font-size: 2rem; }
-        .deco-4 { top: 20%; right: 35%; animation-delay: 2s;    font-size: 2rem; opacity: 0.12; }
-        .deco-5 { top: 75%; right: 30%; animation-delay: 1.6s;  opacity: 0.14; }
-        .deco-6 { top: 5%;  right: 52%; animation-delay: 0.4s;  font-size: 2rem; opacity: 0.1; }
+        .deco-4 { top: 20%; right: 35%; animation-delay: 2s;    font-size: 2rem; opacity: 0.16; }
+        .deco-5 { top: 75%; right: 30%; animation-delay: 1.6s;  opacity: 0.18; }
+        .deco-6 { top: 5%;  right: 52%; animation-delay: 0.4s;  font-size: 2rem; opacity: 0.14; }
         @keyframes float {
           0%, 100% { transform: translateY(0) rotate(-4deg); }
           50%       { transform: translateY(-18px) rotate(4deg); }
         }
 
-        /* ── PREVIEW ── */
-        .preview-section { max-width: 420px; margin: 0 auto; padding: 0 24px 80px; }
+        /* ── PREVIEW — overlaps the teal hero, mirrors in-app meal cards ── */
+        .preview-section { max-width: 420px; margin: -130px auto 0; padding: 0 24px 80px; position: relative; z-index: 3; }
         .preview-card {
           background: #fff; border-radius: 24px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.04), 0 20px 60px rgba(0,0,0,0.08);
-          padding: 28px; border: 1px solid #f0f0f3;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05), 0 24px 70px rgba(0,0,0,0.18);
+          padding: 22px; border: 1px solid #efefea;
         }
         .preview-label {
-          font-family: system-ui, sans-serif; font-size: 0.75rem; font-weight: 600;
-          color: #9c9ca6; text-transform: uppercase; letter-spacing: 0.08em;
-          text-align: center; margin: 0 0 16px;
+          font-size: 0.72rem; font-weight: 700;
+          color: #94948c; text-transform: uppercase; letter-spacing: 0.08em;
+          text-align: center; margin: 0 0 14px;
         }
-        .wheel-mock { display: flex; flex-direction: column; gap: 8px; }
-        .mock-row {
-          display: flex; align-items: center; gap: 12px;
-          padding: 12px 16px; border-radius: 14px;
-          transition: all 0.2s;
+        .mock-meal {
+          border-radius: 18px; overflow: hidden;
+          border: 1px solid #efefea;
+          box-shadow: 0 2px 4px rgba(28,28,26,0.04), 0 10px 28px rgba(28,28,26,0.07);
         }
-        .mock-selected {
-          background: #fff1ec; border: 2px solid #ffd0c2;
-          box-shadow: 0 4px 16px rgba(255,90,54,0.08);
+        .mock-hero {
+          position: relative; height: 130px;
+          background: linear-gradient(135deg, #fdf0d5 0%, #f7d9a8 100%);
+          display: flex; align-items: center; justify-content: center;
         }
-        .mock-dim { opacity: 0.4; border: 1px solid #f0f0f3; background: #f6f6f8; }
-        .mock-emoji { font-size: 1.8rem; }
-        .mock-name { font-weight: 700; font-size: 0.95rem; color: #17171c; margin: 0 0 2px; }
-        .mock-time { font-family: system-ui, sans-serif; font-size: 0.78rem; color: #9c9ca6; margin: 0; }
-        .mock-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff5a36; margin-left: auto; flex-shrink: 0; }
+        .mock-hero-emoji { font-size: 3.8rem; filter: drop-shadow(0 6px 12px rgba(28,28,26,0.18)); }
+        .mock-badge {
+          position: absolute; top: 10px; left: 10px;
+          background: #0e6b60; color: #fff;
+          font-size: 0.64rem; font-weight: 800; letter-spacing: 0.06em;
+          padding: 4px 10px; border-radius: 6px;
+        }
+        .mock-time {
+          position: absolute; bottom: 8px; right: 10px;
+          background: rgba(255,255,255,0.85); color: #1c1c1a;
+          font-size: 0.72rem; font-weight: 700;
+          padding: 4px 10px; border-radius: 999px;
+        }
+        .mock-body { padding: 12px 14px 14px; }
+        .mock-name { font-weight: 800; font-size: 1.05rem; color: #1c1c1a; margin: 0 0 2px; letter-spacing: -0.01em; }
+        .mock-desc { font-size: 0.82rem; color: #56564f; margin: 0 0 10px; }
+        .mock-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .mock-chip {
+          font-size: 0.72rem; font-weight: 600; color: #56564f;
+          background: #f1f1ec; border-radius: 8px; padding: 4px 10px;
+        }
+        .mock-chip-price { color: #0e6b60; background: #e6f1ef; }
         .mock-btn {
-          margin-top: 16px; background: #ff5a36; color: #fff;
-          text-align: center; padding: 13px; border-radius: 12px;
-          font-family: system-ui, sans-serif; font-weight: 700; font-size: 0.95rem;
+          margin-top: 14px; background: #1c1c1a; color: #fff;
+          text-align: center; padding: 14px; border-radius: 999px;
+          font-weight: 800; font-size: 0.95rem;
         }
 
         /* ── STEPS ── */
-        .steps-section { background: #17171c; padding: 80px 24px; }
+        .steps-section { background: #f7f7f3; padding: 80px 24px; }
         .steps-grid {
           max-width: 900px; margin: 40px auto 0;
           display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px;
         }
         .step-card {
-          background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+          background: #fff; border: 1px solid #e4e4df;
           border-radius: 20px; padding: 28px 20px; text-align: center;
         }
         .step-num {
           display: flex; align-items: center; justify-content: center;
           width: 44px; height: 44px; border-radius: 14px;
-          background: #ff5a36; color: #fff;
-          font-family: system-ui, sans-serif; font-size: 1.2rem; font-weight: 800;
+          background: #0e6b60; color: #fff;
+          font-size: 1.2rem; font-weight: 800;
           margin: 0 auto 16px;
         }
-        .step-text { font-family: system-ui, sans-serif; font-size: 0.95rem; color: #c9c9d1; margin: 0; }
+        .step-text { font-size: 0.95rem; color: #56564f; margin: 0; }
 
         /* ── FEATURES ── */
         .features-section { max-width: 1100px; margin: 0 auto; padding: 80px 24px; }
@@ -337,41 +356,37 @@ export default function LandingPage() {
           gap: 16px; margin-top: 40px;
         }
         .feature-card {
-          background: #fff; border: 1px solid #f0f0f3; border-radius: 20px;
+          background: #fff; border: 1px solid #e4e4df; border-radius: 20px;
           padding: 28px; transition: box-shadow 0.2s, transform 0.2s;
         }
-        .feature-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .feature-card:hover { box-shadow: 0 8px 32px rgba(28,28,26,0.08); transform: translateY(-2px); }
         .feature-emoji { font-size: 2rem; display: block; margin-bottom: 14px; }
-        .feature-title { font-size: 1.05rem; font-weight: 700; margin: 0 0 8px; color: #17171c; }
-        .feature-desc { font-family: system-ui, sans-serif; font-size: 0.88rem; color: #5f5f68; line-height: 1.6; margin: 0; }
+        .feature-title { font-size: 1.05rem; font-weight: 700; margin: 0 0 8px; color: #1c1c1a; }
+        .feature-desc { font-size: 0.88rem; color: #56564f; line-height: 1.6; margin: 0; }
 
         /* ── CTA ── */
-        .cta-section { background: #fff1ec; padding: 80px 24px; }
+        .cta-section { background: #0e6b60; padding: 80px 24px; }
         .cta-box {
           max-width: 540px; margin: 0 auto; text-align: center;
-          background: #fff; border: 1px solid #ffd0c2;
+          background: #fff;
           border-radius: 28px; padding: 56px 40px;
-          box-shadow: 0 4px 40px rgba(255,90,54,0.08);
+          box-shadow: 0 12px 60px rgba(0,0,0,0.2);
         }
         .cta-emoji { font-size: 3rem; display: block; margin-bottom: 16px; }
         .cta-title { font-size: 2.2rem; font-weight: 800; margin: 0 0 12px; letter-spacing: -0.02em; }
-        .cta-sub {
-          font-family: system-ui, sans-serif; color: #5f5f68;
-          font-size: 1rem; margin: 0 0 32px;
-        }
+        .cta-sub { color: #56564f; font-size: 1rem; margin: 0 0 32px; }
 
         /* ── SHARED ── */
         .section-title {
           font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800;
           letter-spacing: -0.03em; text-align: center; margin: 0;
         }
-        .steps-section .section-title { color: #fafaf9; }
 
         /* ── FOOTER ── */
         .landing-footer {
-          border-top: 1px solid #e6e6ea; padding: 24px;
-          text-align: center; font-family: system-ui, sans-serif;
-          font-size: 0.85rem; color: #9c9ca6;
+          border-top: 1px solid #e4e4df; padding: 24px;
+          text-align: center;
+          font-size: 0.85rem; color: #94948c;
         }
       `}</style>
     </div>
