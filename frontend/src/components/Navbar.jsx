@@ -47,7 +47,6 @@ export default function Navbar() {
       await joinHousehold(joinCode);
       setJoinSuccess('Du har blitt med i husholdningen!');
       setJoinCode('');
-      // Refresh
       const data = await getHousehold();
       setHousehold(data);
     } catch (err) {
@@ -55,27 +54,83 @@ export default function Navbar() {
     }
   }
 
+  const navStyles = {
+    bar: {
+      position: 'sticky',
+      top: 0,
+      zIndex: 40,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '12px 16px',
+      background: 'rgba(250,248,245,0.9)',
+      backdropFilter: 'blur(12px)',
+      borderBottom: '1px solid #e7e5e2',
+      print: 'none',
+    },
+    logo: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      textDecoration: 'none',
+      color: '#1c1917',
+      transition: 'color 0.2s',
+    },
+    logoText: {
+      fontFamily: 'Georgia, serif',
+      fontSize: '1.1rem',
+      fontWeight: 700,
+      letterSpacing: '-0.01em',
+      color: '#1c1917',
+    },
+    greeting: {
+      fontSize: '0.85rem',
+      color: '#78716c',
+      marginRight: '12px',
+      display: 'none',
+      '@media (min-width: 640px)': {
+        display: 'inline',
+      },
+    },
+    iconBtn: {
+      background: '#fff',
+      border: '1.5px solid #e7e5e2',
+      borderRadius: '10px',
+      padding: '8px',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'all 0.2s',
+      color: '#78716c',
+    },
+    iconBtnHover: {
+      borderColor: '#c2410c',
+      color: '#c2410c',
+    },
+  };
+
   return (
     <>
-      <nav className="glass border-b border-white/10 px-4 py-3 flex items-center justify-between sticky top-0 z-40 no-print">
-        <Link to="/" className="flex items-center gap-2 text-white hover:text-green-400 transition-colors">
-          <span className="text-2xl">🍽️</span>
-          <span className="font-bold text-lg hidden sm:block">Tallerken</span>
-          <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full hidden sm:block">v2</span>
+      <nav style={{ ...navStyles.bar, display: 'flex' }} className="no-print">
+        <Link to="/" style={navStyles.logo}>
+          <span style={{ fontSize: '1.8rem' }}>🍽️</span>
+          <span style={navStyles.logoText}>Tallerken</span>
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {user && (
-            <span className="text-gray-400 text-sm hidden sm:block mr-1">
+            <span style={navStyles.greeting}>
               Hei, {user.name.split(' ')[0]}!
             </span>
           )}
 
-          {/* Household button */}
           <button
             onClick={() => setShowModal(true)}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all duration-200 hover:scale-105"
+            onMouseEnter={e => Object.assign(e.target.style, navStyles.iconBtnHover)}
+            onMouseLeave={e => Object.assign(e.target.style, { borderColor: '#e7e5e2', color: '#78716c' })}
             title="Husholdning"
+            style={navStyles.iconBtn}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -84,11 +139,12 @@ export default function Navbar() {
             </svg>
           </button>
 
-          {/* Logout */}
           <button
             onClick={handleLogout}
-            className="p-2 rounded-xl bg-white/10 hover:bg-red-500/30 text-white hover:text-red-300 transition-all duration-200 hover:scale-105"
+            onMouseEnter={e => Object.assign(e.target.style, { borderColor: '#c2410c', color: '#c2410c' })}
+            onMouseLeave={e => Object.assign(e.target.style, { borderColor: '#e7e5e2', color: '#78716c' })}
             title="Logg ut"
+            style={navStyles.iconBtn}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -102,15 +158,45 @@ export default function Navbar() {
       {/* Household Modal */}
       {showModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 50,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+            background: 'rgba(28,25,23,0.5)',
+            backdropFilter: 'blur(8px)',
+            animation: 'fade-up 0.2s ease-out',
+          }}
           onClick={e => e.target === e.currentTarget && setShowModal(false)}
+          className="no-print"
         >
-          <div className="glass-strong rounded-3xl p-6 w-full max-w-sm animate-[fade-up_0.2s_ease-out]">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Husholdning</h2>
+          <div style={{
+            background: '#fff',
+            borderRadius: '20px',
+            padding: '24px',
+            width: '100%',
+            maxWidth: '384px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#1c1917', margin: 0, fontFamily: 'Georgia, serif' }}>
+                Husholdning
+              </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-400 transition-all"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#a8a29e',
+                  padding: '6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -120,20 +206,45 @@ export default function Navbar() {
 
             {household ? (
               <>
-                <div className="mb-5">
-                  <p className="text-gray-400 text-sm mb-1">Husholdning</p>
-                  <p className="text-white font-semibold">{household.household.name}</p>
+                <div style={{ marginBottom: '20px' }}>
+                  <p style={{ fontSize: '0.8rem', color: '#78716c', marginBottom: '4px', fontWeight: 500 }}>Husholdning</p>
+                  <p style={{ fontSize: '1rem', color: '#1c1917', fontWeight: 600, margin: 0 }}>{household.household.name}</p>
                 </div>
 
-                <div className="mb-5">
-                  <p className="text-gray-400 text-sm mb-2">Invitasjonskode</p>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 bg-white/10 rounded-2xl px-4 py-3 font-mono text-xl font-bold text-green-400 tracking-widest text-center">
+                <div style={{ marginBottom: '20px' }}>
+                  <p style={{ fontSize: '0.8rem', color: '#78716c', marginBottom: '8px', fontWeight: 500 }}>Invitasjonskode</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{
+                      flex: 1,
+                      background: '#fff7ed',
+                      border: '2px solid #fed7aa',
+                      borderRadius: '10px',
+                      padding: '12px',
+                      fontFamily: 'monospace',
+                      fontSize: '1.1rem',
+                      fontWeight: 700,
+                      color: '#c2410c',
+                      textAlign: 'center',
+                      letterSpacing: '0.1em',
+                    }}>
                       {household.household.invite_code}
                     </div>
                     <button
                       onClick={handleCopyCode}
-                      className="p-3 rounded-2xl bg-green-500/20 hover:bg-green-500/30 text-green-400 transition-all"
+                      style={{
+                        background: '#fff7ed',
+                        border: '2px solid #fed7aa',
+                        borderRadius: '10px',
+                        padding: '10px',
+                        cursor: 'pointer',
+                        color: '#c2410c',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={e => Object.assign(e.target.style, { background: '#fed7aa', color: '#b53b0a' })}
+                      onMouseLeave={e => Object.assign(e.target.style, { background: '#fff7ed', color: '#c2410c' })}
                       title="Kopier kode"
                     >
                       {copied ? (
@@ -149,47 +260,97 @@ export default function Navbar() {
                       )}
                     </button>
                   </div>
-                  <p className="text-gray-500 text-xs mt-2 text-center">Del denne koden med andre for å spise sammen</p>
+                  <p style={{ fontSize: '0.7rem', color: '#a8a29e', marginTop: '8px', textAlign: 'center', margin: '8px 0 0' }}>
+                    Del denne koden med andre for å spise sammen
+                  </p>
                 </div>
 
-                <div className="mb-5">
-                  <p className="text-gray-400 text-sm mb-2">Medlemmer ({household.members.length})</p>
-                  <div className="space-y-2">
+                <div style={{ marginBottom: '20px' }}>
+                  <p style={{ fontSize: '0.8rem', color: '#78716c', marginBottom: '8px', fontWeight: 500 }}>
+                    Medlemmer ({household.members.length})
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {household.members.map(m => (
-                      <div key={m.id} className="flex items-center gap-3 bg-white/5 rounded-xl px-3 py-2">
-                        <div className="w-8 h-8 rounded-full bg-green-500/30 flex items-center justify-center text-green-400 font-bold text-sm">
+                      <div key={m.id} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        background: '#fff7ed',
+                        borderRadius: '10px',
+                        padding: '10px 12px',
+                      }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          background: '#fed7aa',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#c2410c',
+                          fontWeight: 700,
+                          fontSize: '0.9rem',
+                        }}>
                           {m.name.charAt(0).toUpperCase()}
                         </div>
-                        <span className="text-white text-sm">{m.name}</span>
+                        <span style={{ color: '#1c1917', fontSize: '0.95rem' }}>{m.name}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="border-t border-white/10 pt-4">
-                  <p className="text-gray-400 text-sm mb-2">Bli med i annen husholdning</p>
-                  <form onSubmit={handleJoin} className="flex gap-2">
+                <div style={{ borderTop: '1px solid #e7e5e2', paddingTop: '16px' }}>
+                  <p style={{ fontSize: '0.8rem', color: '#78716c', marginBottom: '8px', fontWeight: 500 }}>Bli med i annen husholdning</p>
+                  <form onSubmit={handleJoin} style={{ display: 'flex', gap: '8px' }}>
                     <input
                       type="text"
                       value={joinCode}
                       onChange={e => setJoinCode(e.target.value.toUpperCase())}
                       placeholder="Kode"
                       maxLength={6}
-                      className="flex-1 bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 font-mono uppercase text-sm"
+                      style={{
+                        flex: 1,
+                        background: '#faf8f5',
+                        border: '1.5px solid #e7e5e2',
+                        borderRadius: '10px',
+                        padding: '10px 12px',
+                        color: '#1c1917',
+                        fontSize: '0.95rem',
+                        fontFamily: 'monospace',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        outline: 'none',
+                        transition: 'border 0.2s',
+                      }}
+                      onFocus={e => e.target.style.borderColor = '#c2410c'}
+                      onBlur={e => e.target.style.borderColor = '#e7e5e2'}
                     />
                     <button
                       type="submit"
-                      className="bg-green-500 hover:bg-green-400 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-all"
+                      style={{
+                        background: '#c2410c',
+                        color: '#fff',
+                        padding: '10px 16px',
+                        borderRadius: '10px',
+                        border: 'none',
+                        fontWeight: 600,
+                        fontSize: '0.9rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        boxShadow: '0 8px 32px rgba(194,65,12,0.25)',
+                      }}
+                      onMouseEnter={e => e.target.style.background = '#b53b0a'}
+                      onMouseLeave={e => e.target.style.background = '#c2410c'}
                     >
                       Bli med
                     </button>
                   </form>
-                  {joinError && <p className="text-red-400 text-xs mt-2">{joinError}</p>}
-                  {joinSuccess && <p className="text-green-400 text-xs mt-2">{joinSuccess}</p>}
+                  {joinError && <p style={{ color: '#b91c1c', fontSize: '0.75rem', marginTop: '8px' }}>{joinError}</p>}
+                  {joinSuccess && <p style={{ color: '#15803d', fontSize: '0.75rem', marginTop: '8px' }}>{joinSuccess}</p>}
                 </div>
               </>
             ) : (
-              <div className="text-center py-8 text-gray-400">Laster...</div>
+              <div style={{ textAlign: 'center', padding: '32px 0', color: '#a8a29e' }}>Laster...</div>
             )}
           </div>
         </div>

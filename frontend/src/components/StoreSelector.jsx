@@ -15,9 +15,9 @@ const storeDescriptions = {
 };
 
 const storeColors = {
-  'Rema 1000': 'hover:border-red-500/50 hover:bg-red-500/10',
-  'Kiwi': 'hover:border-yellow-500/50 hover:bg-yellow-500/10',
-  'Coop Extra': 'hover:border-green-500/50 hover:bg-green-500/10'
+  'Rema 1000': { border: '#fde8d8', bg: '#fff7ed' },
+  'Kiwi': { border: '#fed7aa', bg: '#fff7ed' },
+  'Coop Extra': { border: '#fed7aa', bg: '#fff7ed' }
 };
 
 export default function StoreSelector() {
@@ -43,20 +43,31 @@ export default function StoreSelector() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-5xl animate-spin">🛒</div>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ fontSize: '3rem', animation: 'spin 2s linear infinite' }}>🛒</div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-md mx-auto w-full px-4 py-6 space-y-6 animate-[fade-up_0.3s_ease-out]">
+    <div style={{ maxWidth: '448px', margin: '0 auto', width: '100%', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Back */}
       <button
         onClick={() => navigate(`/meal/${id}`)}
-        className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          color: '#78716c',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          transition: 'color 0.2s',
+        }}
+        onMouseEnter={e => e.target.style.color = '#c2410c'}
+        onMouseLeave={e => e.target.style.color = '#78716c'}
       >
-        <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
         Tilbake
@@ -64,44 +75,81 @@ export default function StoreSelector() {
 
       {/* Meal reminder */}
       {meal && (
-        <div className="glass rounded-2xl px-4 py-3 flex items-center gap-3">
-          <span className="text-3xl">{meal.emoji}</span>
+        <div style={{
+          background: '#fff',
+          borderRadius: '14px',
+          padding: '12px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          border: '1px solid #e7e5e2',
+        }}>
+          <span style={{ fontSize: '1.8rem' }}>{meal.emoji}</span>
           <div>
-            <p className="text-gray-400 text-xs">Du lager</p>
-            <p className="text-white font-semibold">{meal.name}</p>
+            <p style={{ fontSize: '0.75rem', color: '#a8a29e', margin: 0 }}>Du lager</p>
+            <p style={{ color: '#1c1917', fontWeight: 600, margin: 0 }}>{meal.name}</p>
           </div>
         </div>
       )}
 
       {/* Question */}
       <div>
-        <h1 className="text-2xl font-bold text-white mb-1">Hvilken butikk er du i?</h1>
-        <p className="text-gray-400 text-sm">Vi sorterer handlelisten etter butikkens rekkefølge</p>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#1c1917', marginBottom: '8px', fontFamily: 'Georgia, serif' }}>
+          Hvilken butikk er du i?
+        </h1>
+        <p style={{ color: '#78716c', fontSize: '0.9rem', margin: 0 }}>
+          Vi sorterer handlelisten etter butikkens rekkefølge
+        </p>
       </div>
 
       {/* Store cards */}
-      <div className="space-y-3">
-        {stores.map(store => (
-          <button
-            key={store.id}
-            onClick={() => handleSelectStore(store.id)}
-            className={`w-full glass rounded-3xl p-5 flex items-center gap-4 text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] border border-white/15 ${storeColors[store.name] || 'hover:border-white/30 hover:bg-white/10'}`}
-          >
-            <div className="text-4xl">{storeEmojis[store.name] || '🏪'}</div>
-            <div className="flex-1">
-              <h3 className="text-white font-bold text-lg">{store.name}</h3>
-              <p className="text-gray-400 text-sm mt-0.5">
-                {storeDescriptions[store.name] || 'Norsk dagligvarebutikk'}
-              </p>
-            </div>
-            <svg className="w-5 h-5 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        ))}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {stores.map(store => {
+          const colors = storeColors[store.name] || { border: '#fed7aa', bg: '#fff7ed' };
+          return (
+            <button
+              key={store.id}
+              onClick={() => handleSelectStore(store.id)}
+              style={{
+                width: '100%',
+                background: '#fff',
+                border: `1.5px solid #e7e5e2`,
+                borderRadius: '14px',
+                padding: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                textAlign: 'left',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = colors.border;
+                e.currentTarget.style.background = colors.bg;
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = '#e7e5e2';
+                e.currentTarget.style.background = '#fff';
+              }}
+            >
+              <div style={{ fontSize: '2.2rem' }}>{storeEmojis[store.name] || '🏪'}</div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ color: '#1c1917', fontWeight: 700, fontSize: '1rem', margin: 0 }}>
+                  {store.name}
+                </h3>
+                <p style={{ color: '#78716c', fontSize: '0.8rem', marginTop: '4px', margin: '4px 0 0' }}>
+                  {storeDescriptions[store.name] || 'Norsk dagligvarebutikk'}
+                </p>
+              </div>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="#a8a29e">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          );
+        })}
       </div>
 
-      <p className="text-center text-gray-600 text-xs">
+      <p style={{ textAlign: 'center', color: '#a8a29e', fontSize: '0.75rem', margin: 0 }}>
         Handlelisten sorteres etter den valgte butikkens avdelingsrekkefølge
       </p>
     </div>

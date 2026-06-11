@@ -20,9 +20,9 @@ function ProtectedRoute({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f1a] flex flex-col">
+    <div style={{ minHeight: '100vh', background: '#faf8f5', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
-      <main className="flex-1 flex flex-col">
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         {children}
       </main>
     </div>
