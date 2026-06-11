@@ -1,38 +1,39 @@
-// Modern dark theme with vibrant accents
+// Clean iOS-native design system
+// Light surfaces, appetizing coral accent, system typography
 export const colors = {
   // Backgrounds
-  bg: '#0f0f1a',          // Main background (deep dark)
-  bgAlt: '#1a1a2e',       // Alternative background
-  bgLight: '#252541',     // Light background (dark blue-gray)
-  bgAccent: '#1e3a5f',    // Light accent background for selected/hover states
+  bg: '#f6f6f8',          // Main background (iOS grouped background)
+  bgAlt: '#ffffff',       // Cards / elevated surfaces
+  bgLight: '#ededf0',     // Subtle fills (icon buttons, inactive pills)
+  bgAccent: '#fff1ec',    // Tinted background for selected states
 
   // Text
-  text: '#ffffff',        // Main text (white)
-  textSecond: '#b0b0c8',  // Secondary text (light gray-blue)
-  textTertiary: '#7a7a8e', // Tertiary text (muted)
+  text: '#17171c',        // Main text (near-black)
+  textSecond: '#5f5f68',  // Secondary text
+  textTertiary: '#9c9ca6', // Tertiary text / placeholders
 
   // Accents
-  accent: '#00d4ff',      // Primary accent (cyan/electric blue)
-  accentDark: '#00a8cc',  // Darker accent on hover
-  accentAlt: '#ff0080',   // Alt accent (hot pink)
-  accentAltLight: '#1a0a2e', // Dark background for alt accent
+  accent: '#ff5a36',      // Primary accent (appetizing tomato-coral)
+  accentDark: '#e64726',  // Darker accent on hover/press
+  accentAlt: '#23a559',   // Alt accent (fresh green – success, prices)
+  accentAltLight: '#e9f7ee', // Tinted background for green accent
 
   // UI
-  border: '#2a2a42',      // Borders (dark)
-  borderLight: '#3a3a52', // Light border
-  hairline: '#1f1f33',    // Very light border/dividers
+  border: '#e6e6ea',      // Borders
+  borderLight: '#f0f0f3', // Light border
+  hairline: '#f2f2f5',    // Dividers
   white: '#fff',          // White
 
   // States
-  error: '#ff4757',       // Error (bright red)
-  success: '#00d4ff',     // Success (cyan)
+  error: '#e0282e',       // Error
+  success: '#23a559',     // Success (same as accentAlt)
 };
 
 export const shadows = {
-  sm: '0 2px 8px rgba(0,0,0,0.3)',
-  md: '0 4px 16px rgba(0,0,0,0.4)',
-  lg: '0 8px 32px rgba(0,0,0,0.5)',
-  accent: '0 0 20px rgba(0,212,255,0.3)',
+  sm: '0 1px 2px rgba(20,20,30,0.04), 0 2px 8px rgba(20,20,30,0.04)',
+  md: '0 2px 4px rgba(20,20,30,0.04), 0 8px 24px rgba(20,20,30,0.07)',
+  lg: '0 4px 8px rgba(20,20,30,0.05), 0 16px 40px rgba(20,20,30,0.1)',
+  accent: '0 8px 24px rgba(255,90,54,0.32)',
 };
 
 export const radius = {

@@ -95,7 +95,7 @@ export default function StoreSelector() {
 
       {/* Question */}
       <div>
-        <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: colors.text, marginBottom: '8px', fontFamily: 'Georgia, serif' }}>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: colors.text, marginBottom: '8px', letterSpacing: '-0.02em' }}>
           Hvilken butikk er du i?
         </h1>
         <p style={{ color: colors.textSecond, fontSize: '0.9rem', margin: 0 }}>

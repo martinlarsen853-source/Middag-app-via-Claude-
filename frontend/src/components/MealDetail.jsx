@@ -5,15 +5,15 @@ import PersonCounter from './PersonCounter.jsx';
 import { colors, shadows, radius } from '../theme.js';
 
 const sectionColors = {
-  'Frukt & grønt': { bg: '#1a3a2e', text: '#5cff9e' },
-  'Kjøtt & fisk': { bg: '#3a1a1a', text: '#ff6b6b' },
-  'Meieri': { bg: '#3a3a1a', text: '#ffd666' },
-  'Tørrmat': { bg: '#3a2a1a', text: '#ffb366' },
-  'Frys': { bg: '#1a3a4a', text: '#66d4ff' },
-  'Bakeri': { bg: '#3a3a2a', text: '#ffcc66' },
-  'Krydder & sauser': { bg: '#2a1a3a', text: '#dd99ff' },
-  'Drikkevarer': { bg: '#1a3a4a', text: '#66d4ff' },
-  'Diverse': { bg: '#2a2a3a', text: '#b0b0c8' }
+  'Frukt & grønt': { bg: '#e9f7ee', text: '#1d7a40' },
+  'Kjøtt & fisk': { bg: '#fdeceb', text: '#b3362e' },
+  'Meieri': { bg: '#fdf4e0', text: '#8a6a14' },
+  'Tørrmat': { bg: '#f8efe4', text: '#8a5a24' },
+  'Frys': { bg: '#e7f3fb', text: '#1d6291' },
+  'Bakeri': { bg: '#f9f1de', text: '#856414' },
+  'Krydder & sauser': { bg: '#f3ecfa', text: '#6b3fa3' },
+  'Drikkevarer': { bg: '#e7f3fb', text: '#1d6291' },
+  'Diverse': { bg: '#f0f0f3', text: '#5f5f68' }
 };
 
 function PriceDots({ level }) {
@@ -125,7 +125,7 @@ export default function MealDetail() {
           fontWeight: 700,
           color: colors.text,
           margin: '0 0 8px',
-          fontFamily: 'Georgia, serif',
+          letterSpacing: '-0.02em',
         }}>
           {meal.name}
         </h1>

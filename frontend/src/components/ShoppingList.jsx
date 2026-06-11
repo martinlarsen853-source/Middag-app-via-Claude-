@@ -5,15 +5,15 @@ import PersonCounter from './PersonCounter.jsx';
 import { colors, radius } from '../theme.js';
 
 const sectionConfig = {
-  'Frukt & grønt': { icon: '🥦', color: '#5cff9e', bg: '#1a3a2e' },
-  'Kjøtt & fisk': { icon: '🥩', color: '#ff6b6b', bg: '#3a1a1a' },
-  'Meieri': { icon: '🥛', color: '#ffd666', bg: '#3a3a1a' },
-  'Tørrmat': { icon: '🌾', color: '#ffb366', bg: '#3a2a1a' },
-  'Frys': { icon: '🧊', color: '#66d4ff', bg: '#1a3a4a' },
-  'Bakeri': { icon: '🍞', color: '#ffcc66', bg: '#3a3a2a' },
-  'Krydder & sauser': { icon: '🫙', color: '#dd99ff', bg: '#2a1a3a' },
-  'Drikkevarer': { icon: '🥤', color: '#66d4ff', bg: '#1a3a4a' },
-  'Diverse': { icon: '🛒', color: '#b0b0c8', bg: '#2a2a3a' }
+  'Frukt & grønt': { icon: '🥦', color: '#1d7a40', bg: '#e9f7ee' },
+  'Kjøtt & fisk': { icon: '🥩', color: '#b3362e', bg: '#fdeceb' },
+  'Meieri': { icon: '🥛', color: '#8a6a14', bg: '#fdf4e0' },
+  'Tørrmat': { icon: '🌾', color: '#8a5a24', bg: '#f8efe4' },
+  'Frys': { icon: '🧊', color: '#1d6291', bg: '#e7f3fb' },
+  'Bakeri': { icon: '🍞', color: '#856414', bg: '#f9f1de' },
+  'Krydder & sauser': { icon: '🫙', color: '#6b3fa3', bg: '#f3ecfa' },
+  'Drikkevarer': { icon: '🥤', color: '#1d6291', bg: '#e7f3fb' },
+  'Diverse': { icon: '🛒', color: '#5f5f68', bg: '#f0f0f3' }
 };
 
 export default function ShoppingList() {
@@ -142,7 +142,7 @@ export default function ShoppingList() {
             alignItems: 'center',
             gap: '8px',
             margin: 0,
-            fontFamily: 'Georgia, serif',
+            letterSpacing: '-0.02em',
           }}>
             <span>{data.meal.emoji}</span>
             <span>{data.meal.name}</span>

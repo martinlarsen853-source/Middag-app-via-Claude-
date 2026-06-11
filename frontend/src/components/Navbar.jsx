@@ -65,10 +65,11 @@ export default function Navbar() {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '14px 16px',
-        background: `rgba(15,15,26,0.95)`,
-        backdropFilter: 'blur(12px)',
+        background: `rgba(255,255,255,0.85)`,
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
         borderBottom: `1px solid ${colors.border}`,
-        boxShadow: shadows.sm,
+        boxShadow: 'none',
       }} className="no-print">
         <Link to="/" style={{
           display: 'flex',

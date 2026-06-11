@@ -171,9 +171,9 @@ export default function LandingPage() {
       <style>{`
         /* ── TOKENS ── */
         .landing {
-          font-family: 'Georgia', 'Times New Roman', serif;
-          background: #faf8f5;
-          color: #1c1917;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+          background: #f6f6f8;
+          color: #17171c;
           overflow-x: hidden;
         }
 
@@ -191,45 +191,45 @@ export default function LandingPage() {
         /* ── NAV ── */
         .landing-nav {
           position: sticky; top: 0; z-index: 50;
-          background: rgba(250,248,245,0.9);
+          background: rgba(255,255,255,0.85);
           backdrop-filter: blur(12px);
-          border-bottom: 1px solid #e7e5e2;
+          border-bottom: 1px solid #e6e6ea;
         }
         .nav-inner {
           max-width: 1100px; margin: 0 auto;
           padding: 18px 24px;
           display: flex; align-items: center; justify-content: space-between;
         }
-        .nav-logo { font-size: 1.2rem; font-weight: 700; color: #1c1917; letter-spacing: -0.01em; }
+        .nav-logo { font-size: 1.2rem; font-weight: 700; color: #17171c; letter-spacing: -0.01em; }
         .nav-links { display: flex; align-items: center; gap: 12px; }
-        .nav-link { color: #78716c; font-family: system-ui, sans-serif; font-size: 0.95rem; text-decoration: none; padding: 6px 12px; border-radius: 8px; transition: color 0.2s; }
-        .nav-link:hover { color: #1c1917; }
+        .nav-link { color: #5f5f68; font-family: system-ui, sans-serif; font-size: 0.95rem; text-decoration: none; padding: 6px 12px; border-radius: 8px; transition: color 0.2s; }
+        .nav-link:hover { color: #17171c; }
 
         /* ── BUTTONS ── */
         .btn-primary {
-          background: #c2410c; color: #fff;
+          background: #ff5a36; color: #fff;
           font-family: system-ui, sans-serif; font-size: 0.95rem; font-weight: 600;
           padding: 8px 20px; border-radius: 10px; border: none;
           text-decoration: none; cursor: pointer;
           transition: background 0.2s, transform 0.15s;
         }
-        .btn-primary:hover { background: #b53b0a; transform: scale(1.02); }
+        .btn-primary:hover { background: #e64726; transform: scale(1.02); }
         .btn-hero {
-          background: #c2410c; color: #fff;
+          background: #ff5a36; color: #fff;
           font-family: system-ui, sans-serif; font-size: 1.1rem; font-weight: 700;
           padding: 16px 36px; border-radius: 14px; border: none;
           text-decoration: none; cursor: pointer; display: inline-block;
           transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-          box-shadow: 0 8px 32px rgba(194,65,12,0.25);
+          box-shadow: 0 8px 32px rgba(255,90,54,0.25);
         }
-        .btn-hero:hover { background: #b53b0a; transform: translateY(-2px); box-shadow: 0 12px 40px rgba(194,65,12,0.32); }
+        .btn-hero:hover { background: #e64726; transform: translateY(-2px); box-shadow: 0 12px 40px rgba(255,90,54,0.32); }
         .btn-ghost {
-          color: #78716c; font-family: system-ui, sans-serif; font-size: 1rem;
-          padding: 14px 24px; border-radius: 14px; border: 2px solid #e7e5e2;
+          color: #5f5f68; font-family: system-ui, sans-serif; font-size: 1rem;
+          padding: 14px 24px; border-radius: 14px; border: 2px solid #e6e6ea;
           text-decoration: none; display: inline-block;
           transition: border-color 0.2s, color 0.2s;
         }
-        .btn-ghost:hover { border-color: #a8a29e; color: #1c1917; }
+        .btn-ghost:hover { border-color: #9c9ca6; color: #17171c; }
 
         /* ── HERO ── */
         .hero {
@@ -241,7 +241,7 @@ export default function LandingPage() {
         .hero-inner { position: relative; z-index: 2; max-width: 600px; }
         .hero-badge {
           display: inline-block;
-          background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa;
+          background: #fff1ec; color: #ff5a36; border: 1px solid #ffd0c2;
           font-family: system-ui, sans-serif; font-size: 0.8rem; font-weight: 600;
           padding: 5px 14px; border-radius: 999px; margin-bottom: 24px;
           letter-spacing: 0.02em; text-transform: uppercase;
@@ -251,10 +251,10 @@ export default function LandingPage() {
           font-weight: 800; line-height: 1.1;
           letter-spacing: -0.03em; margin: 0 0 24px;
         }
-        .hero-title em { font-style: italic; color: #c2410c; }
+        .hero-title em { font-style: italic; color: #ff5a36; }
         .hero-sub {
           font-family: system-ui, sans-serif;
-          font-size: 1.15rem; color: #78716c; line-height: 1.7;
+          font-size: 1.15rem; color: #5f5f68; line-height: 1.7;
           margin: 0 0 36px; max-width: 480px;
         }
         .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
@@ -282,11 +282,11 @@ export default function LandingPage() {
         .preview-card {
           background: #fff; border-radius: 24px;
           box-shadow: 0 2px 4px rgba(0,0,0,0.04), 0 20px 60px rgba(0,0,0,0.08);
-          padding: 28px; border: 1px solid #f0ede9;
+          padding: 28px; border: 1px solid #f0f0f3;
         }
         .preview-label {
           font-family: system-ui, sans-serif; font-size: 0.75rem; font-weight: 600;
-          color: #a8a29e; text-transform: uppercase; letter-spacing: 0.08em;
+          color: #9c9ca6; text-transform: uppercase; letter-spacing: 0.08em;
           text-align: center; margin: 0 0 16px;
         }
         .wheel-mock { display: flex; flex-direction: column; gap: 8px; }
@@ -296,22 +296,22 @@ export default function LandingPage() {
           transition: all 0.2s;
         }
         .mock-selected {
-          background: #fff7ed; border: 2px solid #fed7aa;
-          box-shadow: 0 4px 16px rgba(194,65,12,0.08);
+          background: #fff1ec; border: 2px solid #ffd0c2;
+          box-shadow: 0 4px 16px rgba(255,90,54,0.08);
         }
-        .mock-dim { opacity: 0.4; border: 1px solid #f0ede9; background: #faf8f5; }
+        .mock-dim { opacity: 0.4; border: 1px solid #f0f0f3; background: #f6f6f8; }
         .mock-emoji { font-size: 1.8rem; }
-        .mock-name { font-weight: 700; font-size: 0.95rem; color: #1c1917; margin: 0 0 2px; }
-        .mock-time { font-family: system-ui, sans-serif; font-size: 0.78rem; color: #a8a29e; margin: 0; }
-        .mock-dot { width: 8px; height: 8px; border-radius: 50%; background: #c2410c; margin-left: auto; flex-shrink: 0; }
+        .mock-name { font-weight: 700; font-size: 0.95rem; color: #17171c; margin: 0 0 2px; }
+        .mock-time { font-family: system-ui, sans-serif; font-size: 0.78rem; color: #9c9ca6; margin: 0; }
+        .mock-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff5a36; margin-left: auto; flex-shrink: 0; }
         .mock-btn {
-          margin-top: 16px; background: #c2410c; color: #fff;
+          margin-top: 16px; background: #ff5a36; color: #fff;
           text-align: center; padding: 13px; border-radius: 12px;
           font-family: system-ui, sans-serif; font-weight: 700; font-size: 0.95rem;
         }
 
         /* ── STEPS ── */
-        .steps-section { background: #1c1917; padding: 80px 24px; }
+        .steps-section { background: #17171c; padding: 80px 24px; }
         .steps-grid {
           max-width: 900px; margin: 40px auto 0;
           display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px;
@@ -323,11 +323,11 @@ export default function LandingPage() {
         .step-num {
           display: flex; align-items: center; justify-content: center;
           width: 44px; height: 44px; border-radius: 14px;
-          background: #c2410c; color: #fff;
+          background: #ff5a36; color: #fff;
           font-family: system-ui, sans-serif; font-size: 1.2rem; font-weight: 800;
           margin: 0 auto 16px;
         }
-        .step-text { font-family: system-ui, sans-serif; font-size: 0.95rem; color: #d6d3d1; margin: 0; }
+        .step-text { font-family: system-ui, sans-serif; font-size: 0.95rem; color: #c9c9d1; margin: 0; }
 
         /* ── FEATURES ── */
         .features-section { max-width: 1100px; margin: 0 auto; padding: 80px 24px; }
@@ -337,26 +337,26 @@ export default function LandingPage() {
           gap: 16px; margin-top: 40px;
         }
         .feature-card {
-          background: #fff; border: 1px solid #f0ede9; border-radius: 20px;
+          background: #fff; border: 1px solid #f0f0f3; border-radius: 20px;
           padding: 28px; transition: box-shadow 0.2s, transform 0.2s;
         }
         .feature-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.08); transform: translateY(-2px); }
         .feature-emoji { font-size: 2rem; display: block; margin-bottom: 14px; }
-        .feature-title { font-size: 1.05rem; font-weight: 700; margin: 0 0 8px; color: #1c1917; }
-        .feature-desc { font-family: system-ui, sans-serif; font-size: 0.88rem; color: #78716c; line-height: 1.6; margin: 0; }
+        .feature-title { font-size: 1.05rem; font-weight: 700; margin: 0 0 8px; color: #17171c; }
+        .feature-desc { font-family: system-ui, sans-serif; font-size: 0.88rem; color: #5f5f68; line-height: 1.6; margin: 0; }
 
         /* ── CTA ── */
-        .cta-section { background: #fff7ed; padding: 80px 24px; }
+        .cta-section { background: #fff1ec; padding: 80px 24px; }
         .cta-box {
           max-width: 540px; margin: 0 auto; text-align: center;
-          background: #fff; border: 1px solid #fed7aa;
+          background: #fff; border: 1px solid #ffd0c2;
           border-radius: 28px; padding: 56px 40px;
-          box-shadow: 0 4px 40px rgba(194,65,12,0.08);
+          box-shadow: 0 4px 40px rgba(255,90,54,0.08);
         }
         .cta-emoji { font-size: 3rem; display: block; margin-bottom: 16px; }
         .cta-title { font-size: 2.2rem; font-weight: 800; margin: 0 0 12px; letter-spacing: -0.02em; }
         .cta-sub {
-          font-family: system-ui, sans-serif; color: #78716c;
+          font-family: system-ui, sans-serif; color: #5f5f68;
           font-size: 1rem; margin: 0 0 32px;
         }
 
@@ -369,9 +369,9 @@ export default function LandingPage() {
 
         /* ── FOOTER ── */
         .landing-footer {
-          border-top: 1px solid #e7e5e2; padding: 24px;
+          border-top: 1px solid #e6e6ea; padding: 24px;
           text-align: center; font-family: system-ui, sans-serif;
-          font-size: 0.85rem; color: #a8a29e;
+          font-size: 0.85rem; color: #9c9ca6;
         }
       `}</style>
     </div>

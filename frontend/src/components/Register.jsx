@@ -53,11 +53,11 @@ export default function Register() {
             fontWeight: 700,
             color: colors.text,
             marginBottom: '8px',
-            fontFamily: 'Georgia, serif',
+            letterSpacing: '-0.02em',
           }}>
             Tallerken
           </h1>
-          <p style={{ color: '#78716c', fontSize: '1rem', margin: 0 }}>Lag din konto</p>
+          <p style={{ color: colors.textSecond, fontSize: '1rem', margin: 0 }}>Lag din konto</p>
         </div>
 
         {/* Card */}

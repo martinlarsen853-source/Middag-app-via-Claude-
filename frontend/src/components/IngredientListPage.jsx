@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getIngredients, getIngredientCategories, deleteIngredient } from '../api.js';
+import { colors, radius, shadows } from '../theme.js';
 
 export default function IngredientListPage() {
   const [ingredients, setIngredients] = useState([]);
@@ -125,22 +126,25 @@ export default function IngredientListPage() {
 }
 
 const s = {
-  page: { padding: '16px', minHeight: '100vh', background: '#faf8f5' },
+  page: { padding: '16px', minHeight: '100vh', background: colors.bg },
   header: { marginBottom: '24px' },
   title: {
-    fontFamily: 'Georgia, serif',
+    letterSpacing: '-0.02em',
     fontSize: '1.75rem',
     fontWeight: 800,
-    color: '#1c1917',
+    color: colors.text,
     margin: '0 0 12px',
   },
   search: {
     width: '100%',
     padding: '12px',
     fontSize: '1rem',
-    borderRadius: 8,
-    border: '1.5px solid #e7e5e2',
+    borderRadius: radius.md,
+    border: `1.5px solid ${colors.border}`,
+    background: colors.bgAlt,
+    color: colors.text,
     boxSizing: 'border-box',
+    outline: 'none',
   },
   categoryRow: {
     display: 'flex',
@@ -151,10 +155,10 @@ const s = {
   },
   categoryBtn: {
     padding: '6px 12px',
-    borderRadius: 999,
-    border: '1.5px solid #e7e5e2',
-    background: '#fff',
-    color: '#78716c',
+    borderRadius: radius.round,
+    border: `1.5px solid ${colors.border}`,
+    background: colors.bgAlt,
+    color: colors.textSecond,
     fontSize: '0.85rem',
     fontWeight: 600,
     cursor: 'pointer',
@@ -162,15 +166,15 @@ const s = {
     flexShrink: 0,
   },
   categoryBtnActive: {
-    background: '#c2410c',
-    borderColor: '#c2410c',
-    color: '#fff',
+    background: colors.accent,
+    borderColor: colors.accent,
+    color: colors.white,
   },
   categorySection: { marginBottom: 32 },
   categoryTitle: {
     fontSize: '1.1rem',
     fontWeight: 700,
-    color: '#1c1917',
+    color: colors.text,
     margin: '0 0 12px',
   },
   itemsGrid: {
@@ -181,10 +185,11 @@ const s = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    background: '#fff',
+    background: colors.bgAlt,
     padding: '12px 16px',
-    borderRadius: 12,
-    border: '1px solid #e7e5e2',
+    borderRadius: radius.md,
+    border: `1px solid ${colors.border}`,
+    boxShadow: shadows.sm,
     cursor: 'pointer',
     transition: 'all 0.15s',
   },
@@ -192,27 +197,27 @@ const s = {
   ingredientName: {
     fontSize: '0.95rem',
     fontWeight: 600,
-    color: '#1c1917',
+    color: colors.text,
     margin: '0 0 4px',
   },
   ingredientPrice: {
     fontSize: '0.8rem',
-    color: '#c2410c',
+    color: colors.accentAlt,
     fontWeight: 600,
     margin: 0,
   },
   ingredientBrand: {
     fontSize: '0.75rem',
-    color: '#a8a29e',
+    color: colors.textTertiary,
     margin: '4px 0 0',
   },
   deleteBtn: {
     width: 32,
     height: 32,
-    borderRadius: 999,
-    border: '1.5px solid #e7e5e2',
-    background: '#faf8f5',
-    color: '#78716c',
+    borderRadius: radius.round,
+    border: `1.5px solid ${colors.border}`,
+    background: colors.bg,
+    color: colors.textSecond,
     fontSize: '1rem',
     cursor: 'pointer',
     display: 'flex',
@@ -221,20 +226,20 @@ const s = {
     transition: 'all 0.15s',
   },
   error: {
-    color: '#c2410c',
+    color: colors.error,
     padding: '12px',
-    background: '#fff7ed',
-    borderRadius: 8,
+    background: '#fdeceb',
+    borderRadius: radius.sm,
     marginBottom: 16,
   },
   loading: {
     textAlign: 'center',
-    color: '#a8a29e',
+    color: colors.textTertiary,
     padding: '40px 16px',
   },
   empty: {
     textAlign: 'center',
-    color: '#a8a29e',
+    color: colors.textTertiary,
     padding: '40px 16px',
   },
   listContainer: { marginTop: 16 },

@@ -1,22 +1,13 @@
 import React from 'react';
+import { colors, radius } from '../theme.js';
 
 export default function PersonCounter({ value, onChange, min = 1, max = 20, size = 'md' }) {
-  const sizeClasses = {
-    sm: {
-      button: 'w-7 h-7 text-sm',
-      text: 'text-sm font-semibold w-8 text-center'
-    },
-    md: {
-      button: 'w-9 h-9 text-base',
-      text: 'text-base font-bold w-10 text-center'
-    },
-    lg: {
-      button: 'w-11 h-11 text-lg',
-      text: 'text-xl font-bold w-12 text-center'
-    }
+  const sizes = {
+    sm: { btn: 28, font: '0.85rem', countFont: '0.9rem' },
+    md: { btn: 36, font: '1rem', countFont: '1rem' },
+    lg: { btn: 44, font: '1.15rem', countFont: '1.25rem' },
   };
-
-  const classes = sizeClasses[size] || sizeClasses.md;
+  const sz = sizes[size] || sizes.md;
 
   function decrement() {
     if (value > min) onChange(value - 1);
@@ -26,30 +17,55 @@ export default function PersonCounter({ value, onChange, min = 1, max = 20, size
     if (value < max) onChange(value + 1);
   }
 
+  const btnStyle = (disabled) => ({
+    width: sz.btn,
+    height: sz.btn,
+    borderRadius: radius.round,
+    border: `1.5px solid ${colors.border}`,
+    background: colors.bgAlt,
+    color: disabled ? colors.textTertiary : colors.accent,
+    fontSize: sz.font,
+    fontWeight: 700,
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.5 : 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.15s',
+    lineHeight: 1,
+  });
+
   return (
-    <div className="flex items-center gap-2">
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <button
         type="button"
         onClick={decrement}
         disabled={value <= min}
-        className={`${classes.button} rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed text-white font-bold transition-all duration-150 hover:scale-110 active:scale-95 flex items-center justify-center border border-white/20`}
+        style={btnStyle(value <= min)}
         aria-label="Reduser antall"
       >
         −
       </button>
 
-      <div className="flex items-center gap-1">
-        <span className={`${classes.text} text-white tabular-nums`}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+        <span style={{
+          fontSize: sz.countFont,
+          fontWeight: 700,
+          color: colors.text,
+          minWidth: 24,
+          textAlign: 'center',
+          fontVariantNumeric: 'tabular-nums',
+        }}>
           {value}
         </span>
-        <span className="text-gray-400 text-sm">pers.</span>
+        <span style={{ color: colors.textTertiary, fontSize: '0.85rem' }}>pers.</span>
       </div>
 
       <button
         type="button"
         onClick={increment}
         disabled={value >= max}
-        className={`${classes.button} rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed text-white font-bold transition-all duration-150 hover:scale-110 active:scale-95 flex items-center justify-center border border-white/20`}
+        style={btnStyle(value >= max)}
         aria-label="Øk antall"
       >
         +

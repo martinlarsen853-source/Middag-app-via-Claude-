@@ -124,7 +124,7 @@ const s = {
   logoArea: { textAlign: 'center', marginBottom: 32 },
   logoEmoji: { fontSize: '3rem', display: 'block', marginBottom: 8 },
   appName: {
-    fontFamily: 'Georgia, serif', fontSize: '2.4rem', fontWeight: 800,
+    letterSpacing: '-0.02em', fontSize: '2.4rem', fontWeight: 800,
     color: colors.text, margin: '0 0 6px', letterSpacing: '-0.03em',
   },
   tagline: { color: colors.textSecond, fontSize: '1rem', margin: 0 },
@@ -155,7 +155,7 @@ const s = {
   label: { display: 'block', color: '#44403c', fontSize: '0.88rem', fontWeight: 600, marginBottom: 6 },
   input: {
     width: '100%', boxSizing: 'border-box',
-    background: colors.bg, border: '1.5px solid #e7e5e2', borderRadius: 10,
+    background: colors.bg, border: `1.5px solid ${colors.border}`, borderRadius: 10,
     padding: '11px 14px', fontSize: '1rem', color: 'colors.text',
     outline: 'none', transition: 'border-color 0.2s',
   },
