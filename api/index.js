@@ -143,28 +143,59 @@ app.get('/api/meals', auth, async (req, res) => {
       .or(`household_id.is.null,household_id.eq.${householdId}`);
 
     if (sort === 'time') query = query.order('time_minutes', { ascending: true });
-    else if (sort === 'price') query = query.order('price_level', { ascending: true });
     else query = query.order('name');
 
     const { data, error } = await query;
     if (error) return res.status(500).json({ error: error.message });
 
     let meals = data || [];
+    const mealIds = meals.map(m => m.id);
+
+    // Estimated price: sum of one package per linked ingredient (Kassalapp prices).
+    // Quantities are ignored on purpose — you buy whole packages at the store.
+    const priceByMeal = {};
+    if (mealIds.length > 0) {
+      const { data: mi } = await req.sb
+        .from('meal_ingredients')
+        .select('meal_id, ingredient_id')
+        .in('meal_id', mealIds)
+        .not('ingredient_id', 'is', null);
+      const ingIds = [...new Set((mi || []).map(r => r.ingredient_id))];
+      if (ingIds.length > 0) {
+        const { data: ings } = await req.sb
+          .from('ingredients')
+          .select('id, price')
+          .in('id', ingIds);
+        const priceById = {};
+        (ings || []).forEach(i => { priceById[i.id] = i.price || 0; });
+        (mi || []).forEach(r => {
+          priceByMeal[r.meal_id] = (priceByMeal[r.meal_id] || 0) + (priceById[r.ingredient_id] || 0);
+        });
+      }
+    }
+
+    // last_eaten for every meal (used for NYHET badge and "velg for meg" weighting)
+    const lastEaten = {};
+    const { data: history } = await req.sb
+      .from('meal_history').select('meal_id, eaten_at')
+      .eq('user_id', req.user.id).order('eaten_at', { ascending: false });
+    (history || []).forEach(h => { if (!lastEaten[h.meal_id]) lastEaten[h.meal_id] = h.eaten_at; });
+
+    meals = meals.map(m => ({
+      ...m,
+      estimated_price: priceByMeal[m.id] ? Math.round(priceByMeal[m.id]) : null,
+      last_eaten: lastEaten[m.id] || null,
+    }));
 
     if (sort === 'random') {
       for (let i = meals.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [meals[i], meals[j]] = [meals[j], meals[i]];
       }
+    } else if (sort === 'price') {
+      meals.sort((a, b) => (a.estimated_price ?? a.price_level * 350) - (b.estimated_price ?? b.price_level * 350));
     } else if (sort === 'rarely') {
-      const { data: history } = await req.sb
-        .from('meal_history').select('meal_id, eaten_at')
-        .eq('user_id', req.user.id).order('eaten_at', { ascending: false });
-      const lastEaten = {};
-      (history || []).forEach(h => { if (!lastEaten[h.meal_id]) lastEaten[h.meal_id] = h.eaten_at; });
-      meals = meals
-        .map(m => ({ ...m, last_eaten: lastEaten[m.id] || null }))
-        .sort((a, b) => (a.last_eaten ? new Date(a.last_eaten).getTime() : 0) - (b.last_eaten ? new Date(b.last_eaten).getTime() : 0));
+      meals.sort((a, b) => (a.last_eaten ? new Date(a.last_eaten).getTime() : 0) - (b.last_eaten ? new Date(b.last_eaten).getTime() : 0));
     }
 
     res.json(meals);

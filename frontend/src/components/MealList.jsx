@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMeals, markEaten, updatePersons } from '../api.js';
-import { colors, radius, shadows, mealGradients, defaultMealGradient } from '../theme.js';
+import { colors, radius, shadows, mealGradients, defaultMealGradient, mealPhotos } from '../theme.js';
 
 // Range input styling
 const rangeInputCSS = `
@@ -104,12 +104,29 @@ export default function MealList() {
     setPriceRange({ min: 50, max: 1500 });
   }
 
-  // Map price_level to estimated price range
+  // Real summed ingredient price from API when available, else price_level estimate
   function getMealPrice(meal) {
-    if (meal.price && typeof meal.price === 'number') return meal.price;
-    // Temporary mapping until Oda scraping is implemented
+    if (typeof meal.estimated_price === 'number' && meal.estimated_price > 0) return meal.estimated_price;
     const priceMap = { 1: 100, 2: 350, 3: 900 };
     return priceMap[meal.price_level] || 500;
+  }
+
+  // Weighted random pick — meals not eaten for a long time (or never) win more often
+  function pickForMe() {
+    if (filtered.length === 0) return;
+    const now = Date.now();
+    const weights = filtered.map(m => {
+      if (!m.last_eaten) return 30;
+      const days = (now - new Date(m.last_eaten).getTime()) / 86400000;
+      return Math.max(1, Math.min(days, 60));
+    });
+    const total = weights.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total;
+    for (let i = 0; i < filtered.length; i++) {
+      r -= weights[i];
+      if (r <= 0) { handleSelect(filtered[i]); return; }
+    }
+    handleSelect(filtered[filtered.length - 1]);
   }
 
   // Check if meal matches active filters
@@ -278,6 +295,16 @@ export default function MealList() {
         )}
       </div>
 
+      {/* ── VELG FOR MEG ── */}
+      {!loading && filtered.length > 0 && (
+        <div style={s.pickWrap}>
+          <button onClick={pickForMe} style={s.pickBtn}>
+            🎲 Velg for meg
+          </button>
+          <p style={s.pickHint}>Foreslår noe dere ikke har spist på lenge</p>
+        </div>
+      )}
+
       {/* ── LIST ── */}
       <div style={s.list}>
         {loading ? (
@@ -364,9 +391,12 @@ function getMealBadge(meal) {
 
 function MealCard({ meal, onSelect }) {
   const [pressed, setPressed] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const badge = getMealBadge(meal);
   const gradient = mealGradients[meal.category] || defaultMealGradient;
   const tags = (meal.tags || []).slice(0, 3);
+  const photo = mealPhotos[meal.emoji];
+  const showPhoto = photo && !imgError;
 
   return (
     <div
@@ -381,9 +411,22 @@ function MealCard({ meal, onSelect }) {
         transform: pressed ? 'scale(0.985)' : 'scale(1)',
       }}
     >
-      {/* Hero area — large emoji on category gradient (photo placeholder) */}
+      {/* Hero area — food photo, falls back to category gradient + big emoji */}
       <div style={{ ...s.cardHero, background: gradient }}>
-        <span style={s.heroEmoji}>{meal.emoji}</span>
+        {showPhoto ? (
+          <>
+            <img
+              src={photo}
+              alt={meal.name}
+              loading="lazy"
+              onError={() => setImgError(true)}
+              style={s.heroImg}
+            />
+            <span style={s.heroEmojiSmall}>{meal.emoji}</span>
+          </>
+        ) : (
+          <span style={s.heroEmoji}>{meal.emoji}</span>
+        )}
         {badge && (
           <span style={{ ...s.heroBadge, background: badge.bg, color: badge.color }}>
             {badge.label}
@@ -400,7 +443,9 @@ function MealCard({ meal, onSelect }) {
           {tags.map(tag => (
             <span key={tag} style={s.tagChip}>{tag}</span>
           ))}
-          <span style={{ ...s.tagChip, ...s.priceChip }}>{PRICE_LABEL[meal.price_level]}</span>
+          <span style={{ ...s.tagChip, ...s.priceChip }}>
+            {meal.estimated_price ? `ca. ${meal.estimated_price} kr` : PRICE_LABEL[meal.price_level]}
+          </span>
         </div>
       </div>
     </div>
@@ -525,6 +570,17 @@ const s = {
     cursor: 'pointer',
   },
 
+  // Velg for meg
+  pickWrap: { padding: '16px 16px 0', textAlign: 'center' },
+  pickBtn: {
+    width: '100%', background: colors.dark, color: colors.white,
+    border: 'none', borderRadius: radius.round, padding: '16px',
+    fontSize: '1.05rem', fontWeight: 800, cursor: 'pointer',
+    letterSpacing: '-0.01em', boxShadow: shadows.md,
+    transition: 'transform 0.12s',
+  },
+  pickHint: { color: colors.textTertiary, fontSize: '0.75rem', margin: '8px 0 0' },
+
   // Cards — magazine style: big hero, badge, bold title, tag chips
   list: { padding: '16px 16px 32px', display: 'flex', flexDirection: 'column', gap: 20 },
   card: {
@@ -536,12 +592,24 @@ const s = {
   },
   cardHero: {
     position: 'relative',
-    height: 150,
+    height: 170,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  heroImg: {
+    position: 'absolute', inset: 0,
+    width: '100%', height: '100%', objectFit: 'cover',
   },
   heroEmoji: {
     fontSize: '4.6rem', lineHeight: 1,
     filter: 'drop-shadow(0 6px 12px rgba(28,28,26,0.18))',
+  },
+  heroEmojiSmall: {
+    position: 'absolute', bottom: 10, left: 12,
+    fontSize: '1.4rem', lineHeight: 1,
+    background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)',
+    borderRadius: '50%', width: 38, height: 38,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
   },
   heroBadge: {
     position: 'absolute', top: 12, left: 12,
