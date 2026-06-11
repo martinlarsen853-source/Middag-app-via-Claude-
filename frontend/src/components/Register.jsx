@@ -35,34 +35,71 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f1a] flex items-center justify-center p-4">
-      {/* Background gradient orbs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-green-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl" />
-      </div>
-
-      <div className="w-full max-w-md relative">
+    <div style={{
+      minHeight: '100vh',
+      background: '#faf8f5',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '16px',
+    }}>
+      <div style={{ width: '100%', maxWidth: '384px' }}>
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🍽️</div>
-          <h1 className="text-4xl font-bold text-white mb-2">Tallerken</h1>
-          <p className="text-gray-400 text-lg">Lag din konto</p>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>🍽️</div>
+          <h1 style={{
+            fontSize: '2rem',
+            fontWeight: 700,
+            color: '#1c1917',
+            marginBottom: '8px',
+            fontFamily: 'Georgia, serif',
+          }}>
+            Tallerken
+          </h1>
+          <p style={{ color: '#78716c', fontSize: '1rem', margin: 0 }}>Lag din konto</p>
         </div>
 
         {/* Card */}
-        <div className="glass-strong rounded-3xl p-8">
-          <h2 className="text-2xl font-bold text-white mb-6">Registrer deg</h2>
+        <div style={{
+          background: '#fff',
+          borderRadius: '20px',
+          padding: '32px',
+          border: '1px solid #e7e5e2',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+        }}>
+          <h2 style={{
+            fontSize: '1.3rem',
+            fontWeight: 700,
+            color: '#1c1917',
+            marginBottom: '24px',
+            margin: '0 0 24px',
+          }}>
+            Registrer deg
+          </h2>
 
           {error && (
-            <div className="bg-red-500/20 border border-red-500/30 rounded-2xl p-4 mb-6 text-red-300 text-sm">
+            <div style={{
+              background: '#fee2e2',
+              border: '1px solid #fecaca',
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              color: '#b91c1c',
+              fontSize: '0.9rem',
+            }}>
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <label className="block text-gray-300 text-sm font-medium mb-2">
+              <label style={{
+                display: 'block',
+                color: '#78716c',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                marginBottom: '8px',
+              }}>
                 Navn
               </label>
               <input
@@ -72,12 +109,32 @@ export default function Register() {
                 required
                 autoComplete="name"
                 placeholder="Ola Nordmann"
-                className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
+                style={{
+                  width: '100%',
+                  background: '#faf8f5',
+                  border: '1.5px solid #e7e5e2',
+                  borderRadius: '10px',
+                  padding: '12px 14px',
+                  color: '#1c1917',
+                  fontSize: '0.95rem',
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  transition: 'border 0.2s',
+                  boxSizing: 'border-box',
+                }}
+                onFocus={e => e.target.style.borderColor = '#c2410c'}
+                onBlur={e => e.target.style.borderColor = '#e7e5e2'}
               />
             </div>
 
             <div>
-              <label className="block text-gray-300 text-sm font-medium mb-2">
+              <label style={{
+                display: 'block',
+                color: '#78716c',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                marginBottom: '8px',
+              }}>
                 E-postadresse
               </label>
               <input
@@ -87,12 +144,32 @@ export default function Register() {
                 required
                 autoComplete="email"
                 placeholder="din@epost.no"
-                className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
+                style={{
+                  width: '100%',
+                  background: '#faf8f5',
+                  border: '1.5px solid #e7e5e2',
+                  borderRadius: '10px',
+                  padding: '12px 14px',
+                  color: '#1c1917',
+                  fontSize: '0.95rem',
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  transition: 'border 0.2s',
+                  boxSizing: 'border-box',
+                }}
+                onFocus={e => e.target.style.borderColor = '#c2410c'}
+                onBlur={e => e.target.style.borderColor = '#e7e5e2'}
               />
             </div>
 
             <div>
-              <label className="block text-gray-300 text-sm font-medium mb-2">
+              <label style={{
+                display: 'block',
+                color: '#78716c',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                marginBottom: '8px',
+              }}>
                 Passord
               </label>
               <input
@@ -102,31 +179,82 @@ export default function Register() {
                 required
                 autoComplete="new-password"
                 placeholder="Minst 6 tegn"
-                className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
+                style={{
+                  width: '100%',
+                  background: '#faf8f5',
+                  border: '1.5px solid #e7e5e2',
+                  borderRadius: '10px',
+                  padding: '12px 14px',
+                  color: '#1c1917',
+                  fontSize: '0.95rem',
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  transition: 'border 0.2s',
+                  boxSizing: 'border-box',
+                }}
+                onFocus={e => e.target.style.borderColor = '#c2410c'}
+                onBlur={e => e.target.style.borderColor = '#e7e5e2'}
               />
             </div>
 
             <div>
-              <label className="block text-gray-300 text-sm font-medium mb-3">
+              <label style={{
+                display: 'block',
+                color: '#78716c',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                marginBottom: '12px',
+              }}>
                 Antall personer som spiser vanligvis
               </label>
-              <div className="flex items-center">
-                <PersonCounter value={persons} onChange={setPersons} />
-              </div>
+              <PersonCounter value={persons} onChange={setPersons} />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-500 hover:bg-green-400 disabled:bg-green-500/50 text-white font-semibold py-3 rounded-2xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] mt-2"
+              style={{
+                width: '100%',
+                background: loading ? '#e7e5e2' : '#c2410c',
+                color: loading ? '#a8a29e' : '#fff',
+                fontWeight: 600,
+                padding: '12px',
+                borderRadius: '10px',
+                border: 'none',
+                fontSize: '0.95rem',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s',
+                marginTop: '8px',
+                boxShadow: loading ? 'none' : '0 8px 32px rgba(194,65,12,0.25)',
+              }}
+              onMouseEnter={e => {
+                if (!loading) e.target.style.background = '#b53b0a';
+              }}
+              onMouseLeave={e => {
+                if (!loading) e.target.style.background = '#c2410c';
+              }}
             >
               {loading ? 'Oppretter konto...' : 'Opprett konto'}
             </button>
           </form>
 
-          <p className="text-center text-gray-400 mt-6 text-sm">
+          <p style={{
+            textAlign: 'center',
+            color: '#78716c',
+            marginTop: '24px',
+            fontSize: '0.9rem',
+            margin: '24px 0 0',
+          }}>
             Har du allerede konto?{' '}
-            <Link to="/login" className="text-green-400 hover:text-green-300 font-medium transition-colors">
+            <Link to="/login" style={{
+              color: '#c2410c',
+              textDecoration: 'none',
+              fontWeight: 600,
+              transition: 'color 0.2s',
+            }}
+            onMouseEnter={e => e.target.style.color = '#b53b0a'}
+            onMouseLeave={e => e.target.style.color = '#c2410c'}
+            >
               Logg inn her
             </Link>
           </p>
