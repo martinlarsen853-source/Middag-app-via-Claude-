@@ -58,65 +58,59 @@ export default function Navbar() {
   return (
     <>
       <nav style={{
-        position: 'sticky',
-        top: 0,
+        position: 'relative',
         zIndex: 40,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '14px 16px',
-        background: `rgba(255,255,255,0.85)`,
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: `1px solid ${colors.border}`,
-        boxShadow: 'none',
+        background: colors.accent,
+        boxShadow: shadows.sm,
       }} className="no-print">
         <Link to="/" style={{
           display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
+          flexDirection: 'column',
           textDecoration: 'none',
-          color: colors.text,
-          transition: 'color 0.2s',
+          gap: '1px',
         }}>
-          <span style={{ fontSize: '1.8rem' }}>🍽️</span>
           <span style={{
-            fontSize: '1.1rem',
-            fontWeight: 700,
+            fontSize: '1.15rem',
+            fontWeight: 800,
             letterSpacing: '-0.01em',
-            color: colors.text,
+            color: colors.white,
+            lineHeight: 1.2,
           }}>
-            Tallerken
+            🍽️ Tallerken
           </span>
+          {user && (
+            <span style={{
+              fontSize: '0.78rem',
+              color: 'rgba(255,255,255,0.85)',
+              fontWeight: 500,
+            }}>
+              Hei, {user.name.split(' ')[0]}! Hva blir det i dag?
+            </span>
+          )}
         </Link>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {user && (
-            <span style={{
-              fontSize: '0.85rem',
-              color: colors.textSecond,
-              marginRight: '8px',
-            }}>
-              Hei, {user.name.split(' ')[0]}!
-            </span>
-          )}
-
           <button
             onClick={() => setShowModal(true)}
-            onMouseEnter={e => Object.assign(e.target.style, { borderColor: colors.accent, color: colors.accent })}
-            onMouseLeave={e => Object.assign(e.target.style, { borderColor: colors.border, color: colors.textSecond })}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.28)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
             title="Husholdning"
             style={{
-              background: colors.bgLight,
-              border: `1.5px solid ${colors.border}`,
-              borderRadius: radius.md,
-              padding: '8px',
+              background: 'rgba(255,255,255,0.15)',
+              border: 'none',
+              borderRadius: radius.round,
+              width: '38px',
+              height: '38px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               transition: 'all 0.2s',
-              color: colors.textSecond,
+              color: colors.white,
             }}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -128,20 +122,21 @@ export default function Navbar() {
 
           <button
             onClick={handleLogout}
-            onMouseEnter={e => Object.assign(e.target.style, { borderColor: colors.accent, color: colors.accent })}
-            onMouseLeave={e => Object.assign(e.target.style, { borderColor: colors.border, color: colors.textSecond })}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.28)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
             title="Logg ut"
             style={{
-              background: colors.bgLight,
-              border: `1.5px solid ${colors.border}`,
-              borderRadius: radius.md,
-              padding: '8px',
+              background: 'rgba(255,255,255,0.15)',
+              border: 'none',
+              borderRadius: radius.round,
+              width: '38px',
+              height: '38px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               transition: 'all 0.2s',
-              color: colors.textSecond,
+              color: colors.white,
             }}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -337,7 +332,7 @@ export default function Navbar() {
                         transition: 'all 0.2s',
                         boxShadow: shadows.accent,
                       }}
-                      onMouseEnter={e => e.target.style.background = '#158347'}
+                      onMouseEnter={e => e.target.style.background = colors.accentDark}
                       onMouseLeave={e => e.target.style.background = colors.accent}
                     >
                       Bli med

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMeals, markEaten, updatePersons } from '../api.js';
-import { colors, radius, shadows } from '../theme.js';
+import { colors, radius, shadows, mealGradients, defaultMealGradient } from '../theme.js';
 
 // Range input styling
 const rangeInputCSS = `
@@ -221,8 +221,7 @@ export default function MealList() {
       <div style={s.header}>
         <div style={s.headerTop}>
           <div>
-            <h2 style={s.heading}>Hva blir det?</h2>
-            <p style={s.sub}>Bla gjennom og velg</p>
+            <h2 style={s.heading}>Ukens retter</h2>
           </div>
           <div style={s.personBox}>
             <button onClick={() => setPersons(p => Math.max(1, p - 1))} style={s.personBtn}>−</button>
@@ -233,15 +232,6 @@ export default function MealList() {
         </div>
 
         <div style={s.toolRow}>
-          {/* Create meal button */}
-          <button
-            onClick={() => navigate('/meals/new')}
-            style={s.createBtn}
-            title="Lag ny middag"
-          >
-            +
-          </button>
-
           {/* Filter button */}
           {(() => {
             const activeCount = selectedTags.size + (timeRange.min > 10 || timeRange.max < 100 ? 1 : 0) + (priceRange.min > 50 || priceRange.max < 1500 ? 1 : 0);
@@ -365,8 +355,19 @@ function DualRangeSlider({ label, min, max, step, value, onChange, formatLabel }
   );
 }
 
+function getMealBadge(meal) {
+  if (!meal.last_eaten) return { label: 'NYHET', bg: colors.accent, color: colors.white };
+  if (meal.time_minutes <= 20) return { label: 'RASK', bg: colors.accentAlt, color: colors.white };
+  if (meal.price_level === 1) return { label: 'BUDSJETTVINNER', bg: colors.dark, color: colors.white };
+  return null;
+}
+
 function MealCard({ meal, onSelect }) {
   const [pressed, setPressed] = useState(false);
+  const badge = getMealBadge(meal);
+  const gradient = mealGradients[meal.category] || defaultMealGradient;
+  const tags = (meal.tags || []).slice(0, 3);
+
   return (
     <div
       onClick={onSelect}
@@ -378,24 +379,30 @@ function MealCard({ meal, onSelect }) {
       style={{
         ...s.card,
         transform: pressed ? 'scale(0.985)' : 'scale(1)',
-        boxShadow: pressed
-          ? '0 1px 4px rgba(0,0,0,0.06)'
-          : '0 2px 4px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06)',
       }}
     >
-      <span style={s.emoji}>{meal.emoji}</span>
-      <div style={s.cardBody}>
-        <div style={s.cardTop}>
-          <h3 style={s.mealName}>{meal.name}</h3>
-          <span style={s.category}>{meal.category}</span>
-        </div>
-        <p style={s.desc}>{meal.description}</p>
-        <div style={s.badges}>
-          <span style={s.badge2}>⏱ {meal.time_minutes} min</span>
-          <span style={{ ...s.badge2, ...s.priceBadge }}>{PRICE_LABEL[meal.price_level]}</span>
+      {/* Hero area — large emoji on category gradient (photo placeholder) */}
+      <div style={{ ...s.cardHero, background: gradient }}>
+        <span style={s.heroEmoji}>{meal.emoji}</span>
+        {badge && (
+          <span style={{ ...s.heroBadge, background: badge.bg, color: badge.color }}>
+            {badge.label}
+          </span>
+        )}
+        <span style={s.heroTime}>⏱ {meal.time_minutes} min</span>
+      </div>
+
+      {/* Text content */}
+      <div style={s.cardContent}>
+        <h3 style={s.mealName}>{meal.name}</h3>
+        {meal.description && <p style={s.desc}>{meal.description}</p>}
+        <div style={s.tagRow}>
+          {tags.map(tag => (
+            <span key={tag} style={s.tagChip}>{tag}</span>
+          ))}
+          <span style={{ ...s.tagChip, ...s.priceChip }}>{PRICE_LABEL[meal.price_level]}</span>
         </div>
       </div>
-      <span style={s.arrow}>›</span>
     </div>
   );
 }
@@ -466,8 +473,9 @@ const s = {
   // Header
   header: {
     position: 'sticky', top: 0, zIndex: 10,
-    background: `rgba(250, 247, 242, 0.95)`, backdropFilter: 'blur(10px)',
-    borderBottom: `1px solid ${colors.border}`, padding: '16px 16px 12px',
+    background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    borderBottom: `1px solid ${colors.borderLight}`, padding: '16px 16px 12px',
   },
   headerTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   heading: { fontSize: '1.5rem', fontWeight: 800, color: colors.text, margin: 0, letterSpacing: '-0.02em' },
@@ -483,13 +491,6 @@ const s = {
   personLabel: { color: colors.textTertiary, fontSize: '0.78rem' },
 
   toolRow: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 0 },
-  createBtn: {
-    flexShrink: 0, width: 44, height: 44, borderRadius: '50%',
-    background: colors.accent, color: colors.white, border: 'none',
-    fontSize: '1.4rem', fontWeight: 700, cursor: 'pointer',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    boxShadow: shadows.accent, transition: 'all 0.15s',
-  },
   filterBtn: {
     flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
     padding: '6px 12px', borderRadius: 999,
@@ -524,32 +525,47 @@ const s = {
     cursor: 'pointer',
   },
 
-  // Cards
-  list: { padding: '16px 16px 32px', display: 'flex', flexDirection: 'column', gap: 12 },
+  // Cards — magazine style: big hero, badge, bold title, tag chips
+  list: { padding: '16px 16px 32px', display: 'flex', flexDirection: 'column', gap: 20 },
   card: {
-    display: 'flex', alignItems: 'center', gap: 16,
-    background: colors.bgAlt, borderRadius: 20, padding: '18px 16px',
+    background: colors.bgAlt, borderRadius: 18, overflow: 'hidden',
     border: `1px solid ${colors.borderLight}`,
-    cursor: 'pointer', transition: 'transform 0.12s, box-shadow 0.12s',
+    boxShadow: '0 2px 4px rgba(28,28,26,0.04), 0 10px 28px rgba(28,28,26,0.07)',
+    cursor: 'pointer', transition: 'transform 0.12s',
     userSelect: 'none',
   },
-  emoji: { fontSize: '2.8rem', lineHeight: 1, flexShrink: 0 },
-  cardBody: { flex: 1, minWidth: 0 },
-  cardTop: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 4 },
-  mealName: { fontWeight: 700, fontSize: '1.05rem', color: colors.text, margin: 0, letterSpacing: '-0.01em' },
-  category: {
-    flexShrink: 0, fontSize: '0.72rem', fontWeight: 600,
-    color: colors.accent, background: colors.bgAccent, border: `1px solid ${colors.accent}33`,
-    borderRadius: 999, padding: '2px 8px',
+  cardHero: {
+    position: 'relative',
+    height: 150,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
   },
+  heroEmoji: {
+    fontSize: '4.6rem', lineHeight: 1,
+    filter: 'drop-shadow(0 6px 12px rgba(28,28,26,0.18))',
+  },
+  heroBadge: {
+    position: 'absolute', top: 12, left: 12,
+    fontSize: '0.66rem', fontWeight: 800, letterSpacing: '0.06em',
+    padding: '4px 10px', borderRadius: 6,
+  },
+  heroTime: {
+    position: 'absolute', bottom: 10, right: 12,
+    fontSize: '0.75rem', fontWeight: 700, color: colors.text,
+    background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)',
+    padding: '4px 10px', borderRadius: 999,
+  },
+  cardContent: { padding: '14px 16px 16px' },
+  mealName: { fontWeight: 800, fontSize: '1.15rem', color: colors.text, margin: '0 0 4px', letterSpacing: '-0.01em' },
   desc: {
-    color: colors.textSecond, fontSize: '0.82rem', lineHeight: 1.5, margin: '0 0 8px',
+    color: colors.textSecond, fontSize: '0.85rem', lineHeight: 1.5, margin: '0 0 10px',
     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
   },
-  badges: { display: 'flex', gap: 6 },
-  badge2: { fontSize: '0.75rem', fontWeight: 600, color: colors.textSecond, background: colors.bgLight, borderRadius: 999, padding: '3px 10px' },
-  priceBadge: { color: colors.accent, background: colors.bgAccent },
-  arrow: { color: colors.textTertiary, fontSize: '1.5rem', flexShrink: 0, fontWeight: 300 },
+  tagRow: { display: 'flex', flexWrap: 'wrap', gap: 6 },
+  tagChip: {
+    fontSize: '0.74rem', fontWeight: 600, color: colors.textSecond,
+    background: colors.bgLight, borderRadius: 8, padding: '4px 10px',
+  },
+  priceChip: { color: colors.accent, background: colors.bgAccent },
 
   loadingWrap: { textAlign: 'center', paddingTop: 80 },
   loadingEmoji: { fontSize: '3rem', display: 'block', marginBottom: 12 },

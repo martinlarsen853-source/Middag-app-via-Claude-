@@ -8,6 +8,7 @@ import MealDetail from './components/MealDetail.jsx';
 import StoreSelector from './components/StoreSelector.jsx';
 import ShoppingList from './components/ShoppingList.jsx';
 import Navbar from './components/Navbar.jsx';
+import BottomNav from './components/BottomNav.jsx';
 import MealCreatePage from './components/MealCreatePage.jsx';
 import IngredientListPage from './components/IngredientListPage.jsx';
 
@@ -20,11 +21,12 @@ function ProtectedRoute({ children }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f6f6f8', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingBottom: '72px' }}>
         {children}
       </main>
+      <BottomNav />
     </div>
   );
 }
