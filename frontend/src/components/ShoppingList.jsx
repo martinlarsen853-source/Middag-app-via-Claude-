@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getShoppingList } from '../api.js';
 import PersonCounter from './PersonCounter.jsx';
+import { colors, radius } from '../theme.js';
 
 const sectionConfig = {
   'Frukt & grønt': { icon: '🥦', color: '#1a6e3f', bg: '#e0f7dd' },
@@ -90,10 +91,10 @@ export default function ShoppingList() {
     return (
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', textAlign: 'center' }}>
         <div>
-          <p style={{ color: '#b91c1c', marginBottom: '16px' }}>{error || 'Kunne ikke laste handleliste'}</p>
+          <p style={{ color: colors.error, marginBottom: '16px' }}>{error || 'Kunne ikke laste handleliste'}</p>
           <button
             onClick={() => navigate(-1)}
-            style={{ color: '#c2410c', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+            style={{ color: colors.accent, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
           >
             Gå tilbake
           </button>
@@ -112,15 +113,15 @@ export default function ShoppingList() {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            color: '#78716c',
+            color: colors.textSecond,
             background: 'none',
             border: 'none',
             cursor: 'pointer',
             transition: 'color 0.2s',
             marginBottom: '16px',
           }}
-          onMouseEnter={e => e.target.style.color = '#c2410c'}
-          onMouseLeave={e => e.target.style.color = '#78716c'}
+          onMouseEnter={e => e.target.style.color = colors.accent}
+          onMouseLeave={e => e.target.style.color = colors.textSecond}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -132,11 +133,11 @@ export default function ShoppingList() {
       {/* Title */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
-          <p style={{ color: '#78716c', fontSize: '0.85rem', margin: 0 }}>{data.store.name}</p>
+          <p style={{ color: colors.textSecond, fontSize: '0.85rem', margin: 0 }}>{data.store.name}</p>
           <h1 style={{
             fontSize: '1.4rem',
             fontWeight: 700,
-            color: '#1c1917',
+            color: colors.text,
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
@@ -148,10 +149,10 @@ export default function ShoppingList() {
           </h1>
         </div>
         <div style={{ textAlign: 'right' }} className="no-print">
-          <div style={{ color: '#c2410c', fontWeight: 700, fontSize: '0.9rem' }}>
+          <div style={{ color: colors.accent, fontWeight: 700, fontSize: '0.9rem' }}>
             {checkedCount}/{totalItems}
           </div>
-          <div style={{ color: '#a8a29e', fontSize: '0.75rem' }}>i kurven</div>
+          <div style={{ color: colors.textTertiary, fontSize: '0.75rem' }}>i kurven</div>
         </div>
       </div>
 
@@ -159,15 +160,15 @@ export default function ShoppingList() {
       {totalItems > 0 && (
         <div style={{
           height: '6px',
-          background: '#e7e5e2',
-          borderRadius: '999px',
+          background: colors.border,
+          borderRadius: radius.round,
           overflow: 'hidden',
         }} className="no-print">
           <div
             style={{
               height: '100%',
-              background: '#c2410c',
-              borderRadius: '999px',
+              background: colors.accent,
+              borderRadius: radius.round,
               transition: 'width 0.5s ease',
               width: `${(checkedCount / totalItems) * 100}%`,
             }}
@@ -184,16 +185,16 @@ export default function ShoppingList() {
               onClick={clearChecked}
               style={{
                 fontSize: '0.75rem',
-                color: '#78716c',
-                background: '#faf8f5',
-                border: '1px solid #e7e5e2',
+                color: colors.textSecond,
+                background: colors.bg,
+                border: `1px solid ${colors.border}`,
                 padding: '6px 12px',
-                borderRadius: '10px',
+                borderRadius: radius.md,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
               }}
-              onMouseEnter={e => Object.assign(e.target.style, { color: '#c2410c', borderColor: '#c2410c' })}
-              onMouseLeave={e => Object.assign(e.target.style, { color: '#78716c', borderColor: '#e7e5e2' })}
+              onMouseEnter={e => Object.assign(e.target.style, { color: colors.accent, borderColor: colors.accent })}
+              onMouseLeave={e => Object.assign(e.target.style, { color: colors.textSecond, borderColor: colors.border })}
             >
               Fjern avhukede
             </button>
@@ -202,19 +203,19 @@ export default function ShoppingList() {
             onClick={handlePrint}
             style={{
               fontSize: '0.75rem',
-              color: '#78716c',
-              background: '#faf8f5',
-              border: '1px solid #e7e5e2',
+              color: colors.textSecond,
+              background: colors.bg,
+              border: `1px solid ${colors.border}`,
               padding: '6px 12px',
-              borderRadius: '10px',
+              borderRadius: radius.md,
               cursor: 'pointer',
               transition: 'all 0.2s',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
             }}
-            onMouseEnter={e => Object.assign(e.target.style, { color: '#c2410c', borderColor: '#c2410c' })}
-            onMouseLeave={e => Object.assign(e.target.style, { color: '#78716c', borderColor: '#e7e5e2' })}
+            onMouseEnter={e => Object.assign(e.target.style, { color: colors.accent, borderColor: colors.accent })}
+            onMouseLeave={e => Object.assign(e.target.style, { color: colors.textSecond, borderColor: colors.border })}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -234,7 +235,7 @@ export default function ShoppingList() {
           const allChecked = sectionChecked === items.length;
 
           return (
-            <div key={section} style={{ borderRadius: '14px', overflow: 'hidden', border: `1.5px solid ${config.bg}` }}>
+            <div key={section} style={{ borderRadius: radius.md, overflow: 'hidden', border: `1.5px solid ${config.bg}` }}>
               {/* Section header */}
               <div style={{
                 background: config.bg,
@@ -252,14 +253,14 @@ export default function ShoppingList() {
                 <span style={{
                   fontSize: '0.75rem',
                   fontWeight: 600,
-                  color: allChecked ? '#c2410c' : '#a8a29e',
+                  color: allChecked ? colors.accent : colors.textTertiary,
                 }}>
                   {sectionChecked}/{items.length}
                 </span>
               </div>
 
               {/* Items */}
-              <div style={{ background: '#fff', borderTop: `1px solid ${config.bg}` }}>
+              <div style={{ background: colors.white, borderTop: `1px solid ${config.bg}` }}>
                 {items.map((item, idx) => {
                   const isChecked = !!checked[item.id];
                   return (
@@ -273,16 +274,16 @@ export default function ShoppingList() {
                         cursor: 'pointer',
                         transition: 'all 0.15s',
                         opacity: isChecked ? 0.5 : 1,
-                        background: isChecked ? '#f0ede9' : 'transparent',
-                        borderBottom: idx < items.length - 1 ? '1px solid #f0ede9' : 'none',
+                        background: isChecked ? colors.hairline : 'transparent',
+                        borderBottom: idx < items.length - 1 ? `1px solid ${colors.hairline}` : 'none',
                       }}
                     >
                       <div style={{
                         width: '20px',
                         height: '20px',
                         borderRadius: '6px',
-                        border: `2px solid ${isChecked ? '#c2410c' : '#e7e5e2'}`,
-                        background: isChecked ? '#c2410c' : 'transparent',
+                        border: `2px solid ${isChecked ? colors.accent : colors.border}`,
+                        background: isChecked ? colors.accent : 'transparent',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -304,7 +305,7 @@ export default function ShoppingList() {
                       <span style={{
                         flex: 1,
                         fontSize: '0.95rem',
-                        color: isChecked ? '#a8a29e' : '#1c1917',
+                        color: isChecked ? colors.textTertiary : colors.text,
                         textDecoration: isChecked ? 'line-through' : 'none',
                         transition: 'all 0.15s',
                       }}>
@@ -313,7 +314,7 @@ export default function ShoppingList() {
                       <span style={{
                         fontSize: '0.85rem',
                         fontWeight: 600,
-                        color: isChecked ? '#a8a29e' : '#78716c',
+                        color: isChecked ? colors.textTertiary : colors.textSecond,
                         flexShrink: 0,
                         transition: 'all 0.15s',
                       }}>
@@ -331,17 +332,17 @@ export default function ShoppingList() {
       {/* Completion celebration */}
       {checkedCount === totalItems && totalItems > 0 && (
         <div style={{
-          background: '#fff7ed',
-          border: '2px solid #fed7aa',
-          borderRadius: '14px',
+          background: colors.bgAccent,
+          border: `2px solid ${colors.accentAlt}`,
+          borderRadius: radius.md,
           padding: '24px',
           textAlign: 'center',
         }} className="no-print">
           <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🎉</div>
-          <h3 style={{ color: '#1c1917', fontWeight: 700, fontSize: '1.1rem', margin: '0 0 8px' }}>
+          <h3 style={{ color: colors.text, fontWeight: 700, fontSize: '1.1rem', margin: '0 0 8px' }}>
             Alt er i kurven!
           </h3>
-          <p style={{ color: '#78716c', fontSize: '0.9rem', margin: 0 }}>God appetitt!</p>
+          <p style={{ color: colors.textSecond, fontSize: '0.9rem', margin: 0 }}>God appetitt!</p>
         </div>
       )}
 
@@ -351,19 +352,19 @@ export default function ShoppingList() {
           onClick={() => navigate('/')}
           style={{
             width: '100%',
-            background: '#c2410c',
-            color: '#fff',
+            background: colors.accent,
+            color: colors.white,
             fontWeight: 700,
             padding: '16px',
-            borderRadius: '12px',
+            borderRadius: radius.md,
             border: 'none',
             fontSize: '1rem',
             cursor: 'pointer',
             transition: 'all 0.2s',
-            boxShadow: '0 8px 32px rgba(194,65,12,0.25)',
+            boxShadow: `0 8px 32px ${colors.accentDark}40`,
           }}
-          onMouseEnter={e => e.target.style.background = '#b53b0a'}
-          onMouseLeave={e => e.target.style.background = '#c2410c'}
+          onMouseEnter={e => e.target.style.background = colors.accentDark}
+          onMouseLeave={e => e.target.style.background = colors.accent}
         >
           Ferdig! 🏠
         </button>

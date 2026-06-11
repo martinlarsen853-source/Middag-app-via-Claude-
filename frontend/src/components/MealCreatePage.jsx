@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getIngredients, getIngredientCategories, createMeal } from '../api.js';
+import { colors, shadows, radius } from '../theme.js';
 
 const QUICK_TIMES = [15, 30, 45, 60, 90];
 
@@ -169,22 +170,22 @@ export default function MealCreatePage() {
   const mostUsed = getMostUsedIngredients();
 
   // Shared styles
-  const btnBack = { flex: 1, padding: '12px', borderRadius: '10px', background: '#fff', color: '#1c1917', border: '1.5px solid #e7e5e2', fontWeight: '600', cursor: 'pointer', fontSize: '0.95rem' };
-  const btnNext = (active = true) => ({ flex: 2, padding: '12px', borderRadius: '10px', background: active ? '#c2410c' : '#e7e5e2', color: active ? '#fff' : '#a8a29e', border: 'none', fontWeight: '600', cursor: active ? 'pointer' : 'not-allowed', fontSize: '0.95rem', boxShadow: active ? '0 8px 32px rgba(194,65,12,0.25)' : 'none' });
+  const btnBack = { flex: 1, padding: '12px', borderRadius: radius.md, background: colors.white, color: colors.text, border: `1.5px solid ${colors.border}`, fontWeight: '600', cursor: 'pointer', fontSize: '0.95rem' };
+  const btnNext = (active = true) => ({ flex: 2, padding: '12px', borderRadius: radius.md, background: active ? colors.accent : colors.borderLight, color: active ? colors.white : colors.textTertiary, border: 'none', fontWeight: '600', cursor: active ? 'pointer' : 'not-allowed', fontSize: '0.95rem', boxShadow: active ? shadows.accent : 'none' });
 
   return (
-    <div style={{ padding: '0', background: '#faf8f5', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ padding: '0', background: colors.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
 
       {/* STEP 1: Navn + beskrivelse */}
       {step === 1 && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px', marginBottom: '4px' }}>
             {mealData.name && <span style={{ fontSize: '2rem', lineHeight: 1 }}>{mealData.emoji}</span>}
-            <h1 style={{ color: '#1c1917', fontSize: '1.2rem', fontWeight: '600', margin: 0 }}>
+            <h1 style={{ color: colors.text, fontSize: '1.2rem', fontWeight: '600', margin: 0 }}>
               {mealData.name || 'Nytt måltid'}
             </h1>
           </div>
-          <p style={{ color: '#a8a29e', fontSize: '0.85rem', margin: '0 0 24px' }}>Hva skal vi lage?</p>
+          <p style={{ color: colors.textTertiary, fontSize: '0.85rem', margin: '0 0 24px' }}>Hva skal vi lage?</p>
 
           <input
             type="text"
@@ -193,14 +194,14 @@ export default function MealCreatePage() {
             placeholder="Navn på måltid..."
             autoFocus
             style={{
-              padding: '14px 14px', borderRadius: '12px', border: 'none',
-              background: '#fff', width: '100%', boxSizing: 'border-box',
-              fontSize: '1.1rem', fontWeight: '500', color: '#1c1917', outline: 'none',
+              padding: '14px 14px', borderRadius: radius.md, border: 'none',
+              background: colors.white, width: '100%', boxSizing: 'border-box',
+              fontSize: '1.1rem', fontWeight: '500', color: colors.text, outline: 'none',
             }}
           />
 
           <div style={{ marginTop: '16px', marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: '#78716c', fontWeight: '600', marginBottom: '8px' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', color: colors.textSecond, fontWeight: '600', marginBottom: '8px' }}>
               Kort beskrivelse (valgfritt)
             </label>
             <textarea
@@ -208,13 +209,13 @@ export default function MealCreatePage() {
               onChange={e => setMealData({ ...mealData, description: e.target.value })}
               placeholder="F.eks. Rask hverdagsfavoritt..."
               style={{
-                padding: '12px 14px', borderRadius: '10px', border: '1.5px solid #e7e5e2',
-                background: '#fff', width: '100%', boxSizing: 'border-box',
-                fontSize: '0.95rem', color: '#1c1917', outline: 'none',
+                padding: '12px 14px', borderRadius: radius.md, border: `1.5px solid ${colors.border}`,
+                background: colors.white, width: '100%', boxSizing: 'border-box',
+                fontSize: '0.95rem', color: colors.text, outline: 'none',
                 fontFamily: 'inherit', minHeight: '80px', resize: 'none',
               }}
-              onFocus={e => e.target.style.borderColor = '#c2410c'}
-              onBlur={e => e.target.style.borderColor = '#e7e5e2'}
+              onFocus={e => e.target.style.borderColor = colors.accent}
+              onBlur={e => e.target.style.borderColor = colors.border}
             />
           </div>
 
@@ -228,8 +229,8 @@ export default function MealCreatePage() {
       {/* STEP 2: Ingredienser */}
       {step === 2 && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px', paddingBottom: '0' }}>
-          <h1 style={{ color: '#1c1917', fontSize: '1.2rem', fontWeight: '600', margin: '12px 0 2px' }}>Ingredienser</h1>
-          <p style={{ color: '#a8a29e', fontSize: '0.85rem', margin: '0 0 12px' }}>Velg og juster mengder</p>
+          <h1 style={{ color: colors.text, fontSize: '1.2rem', fontWeight: '600', margin: '12px 0 2px' }}>Ingredienser</h1>
+          <p style={{ color: colors.textTertiary, fontSize: '0.85rem', margin: '0 0 12px' }}>Velg og juster mengder</p>
 
           <input
             type="text"
@@ -237,30 +238,30 @@ export default function MealCreatePage() {
             onChange={e => setSearchTerm(e.target.value)}
             placeholder="Søk ingrediens..."
             style={{
-              padding: '11px 14px', borderRadius: '10px', border: '1.5px solid #e7e5e2',
-              background: '#fff', width: '100%', boxSizing: 'border-box',
-              fontSize: '0.95rem', color: '#1c1917', marginBottom: '10px', outline: 'none',
+              padding: '11px 14px', borderRadius: radius.md, border: `1.5px solid ${colors.border}`,
+              background: colors.white, width: '100%', boxSizing: 'border-box',
+              fontSize: '0.95rem', color: colors.text, marginBottom: '10px', outline: 'none',
             }}
-            onFocus={e => e.target.style.borderColor = '#c2410c'}
-            onBlur={e => e.target.style.borderColor = '#e7e5e2'}
+            onFocus={e => e.target.style.borderColor = colors.accent}
+            onBlur={e => e.target.style.borderColor = colors.border}
           />
 
           {/* Category pills */}
           {!searchTerm && (
             <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', marginBottom: '10px', paddingBottom: '4px' }}>
               <button onClick={() => setSelectedCategory(null)} style={{
-                flex: '0 0 auto', padding: '7px 12px', borderRadius: '20px',
-                background: !selectedCategory ? '#c2410c' : '#fff',
-                color: !selectedCategory ? '#fff' : '#1c1917',
-                border: !selectedCategory ? 'none' : '1px solid #e7e5e2',
+                flex: '0 0 auto', padding: '7px 12px', borderRadius: radius.round,
+                background: !selectedCategory ? colors.accent : colors.white,
+                color: !selectedCategory ? colors.white : colors.text,
+                border: !selectedCategory ? 'none' : `1px solid ${colors.border}`,
                 fontWeight: '500', cursor: 'pointer', fontSize: '0.82rem', whiteSpace: 'nowrap',
               }}>Alle</button>
               {Object.keys(ingredientsByCategory).sort().map(cat => (
                 <button key={cat} onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)} style={{
-                  flex: '0 0 auto', padding: '7px 12px', borderRadius: '20px',
-                  background: selectedCategory === cat ? '#c2410c' : '#fff',
-                  color: selectedCategory === cat ? '#fff' : '#1c1917',
-                  border: selectedCategory === cat ? 'none' : '1px solid #e7e5e2',
+                  flex: '0 0 auto', padding: '7px 12px', borderRadius: radius.round,
+                  background: selectedCategory === cat ? colors.accent : colors.white,
+                  color: selectedCategory === cat ? colors.white : colors.text,
+                  border: selectedCategory === cat ? 'none' : `1px solid ${colors.border}`,
                   fontWeight: '500', cursor: 'pointer', fontSize: '0.82rem', whiteSpace: 'nowrap',
                 }}>
                   {CATEGORY_EMOJIS[cat] || '📦'} {cat}
@@ -272,29 +273,29 @@ export default function MealCreatePage() {
           {/* Ingredients list */}
           <div style={{ flex: 1, overflowY: 'auto', marginBottom: '10px' }}>
             {loading ? (
-              <p style={{ color: '#a8a29e', textAlign: 'center', padding: '20px' }}>Laster...</p>
+              <p style={{ color: colors.textTertiary, textAlign: 'center', padding: '20px' }}>Laster...</p>
             ) : (
               <>
                 {!searchTerm && !selectedCategory && mostUsed.length > 0 && (
                   <div style={{ marginBottom: '12px' }}>
-                    <p style={{ color: '#78716c', fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 6px' }}>Klassikerne</p>
+                    <p style={{ color: colors.textSecond, fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 6px' }}>Klassikerne</p>
                     {mostUsed.map(ing => {
                       const selected = isIngredientSelected(ing.id);
                       return (
                         <button key={ing.id} onClick={() => toggleIngredient(ing)} style={{
                           display: 'flex', alignItems: 'center', width: '100%',
-                          padding: '11px 12px', marginBottom: '6px', borderRadius: '10px',
-                          background: selected ? '#fff7ed' : '#fff',
-                          border: selected ? '2px solid #c2410c' : '1px solid #e7e5e2',
+                          padding: '11px 12px', marginBottom: '6px', borderRadius: radius.md,
+                          background: selected ? colors.bgAccent : colors.white,
+                          border: selected ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
                           cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
                           position: 'relative',
                         }}>
-                          {selected && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: '#c2410c', borderRadius: '10px 0 0 10px' }} />}
+                          {selected && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: colors.accent, borderRadius: `${radius.md} 0 0 ${radius.md}` }} />}
                           <div style={{ flex: 1, paddingLeft: selected ? '10px' : '0' }}>
-                            <div style={{ fontWeight: '600', color: '#1c1917', fontSize: '0.95rem' }}>{ing.name}</div>
-                            <div style={{ fontSize: '0.78rem', color: '#a8a29e' }}>{ing.unit}</div>
+                            <div style={{ fontWeight: '600', color: colors.text, fontSize: '0.95rem' }}>{ing.name}</div>
+                            <div style={{ fontSize: '0.78rem', color: colors.textTertiary }}>{ing.unit}</div>
                           </div>
-                          {selected && <span style={{ color: '#c2410c', fontSize: '1.1rem' }}>✓</span>}
+                          {selected && <span style={{ color: colors.accent, fontSize: '1.1rem' }}>✓</span>}
                         </button>
                       );
                     })}
@@ -302,7 +303,7 @@ export default function MealCreatePage() {
                   </div>
                 )}
                 {!searchTerm && !selectedCategory && (
-                  <p style={{ color: '#78716c', fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 6px' }}>Alle</p>
+                  <p style={{ color: colors.textSecond, fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 6px' }}>Alle</p>
                 )}
                 {visibleIngredients.map(ing => {
                   if (!searchTerm && !selectedCategory && MOST_USED_INGREDIENTS.includes(ing.name)) return null;
@@ -310,23 +311,23 @@ export default function MealCreatePage() {
                   return (
                     <button key={ing.id} onClick={() => toggleIngredient(ing)} style={{
                       display: 'flex', alignItems: 'center', width: '100%',
-                      padding: '11px 12px', marginBottom: '6px', borderRadius: '10px',
-                      background: selected ? '#fff7ed' : '#fff',
-                      border: selected ? '2px solid #c2410c' : '1px solid #e7e5e2',
+                      padding: '11px 12px', marginBottom: '6px', borderRadius: radius.md,
+                      background: selected ? colors.bgAccent : colors.white,
+                      border: selected ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
                       cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
                       position: 'relative',
                     }}>
-                      {selected && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: '#c2410c', borderRadius: '10px 0 0 10px' }} />}
+                      {selected && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: colors.accent, borderRadius: `${radius.md} 0 0 ${radius.md}` }} />}
                       <div style={{ flex: 1, paddingLeft: selected ? '10px' : '0' }}>
-                        <div style={{ fontWeight: '600', color: '#1c1917', fontSize: '0.95rem' }}>{ing.name}</div>
-                        <div style={{ fontSize: '0.78rem', color: '#a8a29e' }}>{ing.unit}</div>
+                        <div style={{ fontWeight: '600', color: colors.text, fontSize: '0.95rem' }}>{ing.name}</div>
+                        <div style={{ fontSize: '0.78rem', color: colors.textTertiary }}>{ing.unit}</div>
                       </div>
-                      {selected && <span style={{ color: '#c2410c', fontSize: '1.1rem' }}>✓</span>}
+                      {selected && <span style={{ color: colors.accent, fontSize: '1.1rem' }}>✓</span>}
                     </button>
                   );
                 })}
                 {visibleIngredients.length === 0 && (
-                  <p style={{ color: '#a8a29e', textAlign: 'center', padding: '20px' }}>Ingen ingredienser funnet</p>
+                  <p style={{ color: colors.textTertiary, textAlign: 'center', padding: '20px' }}>Ingen ingredienser funnet</p>
                 )}
               </>
             )}
@@ -335,50 +336,50 @@ export default function MealCreatePage() {
           {/* Chips dock */}
           {selectedIngredients.length > 0 && (
             <div style={{
-              borderTop: '1px solid #e7e5e2',
+              borderTop: `1px solid ${colors.border}`,
               paddingTop: '10px',
               paddingBottom: '4px',
             }}>
-              <p style={{ color: '#78716c', fontSize: '0.75rem', fontWeight: '600', margin: '0 0 8px', textTransform: 'uppercase' }}>
+              <p style={{ color: colors.textSecond, fontSize: '0.75rem', fontWeight: '600', margin: '0 0 8px', textTransform: 'uppercase' }}>
                 Valgt ({selectedIngredients.length})
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {selectedIngredients.map(ing => (
                   <div key={ing.id} style={{
                     display: 'flex', alignItems: 'center', gap: '4px',
-                    background: '#fff7ed', border: '1.5px solid #c2410c',
-                    borderRadius: '20px', padding: '5px 6px 5px 10px',
+                    background: colors.bgAccent, border: `1.5px solid ${colors.accent}`,
+                    borderRadius: radius.round, padding: '5px 6px 5px 10px',
                     fontSize: '0.85rem',
                   }}>
-                    <span style={{ fontWeight: '600', color: '#1c1917' }}>{ing.name}</span>
+                    <span style={{ fontWeight: '600', color: colors.text }}>{ing.name}</span>
 
                     {/* Unit toggle */}
                     <button onClick={e => { e.stopPropagation(); updateUnit(ing.id, ing.unit === 'g' ? 'stk' : ing.unit === 'stk' ? 'dl' : 'g'); }} style={{
-                      background: '#fde8d8', border: 'none', borderRadius: '6px',
-                      padding: '2px 5px', fontSize: '0.72rem', color: '#c2410c',
+                      background: colors.accentAltLight, border: 'none', borderRadius: '6px',
+                      padding: '2px 5px', fontSize: '0.72rem', color: colors.accentAlt,
                       fontWeight: '700', cursor: 'pointer', marginLeft: '2px',
                     }}>
                       {ing.unit}
                     </button>
 
                     {/* − qty + */}
-                    <button onClick={e => { e.stopPropagation(); adjustQuantity(ing.id, -1); }} style={{ background: 'none', border: 'none', color: '#c2410c', fontSize: '1rem', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}>−</button>
+                    <button onClick={e => { e.stopPropagation(); adjustQuantity(ing.id, -1); }} style={{ background: 'none', border: 'none', color: colors.accent, fontSize: '1rem', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}>−</button>
 
                     {editingQtyId === ing.id ? (
                       <input type="number" min="0.1" step="1" value={ing.quantity} autoFocus onChange={e => updateQuantity(ing.id, e.target.value)} onBlur={() => setEditingQtyId(null)} style={{
-                        width: '40px', textAlign: 'center', border: '1px solid #c2410c',
+                        width: '40px', textAlign: 'center', border: `1px solid ${colors.accent}`,
                         borderRadius: '4px', fontSize: '0.82rem', padding: '1px 2px',
-                        fontWeight: '700', color: '#1c1917',
+                        fontWeight: '700', color: colors.text,
                       }} />
                     ) : (
-                      <span onClick={e => { e.stopPropagation(); setEditingQtyId(ing.id); }} style={{ fontWeight: '700', color: '#1c1917', minWidth: '20px', textAlign: 'center', cursor: 'text' }}>
+                      <span onClick={e => { e.stopPropagation(); setEditingQtyId(ing.id); }} style={{ fontWeight: '700', color: colors.text, minWidth: '20px', textAlign: 'center', cursor: 'text' }}>
                         {ing.quantity}
                       </span>
                     )}
 
-                    <button onClick={e => { e.stopPropagation(); adjustQuantity(ing.id, 1); }} style={{ background: 'none', border: 'none', color: '#c2410c', fontSize: '1rem', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}>+</button>
+                    <button onClick={e => { e.stopPropagation(); adjustQuantity(ing.id, 1); }} style={{ background: 'none', border: 'none', color: colors.accent, fontSize: '1rem', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}>+</button>
 
-                    <button onClick={e => { e.stopPropagation(); removeIngredient(ing.id); }} style={{ background: 'none', border: 'none', color: '#a8a29e', fontSize: '0.9rem', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}>✕</button>
+                    <button onClick={e => { e.stopPropagation(); removeIngredient(ing.id); }} style={{ background: 'none', border: 'none', color: colors.textTertiary, fontSize: '0.9rem', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}>✕</button>
                   </div>
                 ))}
               </div>
@@ -398,36 +399,36 @@ export default function MealCreatePage() {
       {/* STEP 3: Tid + personer + kategori + lagre */}
       {step === 3 && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px' }}>
-          <h1 style={{ color: '#1c1917', fontSize: '1.2rem', fontWeight: '600', margin: '12px 0 2px' }}>Detaljer</h1>
-          <p style={{ color: '#a8a29e', fontSize: '0.85rem', margin: '0 0 20px' }}>Tid, personer, kategori</p>
+          <h1 style={{ color: colors.text, fontSize: '1.2rem', fontWeight: '600', margin: '12px 0 2px' }}>Detaljer</h1>
+          <p style={{ color: colors.textTertiary, fontSize: '0.85rem', margin: '0 0 20px' }}>Tid, personer, kategori</p>
 
           {/* Time section */}
           <div style={{ marginBottom: '24px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-              <span style={{ fontSize: '3rem', fontWeight: '800', color: '#c2410c', lineHeight: 1 }}>
+              <span style={{ fontSize: '3rem', fontWeight: '800', color: colors.accent, lineHeight: 1 }}>
                 {mealData.time_minutes}
               </span>
-              <span style={{ fontSize: '1rem', color: '#78716c', fontWeight: '600', marginLeft: '4px' }}>min</span>
+              <span style={{ fontSize: '1rem', color: colors.textSecond, fontWeight: '600', marginLeft: '4px' }}>min</span>
             </div>
 
             {/* Quick buttons */}
             <div style={{ display: 'flex', gap: '6px', marginBottom: '16px' }}>
               {QUICK_TIMES.map(t => (
                 <button key={t} onClick={() => setMealData({ ...mealData, time_minutes: t })} style={{
-                  flex: 1, padding: '10px 0', borderRadius: '10px',
-                  background: mealData.time_minutes === t ? '#c2410c' : '#fff',
-                  color: mealData.time_minutes === t ? '#fff' : '#1c1917',
-                  border: mealData.time_minutes === t ? 'none' : '1px solid #e7e5e2',
+                  flex: 1, padding: '10px 0', borderRadius: radius.md,
+                  background: mealData.time_minutes === t ? colors.accent : colors.white,
+                  color: mealData.time_minutes === t ? colors.white : colors.text,
+                  border: mealData.time_minutes === t ? 'none' : `1px solid ${colors.border}`,
                   fontWeight: '700', cursor: 'pointer', fontSize: '0.9rem', transition: 'all 0.15s',
                 }}>
                   {t}m
                 </button>
               ))}
               <button onClick={() => setMealData({ ...mealData, time_minutes: Math.max(90, mealData.time_minutes >= 90 ? mealData.time_minutes : 90) })} style={{
-                flex: 1, padding: '10px 0', borderRadius: '10px',
-                background: mealData.time_minutes >= 90 ? '#c2410c' : '#fff',
-                color: mealData.time_minutes >= 90 ? '#fff' : '#1c1917',
-                border: mealData.time_minutes >= 90 ? 'none' : '1px solid #e7e5e2',
+                flex: 1, padding: '10px 0', borderRadius: radius.md,
+                background: mealData.time_minutes >= 90 ? colors.accent : colors.white,
+                color: mealData.time_minutes >= 90 ? colors.white : colors.text,
+                border: mealData.time_minutes >= 90 ? 'none' : `1px solid ${colors.border}`,
                 fontWeight: '700', cursor: 'pointer', fontSize: '0.9rem', transition: 'all 0.15s',
               }}>
                 90+
@@ -437,7 +438,7 @@ export default function MealCreatePage() {
             {/* Slider */}
             <input type="range" min="5" max="180" step="5" value={mealData.time_minutes} onChange={e => setMealData({ ...mealData, time_minutes: parseInt(e.target.value) })} style={{
               width: '100%',
-              accentColor: '#c2410c',
+              accentColor: colors.accent,
               height: '6px',
               cursor: 'pointer',
             }} />
@@ -445,36 +446,36 @@ export default function MealCreatePage() {
 
           {/* Persons */}
           <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: '#78716c', fontWeight: '600', marginBottom: '8px' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', color: colors.textSecond, fontWeight: '600', marginBottom: '8px' }}>
               Antall personer
             </label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <button onClick={() => setMealData({ ...mealData, persons: Math.max(1, mealData.persons - 1) })} style={{
-                width: '36px', height: '36px', borderRadius: '10px', border: '1.5px solid #e7e5e2',
-                background: '#fff', cursor: 'pointer', fontSize: '1.2rem', color: '#c2410c', fontWeight: '700'
+                width: '36px', height: '36px', borderRadius: radius.md, border: `1.5px solid ${colors.border}`,
+                background: colors.white, cursor: 'pointer', fontSize: '1.2rem', color: colors.accent, fontWeight: '700'
               }}>−</button>
-              <span style={{ fontSize: '1.1rem', fontWeight: '700', color: '#1c1917', minWidth: '20px', textAlign: 'center' }}>
+              <span style={{ fontSize: '1.1rem', fontWeight: '700', color: colors.text, minWidth: '20px', textAlign: 'center' }}>
                 {mealData.persons}
               </span>
               <button onClick={() => setMealData({ ...mealData, persons: mealData.persons + 1 })} style={{
-                width: '36px', height: '36px', borderRadius: '10px', border: '1.5px solid #e7e5e2',
-                background: '#fff', cursor: 'pointer', fontSize: '1.2rem', color: '#c2410c', fontWeight: '700'
+                width: '36px', height: '36px', borderRadius: radius.md, border: `1.5px solid ${colors.border}`,
+                background: colors.white, cursor: 'pointer', fontSize: '1.2rem', color: colors.accent, fontWeight: '700'
               }}>+</button>
             </div>
           </div>
 
           {/* Category */}
           <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: '#78716c', fontWeight: '600', marginBottom: '8px' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', color: colors.textSecond, fontWeight: '600', marginBottom: '8px' }}>
               Type rett (valgfritt)
             </label>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {['Pasta', 'Fisk', 'Kjøtt', 'Suppe', 'Salat', 'Annet'].map(cat => (
                 <button key={cat} onClick={() => setMealData({ ...mealData, category: mealData.category === cat ? 'Annet' : cat })} style={{
-                  padding: '8px 12px', borderRadius: '8px',
-                  background: mealData.category === cat ? '#fff7ed' : '#fff',
-                  color: mealData.category === cat ? '#c2410c' : '#1c1917',
-                  border: mealData.category === cat ? '2px solid #c2410c' : '1px solid #e7e5e2',
+                  padding: '8px 12px', borderRadius: radius.sm,
+                  background: mealData.category === cat ? colors.bgAccent : colors.white,
+                  color: mealData.category === cat ? colors.accent : colors.text,
+                  border: mealData.category === cat ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
                   fontWeight: '500', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.15s',
                 }}>
                   {cat}
@@ -485,18 +486,18 @@ export default function MealCreatePage() {
 
           {/* Summary */}
           <div style={{
-            background: '#fff', borderRadius: '12px', padding: '14px',
-            border: '1px solid #e7e5e2', marginBottom: '16px',
+            background: colors.white, borderRadius: radius.md, padding: '14px',
+            border: `1px solid ${colors.border}`, marginBottom: '16px',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: selectedIngredients.length > 0 ? '10px' : '0' }}>
               <span style={{ fontSize: '1.8rem' }}>{mealData.emoji}</span>
               <div>
-                <div style={{ fontWeight: '700', color: '#1c1917', fontSize: '1rem' }}>{mealData.name || '(navn)'}</div>
-                <div style={{ color: '#a8a29e', fontSize: '0.8rem' }}>⏱ {mealData.time_minutes} min · 👥 {mealData.persons} pers</div>
+                <div style={{ fontWeight: '700', color: colors.text, fontSize: '1rem' }}>{mealData.name || '(navn)'}</div>
+                <div style={{ color: colors.textTertiary, fontSize: '0.8rem' }}>⏱ {mealData.time_minutes} min · 👥 {mealData.persons} pers</div>
               </div>
             </div>
             {selectedIngredients.length > 0 && (
-              <div style={{ fontSize: '0.8rem', color: '#78716c', borderTop: '1px solid #f0ede9', paddingTop: '8px' }}>
+              <div style={{ fontSize: '0.8rem', color: colors.textSecond, borderTop: `1px solid ${colors.hairline}`, paddingTop: '8px' }}>
                 {selectedIngredients.map(i => `${i.name} (${i.quantity} ${i.unit})`).join(' · ')}
               </div>
             )}

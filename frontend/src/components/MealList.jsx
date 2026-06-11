@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMeals, markEaten, updatePersons } from '../api.js';
+import { colors, radius, shadows } from '../theme.js';
 
 // Range input styling
 const rangeInputCSS = `
@@ -11,9 +12,9 @@ const rangeInputCSS = `
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #c2410c;
-    border: 2px solid #fff;
-    box-shadow: 0 2px 8px rgba(194, 65, 12, 0.3);
+    background: ${colors.accent};
+    border: 2px solid ${colors.white};
+    box-shadow: 0 2px 8px ${colors.accentDark}4d;
     cursor: pointer;
   }
 
@@ -22,9 +23,9 @@ const rangeInputCSS = `
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #c2410c;
-    border: 2px solid #fff;
-    box-shadow: 0 2px 8px rgba(194, 65, 12, 0.3);
+    background: ${colors.accent};
+    border: 2px solid ${colors.white};
+    box-shadow: 0 2px 8px ${colors.accentDark}4d;
     cursor: pointer;
   }
 
@@ -176,7 +177,7 @@ export default function MealList() {
           />
 
           {/* Divider */}
-          <div style={{ borderTop: '1px solid #f0ede9', margin: '24px 0 16px', opacity: 0.5 }} />
+          <div style={{ borderTop: `1px solid ${colors.hairline}`, margin: '24px 0 16px', opacity: 0.5 }} />
 
           {/* Tag Filters */}
           {FILTER_GROUPS.map(group => (
@@ -330,7 +331,7 @@ function DualRangeSlider({ label, min, max, step, value, onChange, formatLabel }
       <div style={s.rangeSliderContainer}>
         <div style={{
           ...s.rangeTrack,
-          background: `linear-gradient(to right, #e7e5e2 0%, #e7e5e2 ${minPercent}%, #c2410c ${minPercent}%, #c2410c ${maxPercent}%, #e7e5e2 ${maxPercent}%, #e7e5e2 100%)`
+          background: `linear-gradient(to right, ${colors.border} 0%, ${colors.border} ${minPercent}%, ${colors.accent} ${minPercent}%, ${colors.accent} ${maxPercent}%, ${colors.border} ${maxPercent}%, ${colors.border} 100%)`
         }} />
 
         <input
@@ -400,7 +401,7 @@ function MealCard({ meal, onSelect }) {
 }
 
 const s = {
-  page: { background: '#faf8f5', minHeight: '100%', fontFamily: 'system-ui, sans-serif' },
+  page: { background: colors.bg, minHeight: '100%', fontFamily: 'system-ui, sans-serif' },
 
   // Drawer
   backdrop: {
@@ -411,44 +412,44 @@ const s = {
   drawer: {
     position: 'fixed', top: 0, left: 0, bottom: 0,
     width: 300, zIndex: 50,
-    background: '#fff', borderRight: '1px solid #f0ede9',
+    background: colors.white, borderRight: `1px solid ${colors.hairline}`,
     boxShadow: '4px 0 40px rgba(0,0,0,0.12)',
     display: 'flex', flexDirection: 'column',
     transition: 'transform 0.28s cubic-bezier(0.4,0,0.2,1)',
   },
   drawerHeader: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '20px 20px 16px', borderBottom: '1px solid #f0ede9',
+    padding: '20px 20px 16px', borderBottom: `1px solid ${colors.hairline}`,
   },
   drawerTitle: {
     fontFamily: 'Georgia, serif', fontSize: '1.25rem', fontWeight: 800,
-    color: '#1c1917', letterSpacing: '-0.02em',
+    color: colors.text, letterSpacing: '-0.02em',
   },
   closeBtn: {
     width: 32, height: 32, borderRadius: 8,
-    border: '1.5px solid #e7e5e2', background: '#faf8f5',
-    color: '#78716c', fontSize: '0.9rem', cursor: 'pointer',
+    border: `1.5px solid ${colors.border}`, background: colors.bg,
+    color: colors.textSecond, fontSize: '0.9rem', cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
   },
   drawerBody: { flex: 1, overflowY: 'auto', padding: '16px 20px' },
   filterGroup: { marginBottom: 24 },
   groupLabel: {
-    fontSize: '0.72rem', fontWeight: 700, color: '#a8a29e',
+    fontSize: '0.72rem', fontWeight: 700, color: colors.textTertiary,
     textTransform: 'uppercase', letterSpacing: '0.08em',
     margin: '0 0 10px',
   },
   chipRow: { display: 'flex', flexWrap: 'wrap', gap: 8 },
   chip: {
     padding: '7px 14px', borderRadius: 999,
-    border: '1.5px solid #e7e5e2', background: '#faf8f5',
-    color: '#44403c', fontSize: '0.85rem', fontWeight: 600,
+    border: `1.5px solid ${colors.border}`, background: colors.bg,
+    color: colors.text, fontSize: '0.85rem', fontWeight: 600,
     cursor: 'pointer', transition: 'all 0.15s',
   },
   chipActive: {
-    background: '#c2410c', borderColor: '#c2410c', color: '#fff',
+    background: colors.accent, borderColor: '#c2410c', color: '#fff',
   },
   drawerFooter: {
-    padding: '16px 20px', borderTop: '1px solid #f0ede9',
+    padding: '16px 20px', borderTop: `1px solid ${colors.hairline}`,
     display: 'flex', flexDirection: 'column', gap: 10,
   },
   clearBtn: {
@@ -457,7 +458,7 @@ const s = {
     textDecoration: 'underline',
   },
   showBtn: {
-    background: '#c2410c', color: '#fff', border: 'none',
+    background: colors.accent, color: '#fff', border: 'none',
     borderRadius: 12, padding: '14px', fontSize: '1rem', fontWeight: 700,
     cursor: 'pointer', boxShadow: '0 4px 16px rgba(194,65,12,0.25)',
   },
@@ -465,26 +466,26 @@ const s = {
   // Header
   header: {
     position: 'sticky', top: 0, zIndex: 10,
-    background: 'rgba(250,248,245,0.95)', backdropFilter: 'blur(10px)',
-    borderBottom: '1px solid #e7e5e2', padding: '16px 16px 12px',
+    background: `rgba(250, 247, 242, 0.95)`, backdropFilter: 'blur(10px)',
+    borderBottom: `1px solid ${colors.border}`, padding: '16px 16px 12px',
   },
   headerTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   heading: { fontFamily: 'Georgia, serif', fontSize: '1.5rem', fontWeight: 800, color: '#1c1917', margin: 0, letterSpacing: '-0.02em' },
-  sub: { color: '#a8a29e', fontSize: '0.8rem', margin: '2px 0 0' },
+  sub: { color: colors.textTertiary, fontSize: '0.8rem', margin: '2px 0 0' },
   personBox: { display: 'flex', alignItems: 'center', gap: 6 },
   personBtn: {
     width: 28, height: 28, borderRadius: 8,
-    border: '1.5px solid #e7e5e2', background: '#fff',
-    color: '#1c1917', fontSize: '1rem', fontWeight: 700,
+    border: `1.5px solid ${colors.border}`, background: '#fff',
+    color: colors.text, fontSize: '1rem', fontWeight: 700,
     cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
   },
   personCount: { fontWeight: 700, fontSize: '1rem', color: '#1c1917', minWidth: 16, textAlign: 'center' },
-  personLabel: { color: '#a8a29e', fontSize: '0.78rem' },
+  personLabel: { color: colors.textTertiary, fontSize: '0.78rem' },
 
   toolRow: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 0 },
   createBtn: {
     flexShrink: 0, width: 36, height: 36, borderRadius: '50%',
-    background: '#c2410c', color: '#fff', border: 'none',
+    background: colors.accent, color: '#fff', border: 'none',
     fontSize: '1.2rem', fontWeight: 700, cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     boxShadow: '0 2px 8px rgba(194, 65, 12, 0.3)', transition: 'all 0.15s',
@@ -492,14 +493,14 @@ const s = {
   filterBtn: {
     flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
     padding: '6px 12px', borderRadius: 999,
-    border: '1.5px solid #e7e5e2', background: '#fff',
-    color: '#44403c', fontSize: '0.8rem', fontWeight: 700,
+    border: `1.5px solid ${colors.border}`, background: '#fff',
+    color: colors.text, fontSize: '0.8rem', fontWeight: 700,
     cursor: 'pointer', transition: 'all 0.15s', position: 'relative',
   },
   filterBtnActive: { background: '#1c1917', borderColor: '#1c1917', color: '#fff' },
   badge: {
     minWidth: 18, height: 18, borderRadius: 999,
-    background: '#c2410c', color: '#fff',
+    background: colors.accent, color: '#fff',
     fontSize: '0.7rem', fontWeight: 800,
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
     padding: '0 4px',
@@ -508,17 +509,17 @@ const s = {
   sortRow: { display: 'flex', gap: 6, overflowX: 'auto', flex: 1 },
   pill: {
     flexShrink: 0, padding: '6px 12px', borderRadius: 999,
-    border: '1.5px solid #e7e5e2', background: '#fff',
-    color: '#78716c', fontSize: '0.78rem', fontWeight: 600,
+    border: `1.5px solid ${colors.border}`, background: '#fff',
+    color: colors.textSecond, fontSize: '0.78rem', fontWeight: 600,
     cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s',
   },
   pillActive: { background: '#c2410c', borderColor: '#c2410c', color: '#fff' },
 
   activeTagRow: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 10 },
-  activeTagLabel: { fontSize: '0.72rem', color: '#a8a29e', fontWeight: 600 },
+  activeTagLabel: { fontSize: '0.72rem', color: colors.textTertiary, fontWeight: 600 },
   activeTag: {
     padding: '3px 10px', borderRadius: 999,
-    background: '#fff7ed', border: '1px solid #fed7aa',
+    background: colors.bgAccent, border: '1px solid #fed7aa',
     color: '#c2410c', fontSize: '0.75rem', fontWeight: 600,
     cursor: 'pointer',
   },
@@ -527,8 +528,8 @@ const s = {
   list: { padding: '16px 16px 32px', display: 'flex', flexDirection: 'column', gap: 12 },
   card: {
     display: 'flex', alignItems: 'center', gap: 16,
-    background: '#fff', borderRadius: 20, padding: '18px 16px',
-    border: '1px solid #f0ede9',
+    background: colors.white, borderRadius: 20, padding: '18px 16px',
+    border: `1px solid ${colors.hairline}`,
     cursor: 'pointer', transition: 'transform 0.12s, box-shadow 0.12s',
     userSelect: 'none',
   },
@@ -542,7 +543,7 @@ const s = {
     borderRadius: 999, padding: '2px 8px',
   },
   desc: {
-    color: '#78716c', fontSize: '0.82rem', lineHeight: 1.5, margin: '0 0 8px',
+    color: colors.textSecond, fontSize: '0.82rem', lineHeight: 1.5, margin: '0 0 8px',
     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
   },
   badges: { display: 'flex', gap: 6 },
@@ -552,9 +553,9 @@ const s = {
 
   loadingWrap: { textAlign: 'center', paddingTop: 80 },
   loadingEmoji: { fontSize: '3rem', display: 'block', marginBottom: 12 },
-  loadingText: { color: '#a8a29e', fontSize: '1rem', marginBottom: 16 },
+  loadingText: { color: colors.textTertiary, fontSize: '1rem', marginBottom: 16 },
   resetBtn: {
-    background: '#c2410c', color: '#fff', border: 'none',
+    background: colors.accent, color: '#fff', border: 'none',
     borderRadius: 10, padding: '10px 20px', fontSize: '0.9rem',
     fontWeight: 600, cursor: 'pointer',
   },
@@ -562,7 +563,7 @@ const s = {
   // Range Slider
   rangeSliderGroup: { marginBottom: 24 },
   rangeValue: {
-    fontSize: '0.9rem', fontWeight: 600, color: '#44403c',
+    fontSize: '0.9rem', fontWeight: 600, color: colors.text,
     margin: '8px 0 12px', fontFamily: 'system-ui, sans-serif',
   },
   rangeSliderContainer: {

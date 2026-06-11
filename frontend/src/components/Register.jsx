@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { register } from '../api.js';
 import PersonCounter from './PersonCounter.jsx';
+import { colors, radius, shadows } from '../theme.js';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -37,7 +38,7 @@ export default function Register() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#faf8f5',
+      background: colors.bg,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -50,7 +51,7 @@ export default function Register() {
           <h1 style={{
             fontSize: '2rem',
             fontWeight: 700,
-            color: '#1c1917',
+            color: colors.text,
             marginBottom: '8px',
             fontFamily: 'Georgia, serif',
           }}>
@@ -61,16 +62,16 @@ export default function Register() {
 
         {/* Card */}
         <div style={{
-          background: '#fff',
-          borderRadius: '20px',
+          background: colors.white,
+          borderRadius: radius.xl,
           padding: '32px',
-          border: '1px solid #e7e5e2',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+          border: `1px solid ${colors.border}`,
+          boxShadow: shadows.md,
         }}>
           <h2 style={{
             fontSize: '1.3rem',
             fontWeight: 700,
-            color: '#1c1917',
+            color: colors.text,
             marginBottom: '24px',
             margin: '0 0 24px',
           }}>
@@ -81,10 +82,10 @@ export default function Register() {
             <div style={{
               background: '#fee2e2',
               border: '1px solid #fecaca',
-              borderRadius: '12px',
+              borderRadius: radius.md,
               padding: '16px',
               marginBottom: '24px',
-              color: '#b91c1c',
+              color: colors.error,
               fontSize: '0.9rem',
             }}>
               {error}
@@ -95,7 +96,7 @@ export default function Register() {
             <div>
               <label style={{
                 display: 'block',
-                color: '#78716c',
+                color: colors.textSecond,
                 fontSize: '0.85rem',
                 fontWeight: 600,
                 marginBottom: '8px',
@@ -111,26 +112,26 @@ export default function Register() {
                 placeholder="Ola Nordmann"
                 style={{
                   width: '100%',
-                  background: '#faf8f5',
-                  border: '1.5px solid #e7e5e2',
-                  borderRadius: '10px',
+                  background: colors.bg,
+                  border: `1.5px solid ${colors.border}`,
+                  borderRadius: radius.md,
                   padding: '12px 14px',
-                  color: '#1c1917',
+                  color: colors.text,
                   fontSize: '0.95rem',
                   fontFamily: 'inherit',
                   outline: 'none',
                   transition: 'border 0.2s',
                   boxSizing: 'border-box',
                 }}
-                onFocus={e => e.target.style.borderColor = '#c2410c'}
-                onBlur={e => e.target.style.borderColor = '#e7e5e2'}
+                onFocus={e => e.target.style.borderColor = colors.accent}
+                onBlur={e => e.target.style.borderColor = colors.border}
               />
             </div>
 
             <div>
               <label style={{
                 display: 'block',
-                color: '#78716c',
+                color: colors.textSecond,
                 fontSize: '0.85rem',
                 fontWeight: 600,
                 marginBottom: '8px',
@@ -146,26 +147,26 @@ export default function Register() {
                 placeholder="din@epost.no"
                 style={{
                   width: '100%',
-                  background: '#faf8f5',
-                  border: '1.5px solid #e7e5e2',
-                  borderRadius: '10px',
+                  background: colors.bg,
+                  border: `1.5px solid ${colors.border}`,
+                  borderRadius: radius.md,
                   padding: '12px 14px',
-                  color: '#1c1917',
+                  color: colors.text,
                   fontSize: '0.95rem',
                   fontFamily: 'inherit',
                   outline: 'none',
                   transition: 'border 0.2s',
                   boxSizing: 'border-box',
                 }}
-                onFocus={e => e.target.style.borderColor = '#c2410c'}
-                onBlur={e => e.target.style.borderColor = '#e7e5e2'}
+                onFocus={e => e.target.style.borderColor = colors.accent}
+                onBlur={e => e.target.style.borderColor = colors.border}
               />
             </div>
 
             <div>
               <label style={{
                 display: 'block',
-                color: '#78716c',
+                color: colors.textSecond,
                 fontSize: '0.85rem',
                 fontWeight: 600,
                 marginBottom: '8px',
@@ -181,26 +182,26 @@ export default function Register() {
                 placeholder="Minst 6 tegn"
                 style={{
                   width: '100%',
-                  background: '#faf8f5',
-                  border: '1.5px solid #e7e5e2',
-                  borderRadius: '10px',
+                  background: colors.bg,
+                  border: `1.5px solid ${colors.border}`,
+                  borderRadius: radius.md,
                   padding: '12px 14px',
-                  color: '#1c1917',
+                  color: colors.text,
                   fontSize: '0.95rem',
                   fontFamily: 'inherit',
                   outline: 'none',
                   transition: 'border 0.2s',
                   boxSizing: 'border-box',
                 }}
-                onFocus={e => e.target.style.borderColor = '#c2410c'}
-                onBlur={e => e.target.style.borderColor = '#e7e5e2'}
+                onFocus={e => e.target.style.borderColor = colors.accent}
+                onBlur={e => e.target.style.borderColor = colors.border}
               />
             </div>
 
             <div>
               <label style={{
                 display: 'block',
-                color: '#78716c',
+                color: colors.textSecond,
                 fontSize: '0.85rem',
                 fontWeight: 600,
                 marginBottom: '12px',
@@ -215,8 +216,8 @@ export default function Register() {
               disabled={loading}
               style={{
                 width: '100%',
-                background: loading ? '#e7e5e2' : '#c2410c',
-                color: loading ? '#a8a29e' : '#fff',
+                background: loading ? colors.borderLight : colors.accent,
+                color: loading ? colors.textTertiary : colors.white,
                 fontWeight: 600,
                 padding: '12px',
                 borderRadius: '10px',
@@ -225,13 +226,13 @@ export default function Register() {
                 cursor: loading ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s',
                 marginTop: '8px',
-                boxShadow: loading ? 'none' : '0 8px 32px rgba(194,65,12,0.25)',
+                boxShadow: loading ? 'none' : shadows.accent,
               }}
               onMouseEnter={e => {
-                if (!loading) e.target.style.background = '#b53b0a';
+                if (!loading) e.target.style.background = colors.accentDark;
               }}
               onMouseLeave={e => {
-                if (!loading) e.target.style.background = '#c2410c';
+                if (!loading) e.target.style.background = colors.accent;
               }}
             >
               {loading ? 'Oppretter konto...' : 'Opprett konto'}
@@ -240,20 +241,20 @@ export default function Register() {
 
           <p style={{
             textAlign: 'center',
-            color: '#78716c',
+            color: colors.textSecond,
             marginTop: '24px',
             fontSize: '0.9rem',
             margin: '24px 0 0',
           }}>
             Har du allerede konto?{' '}
             <Link to="/login" style={{
-              color: '#c2410c',
+              color: colors.accent,
               textDecoration: 'none',
               fontWeight: 600,
               transition: 'color 0.2s',
             }}
-            onMouseEnter={e => e.target.style.color = '#b53b0a'}
-            onMouseLeave={e => e.target.style.color = '#c2410c'}
+            onMouseEnter={e => e.target.style.color = colors.accentDark}
+            onMouseLeave={e => e.target.style.color = colors.accent}
             >
               Logg inn her
             </Link>

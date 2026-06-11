@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getMeal, getStores } from '../api.js';
+import { colors, radius } from '../theme.js';
 
 const storeEmojis = {
   'Rema 1000': '🔴',
@@ -15,9 +16,9 @@ const storeDescriptions = {
 };
 
 const storeColors = {
-  'Rema 1000': { border: '#fde8d8', bg: '#fff7ed' },
-  'Kiwi': { border: '#fed7aa', bg: '#fff7ed' },
-  'Coop Extra': { border: '#fed7aa', bg: '#fff7ed' }
+  'Rema 1000': { border: colors.accentAlt, bg: colors.bgAccent },
+  'Kiwi': { border: colors.accentAlt, bg: colors.bgAccent },
+  'Coop Extra': { border: colors.accentAlt, bg: colors.bgAccent }
 };
 
 export default function StoreSelector() {
@@ -58,14 +59,14 @@ export default function StoreSelector() {
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          color: '#78716c',
+          color: colors.textSecond,
           background: 'none',
           border: 'none',
           cursor: 'pointer',
           transition: 'color 0.2s',
         }}
-        onMouseEnter={e => e.target.style.color = '#c2410c'}
-        onMouseLeave={e => e.target.style.color = '#78716c'}
+        onMouseEnter={e => e.target.style.color = colors.accent}
+        onMouseLeave={e => e.target.style.color = colors.textSecond}
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -76,28 +77,28 @@ export default function StoreSelector() {
       {/* Meal reminder */}
       {meal && (
         <div style={{
-          background: '#fff',
-          borderRadius: '14px',
+          background: colors.white,
+          borderRadius: radius.md,
           padding: '12px 16px',
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
-          border: '1px solid #e7e5e2',
+          border: `1px solid ${colors.border}`,
         }}>
           <span style={{ fontSize: '1.8rem' }}>{meal.emoji}</span>
           <div>
-            <p style={{ fontSize: '0.75rem', color: '#a8a29e', margin: 0 }}>Du lager</p>
-            <p style={{ color: '#1c1917', fontWeight: 600, margin: 0 }}>{meal.name}</p>
+            <p style={{ fontSize: '0.75rem', color: colors.textTertiary, margin: 0 }}>Du lager</p>
+            <p style={{ color: colors.text, fontWeight: 600, margin: 0 }}>{meal.name}</p>
           </div>
         </div>
       )}
 
       {/* Question */}
       <div>
-        <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#1c1917', marginBottom: '8px', fontFamily: 'Georgia, serif' }}>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: colors.text, marginBottom: '8px', fontFamily: 'Georgia, serif' }}>
           Hvilken butikk er du i?
         </h1>
-        <p style={{ color: '#78716c', fontSize: '0.9rem', margin: 0 }}>
+        <p style={{ color: colors.textSecond, fontSize: '0.9rem', margin: 0 }}>
           Vi sorterer handlelisten etter butikkens rekkefølge
         </p>
       </div>
@@ -105,16 +106,16 @@ export default function StoreSelector() {
       {/* Store cards */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {stores.map(store => {
-          const colors = storeColors[store.name] || { border: '#fed7aa', bg: '#fff7ed' };
+          const storeColor = storeColors[store.name] || { border: colors.accentAlt, bg: colors.bgAccent };
           return (
             <button
               key={store.id}
               onClick={() => handleSelectStore(store.id)}
               style={{
                 width: '100%',
-                background: '#fff',
-                border: `1.5px solid #e7e5e2`,
-                borderRadius: '14px',
+                background: colors.white,
+                border: `1.5px solid ${colors.border}`,
+                borderRadius: radius.md,
                 padding: '16px',
                 display: 'flex',
                 alignItems: 'center',
@@ -124,24 +125,24 @@ export default function StoreSelector() {
                 transition: 'all 0.2s',
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.borderColor = colors.border;
-                e.currentTarget.style.background = colors.bg;
+                e.currentTarget.style.borderColor = storeColor.border;
+                e.currentTarget.style.background = storeColor.bg;
               }}
               onMouseLeave={e => {
-                e.currentTarget.style.borderColor = '#e7e5e2';
-                e.currentTarget.style.background = '#fff';
+                e.currentTarget.style.borderColor = colors.border;
+                e.currentTarget.style.background = colors.white;
               }}
             >
               <div style={{ fontSize: '2.2rem' }}>{storeEmojis[store.name] || '🏪'}</div>
               <div style={{ flex: 1 }}>
-                <h3 style={{ color: '#1c1917', fontWeight: 700, fontSize: '1rem', margin: 0 }}>
+                <h3 style={{ color: colors.text, fontWeight: 700, fontSize: '1rem', margin: 0 }}>
                   {store.name}
                 </h3>
-                <p style={{ color: '#78716c', fontSize: '0.8rem', marginTop: '4px', margin: '4px 0 0' }}>
+                <p style={{ color: colors.textSecond, fontSize: '0.8rem', marginTop: '4px', margin: '4px 0 0' }}>
                   {storeDescriptions[store.name] || 'Norsk dagligvarebutikk'}
                 </p>
               </div>
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="#a8a29e">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke={colors.textTertiary}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -149,7 +150,7 @@ export default function StoreSelector() {
         })}
       </div>
 
-      <p style={{ textAlign: 'center', color: '#a8a29e', fontSize: '0.75rem', margin: 0 }}>
+      <p style={{ textAlign: 'center', color: colors.textTertiary, fontSize: '0.75rem', margin: 0 }}>
         Handlelisten sorteres etter den valgte butikkens avdelingsrekkefølge
       </p>
     </div>

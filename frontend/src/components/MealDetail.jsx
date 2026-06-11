@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getMeal } from '../api.js';
 import PersonCounter from './PersonCounter.jsx';
+import { colors, shadows, radius } from '../theme.js';
 
 const sectionColors = {
   'Frukt & grønt': { bg: '#e0f7dd', text: '#1a6e3f' },
@@ -22,7 +23,7 @@ function PriceDots({ level }) {
         <span key={i} style={{
           fontSize: '0.85rem',
           fontWeight: 700,
-          color: i < level ? '#c2410c' : '#a8a29e',
+          color: i < level ? colors.accent : colors.textTertiary,
         }}>
           kr
         </span>
@@ -70,10 +71,10 @@ export default function MealDetail() {
     return (
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', textAlign: 'center' }}>
         <div>
-          <p style={{ color: '#b91c1c', marginBottom: '16px' }}>{error || 'Måltid ikke funnet'}</p>
+          <p style={{ color: colors.error, marginBottom: '16px' }}>{error || 'Måltid ikke funnet'}</p>
           <button
             onClick={() => navigate('/')}
-            style={{ color: '#c2410c', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+            style={{ color: colors.accent, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
           >
             Tilbake
           </button>
@@ -94,14 +95,14 @@ export default function MealDetail() {
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          color: '#78716c',
+          color: colors.textSecond,
           background: 'none',
           border: 'none',
           cursor: 'pointer',
           transition: 'color 0.2s',
         }}
-        onMouseEnter={e => e.target.style.color = '#c2410c'}
-        onMouseLeave={e => e.target.style.color = '#78716c'}
+        onMouseEnter={e => e.target.style.color = colors.accent}
+        onMouseLeave={e => e.target.style.color = colors.textSecond}
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -111,29 +112,29 @@ export default function MealDetail() {
 
       {/* Hero card */}
       <div style={{
-        background: '#fff',
-        borderRadius: '20px',
+        background: colors.white,
+        borderRadius: radius.xl,
         padding: '24px',
         textAlign: 'center',
-        border: '1px solid #e7e5e2',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+        border: `1px solid ${colors.border}`,
+        boxShadow: shadows.md,
       }}>
         <div style={{ fontSize: '4rem', marginBottom: '16px', lineHeight: 1 }}>{meal.emoji}</div>
         <h1 style={{
           fontSize: '1.8rem',
           fontWeight: 700,
-          color: '#1c1917',
+          color: colors.text,
           margin: '0 0 8px',
           fontFamily: 'Georgia, serif',
         }}>
           {meal.name}
         </h1>
-        <p style={{ color: '#78716c', fontSize: '0.85rem', marginBottom: '16px', margin: '0 0 16px' }}>
+        <p style={{ color: colors.textSecond, fontSize: '0.85rem', marginBottom: '16px', margin: '0 0 16px' }}>
           {meal.category}
         </p>
 
         {meal.description && (
-          <p style={{ color: '#78716c', fontSize: '0.9rem', lineHeight: 1.5, marginBottom: '16px' }}>
+          <p style={{ color: colors.textSecond, fontSize: '0.9rem', lineHeight: 1.5, marginBottom: '16px' }}>
             {meal.description}
           </p>
         )}
@@ -141,26 +142,26 @@ export default function MealDetail() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px', marginTop: '16px' }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>⏱</div>
-            <div style={{ color: '#1c1917', fontWeight: 700 }}>{meal.time_minutes} min</div>
-            <div style={{ color: '#a8a29e', fontSize: '0.7rem' }}>tilbereding</div>
+            <div style={{ color: colors.text, fontWeight: 700 }}>{meal.time_minutes} min</div>
+            <div style={{ color: colors.textTertiary, fontSize: '0.7rem' }}>tilbereding</div>
           </div>
-          <div style={{ width: '1px', height: '40px', background: '#e7e5e2' }} />
+          <div style={{ width: '1px', height: '40px', background: colors.border }} />
           <div style={{ textAlign: 'center' }}>
             <div style={{ marginBottom: '4px' }}><PriceDots level={meal.price_level} /></div>
-            <div style={{ color: '#1c1917', fontWeight: 700 }}>
+            <div style={{ color: colors.text, fontWeight: 700 }}>
               {meal.price_level === 1 ? 'Billig' : meal.price_level === 2 ? 'Middels' : 'Dyrere'}
             </div>
-            <div style={{ color: '#a8a29e', fontSize: '0.7rem' }}>prisnivå</div>
+            <div style={{ color: colors.textTertiary, fontSize: '0.7rem' }}>prisnivå</div>
           </div>
           {meal.last_eaten && (
             <>
-              <div style={{ width: '1px', height: '40px', background: '#e7e5e2' }} />
+              <div style={{ width: '1px', height: '40px', background: colors.border }} />
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>📅</div>
-                <div style={{ color: '#1c1917', fontWeight: 700, fontSize: '0.9rem' }}>
+                <div style={{ color: colors.text, fontWeight: 700, fontSize: '0.9rem' }}>
                   {new Date(meal.last_eaten).toLocaleDateString('no-NO', { month: 'short', day: 'numeric' })}
                 </div>
-                <div style={{ color: '#a8a29e', fontSize: '0.7rem' }}>sist spist</div>
+                <div style={{ color: colors.textTertiary, fontSize: '0.7rem' }}>sist spist</div>
               </div>
             </>
           )}
@@ -169,15 +170,15 @@ export default function MealDetail() {
 
       {/* Persons selector */}
       <div style={{
-        background: '#fff',
-        borderRadius: '20px',
+        background: colors.white,
+        borderRadius: radius.xl,
         padding: '16px',
-        border: '1px solid #e7e5e2',
+        border: `1px solid ${colors.border}`,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h3 style={{ color: '#1c1917', fontWeight: 600, margin: '0 0 4px' }}>Antall personer</h3>
-            <p style={{ color: '#a8a29e', fontSize: '0.75rem', margin: 0 }}>Justerer ingrediensene</p>
+            <h3 style={{ color: colors.text, fontWeight: 600, margin: '0 0 4px' }}>Antall personer</h3>
+            <p style={{ color: colors.textTertiary, fontSize: '0.75rem', margin: 0 }}>Justerer ingrediensene</p>
           </div>
           <PersonCounter value={persons} onChange={setPersons} size="md" />
         </div>
@@ -185,40 +186,40 @@ export default function MealDetail() {
 
       {/* Ingredients */}
       <div style={{
-        background: '#fff',
-        borderRadius: '20px',
+        background: colors.white,
+        borderRadius: radius.xl,
         padding: '16px',
-        border: '1px solid #e7e5e2',
+        border: `1px solid ${colors.border}`,
       }}>
-        <h3 style={{ color: '#1c1917', fontWeight: 600, marginBottom: '16px', margin: '0 0 16px' }}>Ingredienser</h3>
+        <h3 style={{ color: colors.text, fontWeight: 600, marginBottom: '16px', margin: '0 0 16px' }}>Ingredienser</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           {meal.ingredients.map(ing => {
             const scaled = Math.round(ing.quantity * scale * 10) / 10;
-            const colors = sectionColors[ing.section] || sectionColors['Diverse'];
+            const sectionColor = sectionColors[ing.section] || sectionColors['Diverse'];
             return (
               <div key={ing.id} style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '10px 0',
-                borderBottom: '1px solid #f0ede9',
+                borderBottom: `1px solid ${colors.hairline}`,
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
                   <span style={{
                     fontSize: '0.72rem',
                     padding: '3px 8px',
-                    borderRadius: '999px',
-                    background: colors.bg,
-                    color: colors.text,
+                    borderRadius: radius.round,
+                    background: sectionColor.bg,
+                    color: sectionColor.text,
                     fontWeight: 600,
                     whiteSpace: 'nowrap',
                     flexShrink: 0,
                   }}>
                     {ing.section.split(' ')[0]}
                   </span>
-                  <span style={{ color: '#1c1917', fontSize: '0.9rem' }}>{ing.ingredient_name}</span>
+                  <span style={{ color: colors.text, fontSize: '0.9rem' }}>{ing.ingredient_name}</span>
                 </div>
-                <span style={{ color: '#78716c', fontSize: '0.9rem', fontWeight: 600, marginLeft: '8px', flexShrink: 0 }}>
+                <span style={{ color: colors.textSecond, fontSize: '0.9rem', fontWeight: 600, marginLeft: '8px', flexShrink: 0 }}>
                   {scaled} {ing.unit}
                 </span>
               </div>
@@ -232,19 +233,19 @@ export default function MealDetail() {
         onClick={handleGoShopping}
         style={{
           width: '100%',
-          background: '#c2410c',
-          color: '#fff',
+          background: colors.accent,
+          color: colors.white,
           fontWeight: 700,
           padding: '16px',
-          borderRadius: '14px',
+          borderRadius: radius.md,
           border: 'none',
           fontSize: '1.1rem',
           cursor: 'pointer',
           transition: 'all 0.2s',
-          boxShadow: '0 8px 32px rgba(194,65,12,0.25)',
+          boxShadow: shadows.accent,
         }}
-        onMouseEnter={e => e.target.style.background = '#b53b0a'}
-        onMouseLeave={e => e.target.style.background = '#c2410c'}
+        onMouseEnter={e => e.target.style.background = colors.accentDark}
+        onMouseLeave={e => e.target.style.background = colors.accent}
       >
         🛒 Gå til butikk
       </button>
