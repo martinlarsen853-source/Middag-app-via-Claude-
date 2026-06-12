@@ -83,19 +83,6 @@ export default function MealCreatePage() {
     }
   }
 
-  function getVisibleIngredients() {
-    let visible = allIngredients;
-    if (selectedCategory) visible = visible.filter(i => i.category === selectedCategory);
-    if (searchTerm.trim()) {
-      const s = searchTerm.toLowerCase();
-      visible = visible.filter(i => i.name.toLowerCase().includes(s));
-    }
-    return visible.sort((a, b) => {
-      const fa = getIngredientFrequency(a.name), fb = getIngredientFrequency(b.name);
-      return fa !== fb ? fa - fb : a.name.localeCompare(b.name);
-    });
-  }
-
   function getMostUsedIngredients() {
     return allIngredients
       .filter(i => MOST_USED_INGREDIENTS.includes(i.name))
@@ -106,10 +93,9 @@ export default function MealCreatePage() {
     return selectedIngredients.some(i => i.id === id);
   }
 
-  function toggleIngredient(ingredient) {
-    if (isIngredientSelected(ingredient.id)) {
-      setSelectedIngredients(prev => prev.filter(i => i.id !== ingredient.id));
-    } else {
+  // Search-first add: tap a suggestion (or hit Enter) to add it straight away
+  function addIngredient(ingredient) {
+    if (!isIngredientSelected(ingredient.id)) {
       setSelectedIngredients(prev => [...prev, {
         id: ingredient.id,
         name: ingredient.name,
@@ -119,6 +105,20 @@ export default function MealCreatePage() {
         unit: ingredient.unit || 'stk'
       }]);
     }
+    setSearchTerm('');
+  }
+
+  // Free-text item that doesn't exist in the ingredient database
+  function addCustomIngredient(name) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const id = `custom:${trimmed.toLowerCase()}`;
+    if (!selectedIngredients.some(i => i.id === id)) {
+      setSelectedIngredients(prev => [...prev, {
+        id, name: trimmed, category: 'Diverse', price: 0, quantity: 1, unit: 'stk',
+      }]);
+    }
+    setSearchTerm('');
   }
 
   function removeIngredient(id) {
@@ -182,7 +182,7 @@ export default function MealCreatePage() {
       await createMeal({
         ...mealData,
         ingredients: selectedIngredients.map(ing => ({
-          ingredient_id: typeof ing.id === 'string' && ing.id.startsWith('base:') ? null : ing.id,
+          ingredient_id: typeof ing.id === 'string' && (ing.id.startsWith('base:') || ing.id.startsWith('custom:')) ? null : ing.id,
           name: ing.name,
           quantity: ing.quantity,
           unit: ing.unit,
@@ -195,8 +195,21 @@ export default function MealCreatePage() {
     }
   }
 
-  const visibleIngredients = getVisibleIngredients();
   const mostUsed = getMostUsedIngredients();
+
+  // Live search suggestions for step 2 (prefix matches first)
+  const searchQuery = searchTerm.trim().toLowerCase();
+  const suggestions = searchQuery
+    ? allIngredients
+        .filter(i => i.name.toLowerCase().includes(searchQuery))
+        .sort((a, b) => {
+          const sa = a.name.toLowerCase().startsWith(searchQuery) ? 0 : 1;
+          const sb = b.name.toLowerCase().startsWith(searchQuery) ? 0 : 1;
+          return sa !== sb ? sa - sb : a.name.localeCompare(b.name);
+        })
+        .slice(0, 8)
+    : [];
+  const exactMatch = searchQuery ? allIngredients.find(i => i.name.toLowerCase() === searchQuery) : null;
 
   // Shared styles
   const btnBack = { flex: 1, padding: '12px', borderRadius: radius.md, background: colors.bgAlt, color: colors.text, border: `1.5px solid ${colors.border}`, fontWeight: '600', cursor: 'pointer', fontSize: '0.95rem' };
@@ -313,165 +326,217 @@ export default function MealCreatePage() {
         </div>
       )}
 
-      {/* STEP 2: Ingredienser */}
+      {/* STEP 2: Ingredienser — search-first */}
       {step === 2 && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px', paddingBottom: '0' }}>
-          <h1 style={{ color: colors.text, fontSize: '1.2rem', fontWeight: '600', margin: '12px 0 2px' }}>Ingredienser</h1>
-          <p style={{ color: colors.textTertiary, fontSize: '0.85rem', margin: '0 0 12px' }}>Velg og juster mengder</p>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '16px', paddingBottom: '0' }}>
+          <h1 style={{ color: colors.text, fontSize: '1.3rem', fontWeight: '700', margin: '4px 0 2px', letterSpacing: '-0.01em' }}>Ingredienser</h1>
+          <p style={{ color: colors.textTertiary, fontSize: '0.85rem', margin: '0 0 14px' }}>
+            {selectedIngredients.length > 0 ? `${selectedIngredients.length} lagt til` : 'Søk og legg til'}
+          </p>
 
           <input
             type="text"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            placeholder="Søk ingrediens..."
+            onKeyDown={e => {
+              if (e.key === 'Enter' && searchQuery) {
+                e.preventDefault();
+                exactMatch ? addIngredient(exactMatch) : addCustomIngredient(searchTerm);
+              }
+            }}
+            placeholder="Søk eller skriv egen vare…"
+            autoFocus
             style={{
-              padding: '11px 14px', borderRadius: radius.md, border: `1.5px solid ${colors.border}`,
+              padding: '13px 14px', borderRadius: radius.md, border: `1.5px solid ${colors.border}`,
               background: colors.bgAlt, width: '100%', boxSizing: 'border-box',
-              fontSize: '0.95rem', color: colors.text, marginBottom: '10px', outline: 'none',
+              fontSize: '1rem', color: colors.text, outline: 'none',
+              transition: 'border-color 0.2s',
             }}
             onFocus={e => e.target.style.borderColor = colors.accent}
             onBlur={e => e.target.style.borderColor = colors.border}
           />
 
-          {/* Category pills */}
-          {!searchTerm && (
-            <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', marginBottom: '10px', paddingBottom: '4px' }}>
-              <button onClick={() => setSelectedCategory(null)} style={{
-                flex: '0 0 auto', padding: '7px 12px', borderRadius: radius.round,
-                background: !selectedCategory ? colors.accent : colors.white,
-                color: !selectedCategory ? colors.white : colors.text,
-                border: !selectedCategory ? 'none' : `1px solid ${colors.border}`,
-                fontWeight: '500', cursor: 'pointer', fontSize: '0.82rem', whiteSpace: 'nowrap',
-              }}>Alle</button>
-              {Object.keys(ingredientsByCategory).sort().map(cat => (
-                <button key={cat} onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)} style={{
-                  flex: '0 0 auto', padding: '7px 12px', borderRadius: radius.round,
-                  background: selectedCategory === cat ? colors.accent : colors.white,
-                  color: selectedCategory === cat ? colors.white : colors.text,
-                  border: selectedCategory === cat ? 'none' : `1px solid ${colors.border}`,
-                  fontWeight: '500', cursor: 'pointer', fontSize: '0.82rem', whiteSpace: 'nowrap',
-                }}>
-                  {CATEGORY_EMOJIS[cat] || '📦'} {cat}
-                </button>
-              ))}
-            </div>
-          )}
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', marginTop: '10px' }}>
 
-          {/* Ingredients list */}
-          <div style={{ flex: 1, overflowY: 'auto', marginBottom: '10px' }}>
-            {loading ? (
-              <p style={{ color: colors.textTertiary, textAlign: 'center', padding: '20px' }}>Laster...</p>
-            ) : (
-              <>
-                {!searchTerm && !selectedCategory && mostUsed.length > 0 && (
-                  <div style={{ marginBottom: '12px' }}>
-                    <p style={{ color: colors.textSecond, fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 6px' }}>Klassikerne</p>
-                    {mostUsed.map(ing => {
-                      const selected = isIngredientSelected(ing.id);
-                      return (
-                        <button key={ing.id} onClick={() => toggleIngredient(ing)} style={{
-                          display: 'flex', alignItems: 'center', width: '100%',
-                          padding: '11px 12px', marginBottom: '6px', borderRadius: radius.md,
-                          background: selected ? colors.bgAccent : colors.white,
-                          border: selected ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                          cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
-                          position: 'relative',
-                        }}>
-                          {selected && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: colors.accent, borderRadius: `${radius.md} 0 0 ${radius.md}` }} />}
-                          <div style={{ flex: 1, paddingLeft: selected ? '10px' : '0' }}>
-                            <div style={{ fontWeight: '600', color: colors.text, fontSize: '0.95rem' }}>{ing.name}</div>
-                            <div style={{ fontSize: '0.78rem', color: colors.textTertiary }}>{ing.unit}</div>
-                          </div>
-                          {selected && <span style={{ color: colors.accent, fontSize: '1.1rem' }}>✓</span>}
-                        </button>
-                      );
-                    })}
-                    <div style={{ height: '8px' }} />
-                  </div>
-                )}
-                {!searchTerm && !selectedCategory && (
-                  <p style={{ color: colors.textSecond, fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 6px' }}>Alle</p>
-                )}
-                {visibleIngredients.map(ing => {
-                  if (!searchTerm && !selectedCategory && MOST_USED_INGREDIENTS.includes(ing.name)) return null;
+            {/* ── Searching: live suggestions ── */}
+            {searchQuery ? (
+              <div style={{
+                borderRadius: radius.md, overflow: 'hidden',
+                border: `1px solid ${colors.border}`, background: colors.white,
+              }}>
+                {suggestions.map((ing, idx) => {
                   const selected = isIngredientSelected(ing.id);
                   return (
-                    <button key={ing.id} onClick={() => toggleIngredient(ing)} style={{
-                      display: 'flex', alignItems: 'center', width: '100%',
-                      padding: '11px 12px', marginBottom: '6px', borderRadius: radius.md,
-                      background: selected ? colors.bgAccent : colors.white,
-                      border: selected ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                      cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
-                      position: 'relative',
-                    }}>
-                      {selected && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: colors.accent, borderRadius: `${radius.md} 0 0 ${radius.md}` }} />}
-                      <div style={{ flex: 1, paddingLeft: selected ? '10px' : '0' }}>
-                        <div style={{ fontWeight: '600', color: colors.text, fontSize: '0.95rem' }}>{ing.name}</div>
-                        <div style={{ fontSize: '0.78rem', color: colors.textTertiary }}>{ing.unit}</div>
-                      </div>
-                      {selected && <span style={{ color: colors.accent, fontSize: '1.1rem' }}>✓</span>}
+                    <button
+                      key={ing.id}
+                      onClick={() => addIngredient(ing)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
+                        padding: '12px 14px', background: 'none', textAlign: 'left',
+                        border: 'none', cursor: 'pointer',
+                        borderTop: idx === 0 ? 'none' : `1px solid ${colors.hairline}`,
+                      }}
+                    >
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ display: 'block', fontWeight: '600', color: colors.text, fontSize: '0.95rem' }}>{ing.name}</span>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: colors.textTertiary }}>{ing.category}{ing.unit ? ` · ${ing.unit}` : ''}</span>
+                      </span>
+                      <span style={{ color: selected ? colors.success : colors.accent, fontSize: '1.15rem', fontWeight: '700', flexShrink: 0 }}>
+                        {selected ? '✓' : '+'}
+                      </span>
                     </button>
                   );
                 })}
-                {visibleIngredients.length === 0 && (
-                  <p style={{ color: colors.textTertiary, textAlign: 'center', padding: '20px' }}>Ingen ingredienser funnet</p>
+
+                {/* Free-text add */}
+                {!exactMatch && (
+                  <button
+                    onClick={() => addCustomIngredient(searchTerm)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
+                      padding: '12px 14px', background: colors.bgLight, textAlign: 'left',
+                      border: 'none', cursor: 'pointer',
+                      borderTop: suggestions.length > 0 ? `1px solid ${colors.hairline}` : 'none',
+                    }}
+                  >
+                    <span style={{ flex: 1, fontWeight: '600', color: colors.text, fontSize: '0.95rem' }}>
+                      Legg til <span style={{ color: colors.accent }}>«{searchTerm.trim()}»</span> som egen vare
+                    </span>
+                    <span style={{ color: colors.accent, fontSize: '1.15rem', fontWeight: '700' }}>+</span>
+                  </button>
+                )}
+              </div>
+
+            ) : (
+              <>
+                {/* ── Added ingredients as rows with steppers ── */}
+                {selectedIngredients.length > 0 && (
+                  <div style={{ marginBottom: '16px' }}>
+                    {selectedIngredients.map(ing => (
+                      <div key={ing.id} style={{
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        background: colors.white, border: `1px solid ${colors.border}`,
+                        borderRadius: radius.md, padding: '10px 12px', marginBottom: '6px',
+                      }}>
+                        <span style={{ flex: 1, minWidth: 0, fontWeight: '600', color: colors.text, fontSize: '0.92rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {ing.name}
+                        </span>
+
+                        {/* Unit toggle */}
+                        <button onClick={() => updateUnit(ing.id, ing.unit === 'g' ? 'stk' : ing.unit === 'stk' ? 'dl' : 'g')} style={{
+                          background: colors.accentAltLight, border: 'none', borderRadius: '6px',
+                          padding: '4px 8px', fontSize: '0.75rem', color: colors.accentAlt,
+                          fontWeight: '700', cursor: 'pointer', flexShrink: 0,
+                        }}>
+                          {ing.unit}
+                        </button>
+
+                        {/* − qty + */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0, background: colors.bgLight, borderRadius: radius.round, padding: '2px' }}>
+                          <button onClick={() => adjustQuantity(ing.id, -1)} style={{
+                            width: '28px', height: '28px', borderRadius: '50%', border: 'none',
+                            background: colors.white, color: colors.accent, fontSize: '1rem',
+                            fontWeight: '700', cursor: 'pointer', lineHeight: 1,
+                          }}>−</button>
+                          {editingQtyId === ing.id ? (
+                            <input type="number" min="0.1" step="1" value={ing.quantity} autoFocus onChange={e => updateQuantity(ing.id, e.target.value)} onBlur={() => setEditingQtyId(null)} style={{
+                              width: '44px', textAlign: 'center', border: `1px solid ${colors.accent}`,
+                              borderRadius: '6px', fontSize: '0.85rem', padding: '3px 2px',
+                              fontWeight: '700', color: colors.text,
+                            }} />
+                          ) : (
+                            <span onClick={() => setEditingQtyId(ing.id)} style={{ fontWeight: '700', color: colors.text, minWidth: '34px', textAlign: 'center', cursor: 'text', fontSize: '0.88rem' }}>
+                              {ing.quantity}
+                            </span>
+                          )}
+                          <button onClick={() => adjustQuantity(ing.id, 1)} style={{
+                            width: '28px', height: '28px', borderRadius: '50%', border: 'none',
+                            background: colors.white, color: colors.accent, fontSize: '1rem',
+                            fontWeight: '700', cursor: 'pointer', lineHeight: 1,
+                          }}>+</button>
+                        </div>
+
+                        <button onClick={() => removeIngredient(ing.id)} style={{
+                          background: 'none', border: 'none', color: colors.textTertiary,
+                          fontSize: '0.95rem', cursor: 'pointer', padding: '4px', lineHeight: 1, flexShrink: 0,
+                        }}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* ── Quick-add classics ── */}
+                {loading ? (
+                  <p style={{ color: colors.textTertiary, textAlign: 'center', padding: '20px' }}>Laster…</p>
+                ) : (
+                  <>
+                    {mostUsed.filter(i => !isIngredientSelected(i.id)).length > 0 && (
+                      <div style={{ marginBottom: '16px' }}>
+                        <p style={{ color: colors.textSecond, fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>Klassikerne</p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                          {mostUsed.filter(i => !isIngredientSelected(i.id)).map(ing => (
+                            <button key={ing.id} onClick={() => addIngredient(ing)} style={{
+                              padding: '8px 14px', borderRadius: radius.round,
+                              background: colors.white, border: `1px solid ${colors.border}`,
+                              color: colors.text, fontWeight: '600', fontSize: '0.85rem',
+                              cursor: 'pointer', transition: 'all 0.15s',
+                            }}>
+                              + {ing.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Browse by category ── */}
+                    <p style={{ color: colors.textSecond, fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>Bla i kategorier</p>
+                    <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', marginBottom: '10px', paddingBottom: '4px' }}>
+                      {Object.keys(ingredientsByCategory).sort().map(cat => (
+                        <button key={cat} onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)} style={{
+                          flex: '0 0 auto', padding: '7px 12px', borderRadius: radius.round,
+                          background: selectedCategory === cat ? colors.accent : colors.white,
+                          color: selectedCategory === cat ? colors.white : colors.text,
+                          border: selectedCategory === cat ? 'none' : `1px solid ${colors.border}`,
+                          fontWeight: '500', cursor: 'pointer', fontSize: '0.82rem', whiteSpace: 'nowrap',
+                        }}>
+                          {CATEGORY_EMOJIS[cat] || '📦'} {cat}
+                        </button>
+                      ))}
+                    </div>
+
+                    {selectedCategory && (
+                      <div style={{
+                        borderRadius: radius.md, overflow: 'hidden',
+                        border: `1px solid ${colors.border}`, background: colors.white,
+                        marginBottom: '12px',
+                      }}>
+                        {(ingredientsByCategory[selectedCategory] || []).map((ing, idx) => {
+                          const selected = isIngredientSelected(ing.id);
+                          return (
+                            <button
+                              key={ing.id}
+                              onClick={() => selected ? removeIngredient(ing.id) : addIngredient(ing)}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
+                                padding: '11px 14px', background: selected ? colors.bgAccent : 'none',
+                                textAlign: 'left', border: 'none', cursor: 'pointer',
+                                borderTop: idx === 0 ? 'none' : `1px solid ${colors.hairline}`,
+                              }}
+                            >
+                              <span style={{ flex: 1, fontWeight: '600', color: colors.text, fontSize: '0.92rem' }}>{ing.name}</span>
+                              <span style={{ color: selected ? colors.success : colors.accent, fontSize: '1.1rem', fontWeight: '700' }}>
+                                {selected ? '✓' : '+'}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
           </div>
-
-          {/* Chips dock */}
-          {selectedIngredients.length > 0 && (
-            <div style={{
-              borderTop: `1px solid ${colors.border}`,
-              paddingTop: '10px',
-              paddingBottom: '4px',
-            }}>
-              <p style={{ color: colors.textSecond, fontSize: '0.75rem', fontWeight: '600', margin: '0 0 8px', textTransform: 'uppercase' }}>
-                Valgt ({selectedIngredients.length})
-              </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {selectedIngredients.map(ing => (
-                  <div key={ing.id} style={{
-                    display: 'flex', alignItems: 'center', gap: '4px',
-                    background: colors.bgAccent, border: `1.5px solid ${colors.accent}`,
-                    borderRadius: radius.round, padding: '5px 6px 5px 10px',
-                    fontSize: '0.85rem',
-                  }}>
-                    <span style={{ fontWeight: '600', color: colors.text }}>{ing.name}</span>
-
-                    {/* Unit toggle */}
-                    <button onClick={e => { e.stopPropagation(); updateUnit(ing.id, ing.unit === 'g' ? 'stk' : ing.unit === 'stk' ? 'dl' : 'g'); }} style={{
-                      background: colors.accentAltLight, border: 'none', borderRadius: '6px',
-                      padding: '2px 5px', fontSize: '0.72rem', color: colors.accentAlt,
-                      fontWeight: '700', cursor: 'pointer', marginLeft: '2px',
-                    }}>
-                      {ing.unit}
-                    </button>
-
-                    {/* − qty + */}
-                    <button onClick={e => { e.stopPropagation(); adjustQuantity(ing.id, -1); }} style={{ background: 'none', border: 'none', color: colors.accent, fontSize: '1rem', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}>−</button>
-
-                    {editingQtyId === ing.id ? (
-                      <input type="number" min="0.1" step="1" value={ing.quantity} autoFocus onChange={e => updateQuantity(ing.id, e.target.value)} onBlur={() => setEditingQtyId(null)} style={{
-                        width: '40px', textAlign: 'center', border: `1px solid ${colors.accent}`,
-                        borderRadius: '4px', fontSize: '0.82rem', padding: '1px 2px',
-                        fontWeight: '700', color: colors.text,
-                      }} />
-                    ) : (
-                      <span onClick={e => { e.stopPropagation(); setEditingQtyId(ing.id); }} style={{ fontWeight: '700', color: colors.text, minWidth: '20px', textAlign: 'center', cursor: 'text' }}>
-                        {ing.quantity}
-                      </span>
-                    )}
-
-                    <button onClick={e => { e.stopPropagation(); adjustQuantity(ing.id, 1); }} style={{ background: 'none', border: 'none', color: colors.accent, fontSize: '1rem', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}>+</button>
-
-                    <button onClick={e => { e.stopPropagation(); removeIngredient(ing.id); }} style={{ background: 'none', border: 'none', color: colors.textTertiary, fontSize: '0.9rem', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}>✕</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Footer */}
           <div style={{ display: 'flex', gap: '10px', paddingBottom: '16px', paddingTop: '10px' }}>
