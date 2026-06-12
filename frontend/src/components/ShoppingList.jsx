@@ -78,6 +78,7 @@ export default function ShoppingList() {
 
   const totalItems = data?.sections?.reduce((acc, s) => acc + s.items.length, 0) || 0;
   const checkedCount = Object.values(checked).filter(Boolean).length;
+  const isComplete = checkedCount === totalItems && totalItems > 0;
 
   if (loading) {
     return (
@@ -330,28 +331,32 @@ export default function ShoppingList() {
       </div>
 
       {/* Completion celebration */}
-      {checkedCount === totalItems && totalItems > 0 && (
+      {isComplete && (
         <div style={{
           background: colors.bgAccent,
           border: `2px solid ${colors.accentAlt}`,
           borderRadius: radius.md,
           padding: '24px',
           textAlign: 'center',
+          animation: 'fadeUp 0.4s ease-out',
         }} className="no-print">
-          <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🎉</div>
-          <h3 style={{ color: colors.text, fontWeight: 700, fontSize: '1.1rem', margin: '0 0 8px' }}>
-            Alt er i kurven!
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>✨🎉</div>
+          <h3 style={{ color: colors.text, fontWeight: 700, fontSize: '1.2rem', margin: '0 0 8px' }}>
+            Alt er kjøpt inn!
           </h3>
-          <p style={{ color: colors.textSecond, fontSize: '0.9rem', margin: 0 }}>God appetitt!</p>
+          <p style={{ color: colors.textSecond, fontSize: '0.95rem', margin: '0 0 16px' }}>
+            Lyst på tips? Velg en ny middag når du er ferdig med {data.meal.name.toLowerCase()}.
+          </p>
         </div>
       )}
 
       {/* Done button */}
-      <div className="no-print" style={{ paddingBottom: '16px' }}>
+      <div className="no-print" style={{ paddingBottom: '16px', display: 'flex', gap: '10px', flexDirection: isComplete ? 'row-reverse' : 'column' }}>
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/app')}
           style={{
-            width: '100%',
+            flex: isComplete ? 1 : undefined,
+            width: isComplete ? 'auto' : '100%',
             background: colors.accent,
             color: colors.white,
             fontWeight: 700,
@@ -361,13 +366,34 @@ export default function ShoppingList() {
             fontSize: '1rem',
             cursor: 'pointer',
             transition: 'all 0.2s',
-            boxShadow: `0 8px 32px ${colors.accentDark}40`,
+            boxShadow: `0 8px 32px ${colors.accent}40`,
           }}
           onMouseEnter={e => e.target.style.background = colors.accentDark}
           onMouseLeave={e => e.target.style.background = colors.accent}
         >
-          Ferdig! 🏠
+          {isComplete ? '🎲 Velg ny' : 'Ferdig! 🏠'}
         </button>
+        {isComplete && (
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              flex: 1,
+              background: colors.bgAlt,
+              color: colors.text,
+              fontWeight: 600,
+              padding: '16px',
+              borderRadius: radius.md,
+              border: `1.5px solid ${colors.border}`,
+              fontSize: '1rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => Object.assign(e.target.style, { borderColor: colors.accent, color: colors.accent })}
+            onMouseLeave={e => Object.assign(e.target.style, { borderColor: colors.border, color: colors.text })}
+          >
+            Hjem
+          </button>
+        )}
       </div>
     </div>
   );
