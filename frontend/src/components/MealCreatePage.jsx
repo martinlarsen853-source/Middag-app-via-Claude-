@@ -409,56 +409,65 @@ export default function MealCreatePage() {
 
             ) : (
               <>
-                {/* ── Added ingredients as rows with steppers ── */}
+                {/* ── Added ingredients: one clean card with divider rows ── */}
                 {selectedIngredients.length > 0 && (
-                  <div style={{ marginBottom: '16px' }}>
-                    {selectedIngredients.map(ing => (
+                  <div style={{
+                    borderRadius: radius.md, overflow: 'hidden',
+                    border: `1px solid ${colors.border}`, background: colors.white,
+                    marginBottom: '16px',
+                  }}>
+                    {selectedIngredients.map((ing, idx) => (
                       <div key={ing.id} style={{
-                        display: 'flex', alignItems: 'center', gap: '8px',
-                        background: colors.white, border: `1px solid ${colors.border}`,
-                        borderRadius: radius.md, padding: '10px 12px', marginBottom: '6px',
+                        display: 'flex', alignItems: 'center', gap: '10px',
+                        padding: '11px 14px',
+                        borderTop: idx === 0 ? 'none' : `1px solid ${colors.hairline}`,
                       }}>
-                        <span style={{ flex: 1, minWidth: 0, fontWeight: '600', color: colors.text, fontSize: '0.92rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span style={{ flex: 1, minWidth: 0, fontWeight: '600', color: colors.text, fontSize: '0.95rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {ing.name}
                         </span>
 
-                        {/* Unit toggle */}
-                        <button onClick={() => updateUnit(ing.id, ing.unit === 'g' ? 'stk' : ing.unit === 'stk' ? 'dl' : 'g')} style={{
-                          background: colors.accentAltLight, border: 'none', borderRadius: '6px',
-                          padding: '4px 8px', fontSize: '0.75rem', color: colors.accentAlt,
-                          fontWeight: '700', cursor: 'pointer', flexShrink: 0,
-                        }}>
-                          {ing.unit}
-                        </button>
+                        {/* − qty unit + */}
+                        <button onClick={() => adjustQuantity(ing.id, -1)} style={{
+                          width: '30px', height: '30px', borderRadius: '50%',
+                          border: `1.5px solid ${colors.border}`, background: colors.white,
+                          color: colors.accent, fontSize: '1.05rem', fontWeight: '700',
+                          cursor: 'pointer', lineHeight: 1, flexShrink: 0,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>−</button>
 
-                        {/* − qty + */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0, background: colors.bgLight, borderRadius: radius.round, padding: '2px' }}>
-                          <button onClick={() => adjustQuantity(ing.id, -1)} style={{
-                            width: '28px', height: '28px', borderRadius: '50%', border: 'none',
-                            background: colors.white, color: colors.accent, fontSize: '1rem',
-                            fontWeight: '700', cursor: 'pointer', lineHeight: 1,
-                          }}>−</button>
-                          {editingQtyId === ing.id ? (
-                            <input type="number" min="0.1" step="1" value={ing.quantity} autoFocus onChange={e => updateQuantity(ing.id, e.target.value)} onBlur={() => setEditingQtyId(null)} style={{
-                              width: '44px', textAlign: 'center', border: `1px solid ${colors.accent}`,
-                              borderRadius: '6px', fontSize: '0.85rem', padding: '3px 2px',
-                              fontWeight: '700', color: colors.text,
-                            }} />
-                          ) : (
-                            <span onClick={() => setEditingQtyId(ing.id)} style={{ fontWeight: '700', color: colors.text, minWidth: '34px', textAlign: 'center', cursor: 'text', fontSize: '0.88rem' }}>
-                              {ing.quantity}
+                        {editingQtyId === ing.id ? (
+                          <input type="number" min="0.1" step="1" value={ing.quantity} autoFocus onChange={e => updateQuantity(ing.id, e.target.value)} onBlur={() => setEditingQtyId(null)} style={{
+                            width: '48px', textAlign: 'center', border: `1.5px solid ${colors.accent}`,
+                            borderRadius: '8px', fontSize: '0.9rem', padding: '4px 2px',
+                            fontWeight: '700', color: colors.text,
+                          }} />
+                        ) : (
+                          <button onClick={() => setEditingQtyId(ing.id)} style={{
+                            background: 'none', border: 'none', cursor: 'text', padding: 0,
+                            fontWeight: '700', color: colors.text, fontSize: '0.92rem',
+                            minWidth: '52px', textAlign: 'center', whiteSpace: 'nowrap',
+                          }}>
+                            {ing.quantity}{' '}
+                            <span
+                              onClick={e => { e.stopPropagation(); updateUnit(ing.id, ing.unit === 'g' ? 'stk' : ing.unit === 'stk' ? 'dl' : 'g'); }}
+                              style={{ color: colors.accent, fontWeight: '700' }}
+                            >
+                              {ing.unit}
                             </span>
-                          )}
-                          <button onClick={() => adjustQuantity(ing.id, 1)} style={{
-                            width: '28px', height: '28px', borderRadius: '50%', border: 'none',
-                            background: colors.white, color: colors.accent, fontSize: '1rem',
-                            fontWeight: '700', cursor: 'pointer', lineHeight: 1,
-                          }}>+</button>
-                        </div>
+                          </button>
+                        )}
+
+                        <button onClick={() => adjustQuantity(ing.id, 1)} style={{
+                          width: '30px', height: '30px', borderRadius: '50%',
+                          border: `1.5px solid ${colors.border}`, background: colors.white,
+                          color: colors.accent, fontSize: '1.05rem', fontWeight: '700',
+                          cursor: 'pointer', lineHeight: 1, flexShrink: 0,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>+</button>
 
                         <button onClick={() => removeIngredient(ing.id)} style={{
                           background: 'none', border: 'none', color: colors.textTertiary,
-                          fontSize: '0.95rem', cursor: 'pointer', padding: '4px', lineHeight: 1, flexShrink: 0,
+                          fontSize: '0.9rem', cursor: 'pointer', padding: '4px 0 4px 4px', lineHeight: 1, flexShrink: 0,
                         }}>✕</button>
                       </div>
                     ))}
