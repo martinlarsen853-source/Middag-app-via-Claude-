@@ -2,12 +2,17 @@
 
 ## Deployment
 - **Production URL:** https://middag-app-via-claude.vercel.app
-- **Vercel deploys from the `main` branch**
-- ALL changes MUST be pushed to `main` to appear on the live site
+- **Vercel's production branch is `claude/meal-planning-app-saCrQ`** (verified June 2026 in the Vercel dashboard — NOT `main`)
+- ALL changes MUST be pushed to BOTH branches to appear on the live site
 
 ## Git Workflow
-- Always push final changes to `main`: `git push origin main`
-- If working on a feature branch, merge/push to `main` when done
+- Push final changes to main AND the Vercel production branch:
+  ```bash
+  git push origin main
+  git push origin main:claude/meal-planning-app-saCrQ
+  ```
+- TODO: In the Vercel dashboard, change Settings → Git → Production Branch
+  to `main`, then this double-push becomes unnecessary
 
 ## Project Structure
 - `frontend/` - React (Vite) frontend
