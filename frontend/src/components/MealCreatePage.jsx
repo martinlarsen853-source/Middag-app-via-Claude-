@@ -208,25 +208,30 @@ export default function MealCreatePage() {
       {/* STEP 1: Navn + beskrivelse */}
       {step === 1 && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px', marginBottom: '4px' }}>
-            {mealData.name && <span style={{ fontSize: '2rem', lineHeight: 1 }}>{mealData.emoji}</span>}
-            <h1 style={{ color: colors.text, fontSize: '1.2rem', fontWeight: '600', margin: 0 }}>
-              {mealData.name || 'Nytt måltid'}
-            </h1>
-          </div>
-          <p style={{ color: colors.textTertiary, fontSize: '0.85rem', margin: '0 0 24px' }}>Hva skal vi lage?</p>
+          <h1 style={{ color: colors.text, fontSize: '1.3rem', fontWeight: '700', margin: '8px 0 4px', letterSpacing: '-0.01em' }}>
+            Nytt måltid
+          </h1>
+          <p style={{ color: colors.textTertiary, fontSize: '0.85rem', margin: '0 0 18px' }}>
+            Navn og kort beskrivelse
+          </p>
 
+          <label style={{ fontSize: '0.8rem', color: colors.textSecond, fontWeight: '600', marginBottom: '6px', display: 'block' }}>
+            Navn på måltid
+          </label>
           <input
             type="text"
             value={mealData.name}
             onChange={e => setMealData({ ...mealData, name: e.target.value, emoji: guessEmojiFromName(e.target.value) })}
-            placeholder="Navn på måltid..."
+            placeholder="F.eks. Pannekaker…"
             autoFocus
             style={{
-              padding: '14px 14px', borderRadius: radius.md, border: 'none',
+              padding: '14px 14px', borderRadius: radius.md, border: `1.5px solid ${colors.border}`,
               background: colors.bgAlt, width: '100%', boxSizing: 'border-box',
-              fontSize: '1.1rem', fontWeight: '500', color: colors.text, outline: 'none',
+              fontSize: '1rem', fontWeight: '500', color: colors.text, outline: 'none',
+              transition: 'border-color 0.2s',
             }}
+            onFocus={e => e.target.style.borderColor = colors.accent}
+            onBlur={e => e.target.style.borderColor = colors.border}
           />
 
           {/* Grunnoppskrift-forslag — live while typing, tap to prefill */}
@@ -281,26 +286,27 @@ export default function MealCreatePage() {
             </p>
           )}
 
-          <div style={{ marginTop: '16px', marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: colors.textSecond, fontWeight: '600', marginBottom: '8px' }}>
+          <div style={{ marginTop: '20px' }}>
+            <label style={{ fontSize: '0.8rem', color: colors.textSecond, fontWeight: '600', marginBottom: '6px', display: 'block' }}>
               Kort beskrivelse (valgfritt)
             </label>
             <textarea
               value={mealData.description}
               onChange={e => setMealData({ ...mealData, description: e.target.value })}
-              placeholder="F.eks. Rask hverdagsfavoritt..."
+              placeholder="F.eks. Rask hverdagsfavoritt…"
               style={{
                 padding: '12px 14px', borderRadius: radius.md, border: `1.5px solid ${colors.border}`,
                 background: colors.bgAlt, width: '100%', boxSizing: 'border-box',
                 fontSize: '0.95rem', color: colors.text, outline: 'none',
-                fontFamily: 'inherit', minHeight: '80px', resize: 'none',
+                fontFamily: 'inherit', minHeight: '70px', resize: 'none',
+                transition: 'border-color 0.2s',
               }}
               onFocus={e => e.target.style.borderColor = colors.accent}
               onBlur={e => e.target.style.borderColor = colors.border}
             />
           </div>
 
-          <div style={{ marginTop: 'auto', display: 'flex', gap: '10px', paddingTop: '16px' }}>
+          <div style={{ marginTop: 'auto', display: 'flex', gap: '10px', paddingTop: '20px' }}>
             <button onClick={() => navigate('/app')} style={btnBack}>Avbryt</button>
             <button onClick={() => setStep(2)} disabled={!mealData.name.trim()} style={btnNext(!!mealData.name.trim())}>Neste →</button>
           </div>
