@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { getMeals, markEaten, updatePersons } from '../api.js';
 import { colors, radius, shadows, mealGradients, defaultMealGradient, mealPhotos } from '../theme.js';
 
+const TERRA = '#E25A33';
+
 // Range input styling
 const rangeInputCSS = `
   input[type='range'].dual-range-input::-webkit-slider-thumb {
@@ -12,9 +14,9 @@ const rangeInputCSS = `
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: ${colors.accent};
+    background: ${TERRA};
     border: 2px solid ${colors.white};
-    box-shadow: 0 2px 8px ${colors.accentDark}4d;
+    box-shadow: 0 2px 8px rgba(226,90,51,0.40);
     cursor: pointer;
   }
 
@@ -23,9 +25,9 @@ const rangeInputCSS = `
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: ${colors.accent};
+    background: ${TERRA};
     border: 2px solid ${colors.white};
-    box-shadow: 0 2px 8px ${colors.accentDark}4d;
+    box-shadow: 0 2px 8px rgba(226,90,51,0.40);
     cursor: pointer;
   }
 
@@ -348,7 +350,7 @@ function DualRangeSlider({ label, min, max, step, value, onChange, formatLabel }
       <div style={s.rangeSliderContainer}>
         <div style={{
           ...s.rangeTrack,
-          background: `linear-gradient(to right, ${colors.border} 0%, ${colors.border} ${minPercent}%, ${colors.accent} ${minPercent}%, ${colors.accent} ${maxPercent}%, ${colors.border} ${maxPercent}%, ${colors.border} 100%)`
+          background: `linear-gradient(to right, ${colors.border} 0%, ${colors.border} ${minPercent}%, ${TERRA} ${minPercent}%, ${TERRA} ${maxPercent}%, ${colors.border} ${maxPercent}%, ${colors.border} 100%)`
         }} />
 
         <input
@@ -510,9 +512,9 @@ const s = {
     textDecoration: 'underline',
   },
   showBtn: {
-    background: colors.accent, color: colors.white, border: 'none',
+    background: `linear-gradient(135deg, ${TERRA}, #C8431F)`, color: colors.white, border: 'none',
     borderRadius: 12, padding: '14px', fontSize: '1rem', fontWeight: 700,
-    cursor: 'pointer', boxShadow: '0 4px 16px rgba(194,65,12,0.25)',
+    cursor: 'pointer', boxShadow: '0 4px 16px rgba(226,90,51,0.30)',
   },
 
   // Header
@@ -584,9 +586,9 @@ const s = {
   // Cards — magazine style: big hero, badge, bold title, tag chips
   list: { padding: '16px 16px 32px', display: 'flex', flexDirection: 'column', gap: 20 },
   card: {
-    background: colors.bgAlt, borderRadius: 18, overflow: 'hidden',
-    border: `1px solid ${colors.borderLight}`,
-    boxShadow: '0 2px 4px rgba(28,28,26,0.04), 0 10px 28px rgba(28,28,26,0.07)',
+    background: '#1E1714', borderRadius: 18, overflow: 'hidden',
+    border: `1px solid rgba(245,237,223,0.08)`,
+    boxShadow: '0 4px 24px rgba(0,0,0,0.30)',
     cursor: 'pointer', transition: 'transform 0.12s',
     userSelect: 'none',
   },
@@ -623,17 +625,18 @@ const s = {
     padding: '4px 10px', borderRadius: 999,
   },
   cardContent: { padding: '14px 16px 16px' },
-  mealName: { fontWeight: 800, fontSize: '1.15rem', color: colors.text, margin: '0 0 4px', letterSpacing: '-0.01em' },
+  mealName: { fontWeight: 800, fontSize: '1.15rem', color: '#F5EDDF', margin: '0 0 4px', letterSpacing: '-0.01em' },
   desc: {
-    color: colors.textSecond, fontSize: '0.85rem', lineHeight: 1.5, margin: '0 0 10px',
+    color: 'rgba(245,237,223,0.65)', fontSize: '0.85rem', lineHeight: 1.5, margin: '0 0 10px',
     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
   },
   tagRow: { display: 'flex', flexWrap: 'wrap', gap: 6 },
   tagChip: {
-    fontSize: '0.74rem', fontWeight: 600, color: colors.textSecond,
-    background: colors.bgLight, borderRadius: 8, padding: '4px 10px',
+    fontSize: '0.74rem', fontWeight: 600, color: 'rgba(245,237,223,0.60)',
+    background: 'rgba(245,237,223,0.07)', border: '1px solid rgba(245,237,223,0.10)',
+    borderRadius: 8, padding: '4px 10px',
   },
-  priceChip: { color: colors.accent, background: colors.bgAccent },
+  priceChip: { color: '#E25A33', background: 'rgba(226,90,51,0.15)', border: '1px solid rgba(226,90,51,0.25)' },
 
   loadingWrap: { textAlign: 'center', paddingTop: 80 },
   loadingEmoji: { fontSize: '3rem', display: 'block', marginBottom: 12 },
