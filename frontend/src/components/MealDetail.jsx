@@ -228,27 +228,48 @@ export default function MealDetail() {
         </div>
       </div>
 
-      {/* CTA */}
-      <button
-        onClick={handleGoShopping}
-        style={{
-          width: '100%',
-          background: colors.accent,
-          color: colors.white,
-          fontWeight: 700,
-          padding: '16px',
-          borderRadius: radius.md,
-          border: 'none',
-          fontSize: '1.1rem',
-          cursor: 'pointer',
-          transition: 'all 0.2s',
-          boxShadow: shadows.accent,
-        }}
-        onMouseEnter={e => e.target.style.background = colors.accentDark}
-        onMouseLeave={e => e.target.style.background = colors.accent}
-      >
-        🛒 Gå til butikk
-      </button>
+      {/* Actions */}
+      <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
+        <button
+          onClick={handleGoShopping}
+          style={{
+            width: '100%',
+            background: colors.accent,
+            color: colors.white,
+            fontWeight: 700,
+            padding: '16px',
+            borderRadius: radius.md,
+            border: 'none',
+            fontSize: '1.1rem',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            boxShadow: shadows.accent,
+          }}
+          onMouseEnter={e => e.target.style.background = colors.accentDark}
+          onMouseLeave={e => e.target.style.background = colors.accent}
+        >
+          🛒 Gå til butikk
+        </button>
+        <button
+          onClick={() => navigate(`/meal/${id}/edit`)}
+          style={{
+            width: '100%',
+            background: colors.bgAlt,
+            color: colors.text,
+            fontWeight: 600,
+            padding: '14px',
+            borderRadius: radius.md,
+            border: `1.5px solid ${colors.border}`,
+            fontSize: '1rem',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={e => Object.assign(e.target.style, { borderColor: colors.accent, color: colors.accent })}
+          onMouseLeave={e => Object.assign(e.target.style, { borderColor: colors.border, color: colors.text })}
+        >
+          ✏️ Rediger
+        </button>
+      </div>
     </div>
   );
 }

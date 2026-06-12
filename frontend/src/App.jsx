@@ -79,6 +79,14 @@ export default function App() {
           }
         />
         <Route
+          path="/meal/:id/edit"
+          element={
+            <ProtectedRoute>
+              <MealCreatePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/ingredients"
           element={
             <ProtectedRoute>

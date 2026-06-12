@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getIngredients, getIngredientCategories, createMeal } from '../api.js';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getIngredients, getIngredientCategories, createMeal, getMeal, updateMeal, removeMealIngredient } from '../api.js';
 import { colors, shadows, radius } from '../theme.js';
 import { BASE_RECIPES } from '../baseRecipes.js';
 
@@ -41,6 +41,8 @@ function getIngredientFrequency(name) {
 
 export default function MealCreatePage() {
   const navigate = useNavigate();
+  const { id: mealId } = useParams();
+  const isEditing = !!mealId;
   const [step, setStep] = useState(1);
   const [mealData, setMealData] = useState({
     name: '',
@@ -61,7 +63,7 @@ export default function MealCreatePage() {
   const [editingQtyId, setEditingQtyId] = useState(null);
   const [appliedRecipe, setAppliedRecipe] = useState(null);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [mealId]);
 
   async function loadData() {
     try {
@@ -76,6 +78,26 @@ export default function MealCreatePage() {
         grouped[ing.category].push(ing);
       });
       setIngredientsByCategory(grouped);
+
+      if (isEditing && mealId) {
+        const meal = await getMeal(mealId);
+        setMealData({
+          name: meal.name,
+          emoji: meal.emoji,
+          description: meal.description || '',
+          time_minutes: meal.time_minutes || 30,
+          persons: meal.persons || 4,
+          category: meal.category || 'Annet',
+        });
+        setSelectedIngredients(meal.ingredients.map(ing => ({
+          id: ing.ingredient_id,
+          name: ing.ingredient_name,
+          category: ing.section,
+          price: 0,
+          quantity: ing.quantity,
+          unit: ing.unit,
+        })));
+      }
     } catch (e) {
       setError('Feil ved lasting: ' + e.message);
     } finally {
@@ -179,7 +201,7 @@ export default function MealCreatePage() {
   async function saveMeal() {
     if (!mealData.name.trim()) { alert('Skriv inn navn'); return; }
     try {
-      await createMeal({
+      const mealPayload = {
         ...mealData,
         ingredients: selectedIngredients.map(ing => ({
           ingredient_id: typeof ing.id === 'string' && (ing.id.startsWith('base:') || ing.id.startsWith('custom:')) ? null : ing.id,
@@ -188,7 +210,13 @@ export default function MealCreatePage() {
           unit: ing.unit,
           section: ing.category
         }))
-      });
+      };
+
+      if (isEditing && mealId) {
+        await updateMeal(mealId, mealPayload);
+      } else {
+        await createMeal(mealPayload);
+      }
       navigate('/app');
     } catch (e) {
       alert('Feil ved lagring: ' + e.message);
@@ -222,7 +250,7 @@ export default function MealCreatePage() {
       {step === 1 && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px' }}>
           <h1 style={{ color: colors.text, fontSize: '1.3rem', fontWeight: '700', margin: '4px 0 2px', letterSpacing: '-0.01em' }}>
-            Nytt måltid
+            {isEditing ? 'Rediger måltid' : 'Nytt måltid'}
           </h1>
           <p style={{ color: colors.textTertiary, fontSize: '0.85rem', margin: '0 0 16px' }}>
             Navn og kort beskrivelse
@@ -320,7 +348,7 @@ export default function MealCreatePage() {
           </div>
 
           <div style={{ display: 'flex', gap: '10px', paddingTop: '20px' }}>
-            <button onClick={() => navigate('/app')} style={btnBack}>Avbryt</button>
+            <button onClick={() => navigate(isEditing ? `/meal/${mealId}` : '/app')} style={btnBack}>Avbryt</button>
             <button onClick={() => setStep(2)} disabled={!mealData.name.trim()} style={btnNext(!!mealData.name.trim())}>Neste →</button>
           </div>
         </div>
