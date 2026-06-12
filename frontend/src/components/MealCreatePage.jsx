@@ -203,15 +203,15 @@ export default function MealCreatePage() {
   const btnNext = (active = true) => ({ flex: 2, padding: '12px', borderRadius: radius.md, background: active ? colors.accent : colors.borderLight, color: active ? colors.white : colors.textTertiary, border: 'none', fontWeight: '600', cursor: active ? 'pointer' : 'not-allowed', fontSize: '0.95rem', boxShadow: active ? shadows.accent : 'none' });
 
   return (
-    <div style={{ padding: '0', background: colors.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ padding: '0', background: colors.bg, flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
 
       {/* STEP 1: Navn + beskrivelse */}
       {step === 1 && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px' }}>
-          <h1 style={{ color: colors.text, fontSize: '1.3rem', fontWeight: '700', margin: '8px 0 4px', letterSpacing: '-0.01em' }}>
+          <h1 style={{ color: colors.text, fontSize: '1.3rem', fontWeight: '700', margin: '4px 0 2px', letterSpacing: '-0.01em' }}>
             Nytt måltid
           </h1>
-          <p style={{ color: colors.textTertiary, fontSize: '0.85rem', margin: '0 0 18px' }}>
+          <p style={{ color: colors.textTertiary, fontSize: '0.85rem', margin: '0 0 16px' }}>
             Navn og kort beskrivelse
           </p>
 
@@ -306,7 +306,7 @@ export default function MealCreatePage() {
             />
           </div>
 
-          <div style={{ marginTop: 'auto', display: 'flex', gap: '10px', paddingTop: '20px' }}>
+          <div style={{ display: 'flex', gap: '10px', paddingTop: '20px' }}>
             <button onClick={() => navigate('/app')} style={btnBack}>Avbryt</button>
             <button onClick={() => setStep(2)} disabled={!mealData.name.trim()} style={btnNext(!!mealData.name.trim())}>Neste →</button>
           </div>
