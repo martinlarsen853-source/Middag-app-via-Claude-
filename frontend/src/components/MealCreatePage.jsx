@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getIngredients, getIngredientCategories, createMeal } from '../api.js';
 import { colors, shadows, radius } from '../theme.js';
+import { BASE_RECIPES } from '../baseRecipes.js';
 
 const QUICK_TIMES = [15, 30, 45, 60, 90];
 
@@ -58,6 +59,7 @@ export default function MealCreatePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [editingQtyId, setEditingQtyId] = useState(null);
+  const [appliedRecipe, setAppliedRecipe] = useState(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -143,6 +145,33 @@ export default function MealCreatePage() {
     );
   }
 
+  // Prefill the whole wizard from a base recipe. Ingredients are matched
+  // by name against the synced ingredient database so they keep real ids
+  // and prices; unmatched ones get a synthetic id and are saved by name.
+  function applyBaseRecipe(recipe) {
+    const KNOWN_CATEGORIES = ['Pasta', 'Fisk', 'Kjøtt', 'Suppe', 'Salat'];
+    setMealData({
+      ...mealData,
+      name: recipe.name,
+      emoji: recipe.emoji,
+      description: recipe.description,
+      time_minutes: recipe.time_minutes,
+      category: KNOWN_CATEGORIES.includes(recipe.category) ? recipe.category : 'Annet',
+    });
+    setSelectedIngredients(recipe.ingredients.map(ri => {
+      const match = allIngredients.find(ai => ai.name.toLowerCase() === ri.name.toLowerCase());
+      return {
+        id: match ? match.id : `base:${ri.name}`,
+        name: ri.name,
+        category: match ? match.category : ri.section,
+        price: match?.price || 0,
+        quantity: ri.quantity,
+        unit: ri.unit,
+      };
+    }));
+    setAppliedRecipe(recipe.name);
+  }
+
   function calculateTotalPrice() {
     return selectedIngredients.reduce((sum, i) => sum + ((i.price || 0) * i.quantity), 0).toFixed(0);
   }
@@ -153,7 +182,7 @@ export default function MealCreatePage() {
       await createMeal({
         ...mealData,
         ingredients: selectedIngredients.map(ing => ({
-          ingredient_id: ing.id,
+          ingredient_id: typeof ing.id === 'string' && ing.id.startsWith('base:') ? null : ing.id,
           name: ing.name,
           quantity: ing.quantity,
           unit: ing.unit,
@@ -199,6 +228,48 @@ export default function MealCreatePage() {
               fontSize: '1.1rem', fontWeight: '500', color: colors.text, outline: 'none',
             }}
           />
+
+          {/* Grunnoppskrifter — tap to prefill the whole wizard */}
+          <div style={{ marginTop: '20px' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', color: colors.textSecond, fontWeight: '600', marginBottom: '8px' }}>
+              … eller hent en grunnoppskrift
+            </label>
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '6px', WebkitOverflowScrolling: 'touch' }}>
+              {BASE_RECIPES.map(recipe => {
+                const active = appliedRecipe === recipe.name;
+                return (
+                  <button
+                    key={recipe.name}
+                    onClick={() => applyBaseRecipe(recipe)}
+                    style={{
+                      flex: '0 0 auto', width: '110px',
+                      padding: '12px 8px 10px', borderRadius: radius.md,
+                      background: active ? colors.bgAccent : colors.white,
+                      border: active ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                      cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s',
+                    }}
+                  >
+                    <div style={{ fontSize: '1.7rem', lineHeight: 1, marginBottom: '6px' }}>{recipe.emoji}</div>
+                    <div style={{
+                      fontSize: '0.76rem', fontWeight: '700', color: colors.text,
+                      lineHeight: 1.25, marginBottom: '3px',
+                      overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                    }}>
+                      {recipe.name}
+                    </div>
+                    <div style={{ fontSize: '0.68rem', color: colors.textTertiary }}>
+                      ⏱ {recipe.time_minutes} min · {recipe.ingredients.length} ingr.
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {appliedRecipe && (
+              <p style={{ fontSize: '0.78rem', color: colors.accent, fontWeight: '600', margin: '6px 0 0' }}>
+                ✓ {appliedRecipe} hentet — navn, ingredienser og tid er fylt ut. Juster fritt!
+              </p>
+            )}
+          </div>
 
           <div style={{ marginTop: '16px', marginBottom: '16px' }}>
             <label style={{ display: 'block', fontSize: '0.8rem', color: colors.textSecond, fontWeight: '600', marginBottom: '8px' }}>
