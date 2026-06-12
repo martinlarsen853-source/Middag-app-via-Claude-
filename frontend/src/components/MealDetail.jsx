@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getMeal } from '../api.js';
+import { getMeal, deleteMeal } from '../api.js';
 import PersonCounter from './PersonCounter.jsx';
 import { colors, shadows, radius } from '../theme.js';
 
@@ -43,6 +43,8 @@ export default function MealDetail() {
       return JSON.parse(localStorage.getItem('middag_user') || '{}').default_persons || 2;
     } catch { return 2; }
   });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     getMeal(id)
@@ -57,6 +59,17 @@ export default function MealDetail() {
     localStorage.setItem('middag_user', JSON.stringify(user));
     localStorage.setItem('middag_persons_' + id, persons);
     navigate(`/meal/${id}/shopping`);
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await deleteMeal(id);
+      navigate('/app');
+    } catch (err) {
+      setError(err.message);
+      setDeleting(false);
+    }
   }
 
   if (loading) {
@@ -269,7 +282,96 @@ export default function MealDetail() {
         >
           ✏️ Rediger
         </button>
+        <button
+          onClick={() => setShowDeleteConfirm(true)}
+          style={{
+            width: '100%',
+            background: colors.bgAlt,
+            color: colors.error,
+            fontWeight: 600,
+            padding: '14px',
+            borderRadius: radius.md,
+            border: `1.5px solid ${colors.error}33`,
+            fontSize: '1rem',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={e => Object.assign(e.target.style, { borderColor: colors.error, background: `${colors.error}08` })}
+          onMouseLeave={e => Object.assign(e.target.style, { borderColor: `${colors.error}33`, background: colors.bgAlt })}
+        >
+          🗑️ Slett
+        </button>
       </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          background: 'rgba(45,37,32,0.3)',
+          backdropFilter: 'blur(8px)',
+        }}
+        onClick={() => !deleting && setShowDeleteConfirm(false)}
+        >
+          <div style={{
+            background: colors.white,
+            borderRadius: radius.xl,
+            padding: '24px',
+            width: '100%',
+            maxWidth: '320px',
+            boxShadow: shadows.lg,
+          }}
+          onClick={e => e.stopPropagation()}
+          >
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: colors.text, margin: '0 0 8px' }}>
+              Slett {meal?.name}?
+            </h2>
+            <p style={{ color: colors.textSecond, fontSize: '0.9rem', margin: '0 0 20px' }}>
+              Denne handlingen kan ikke angres.
+            </p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: radius.md,
+                  border: `1.5px solid ${colors.border}`,
+                  background: colors.white,
+                  color: colors.text,
+                  fontWeight: 600,
+                  cursor: deleting ? 'not-allowed' : 'pointer',
+                  opacity: deleting ? 0.5 : 1,
+                }}
+              >
+                Avbryt
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: radius.md,
+                  border: 'none',
+                  background: deleting ? colors.error + '80' : colors.error,
+                  color: colors.white,
+                  fontWeight: 600,
+                  cursor: deleting ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {deleting ? 'Sletter...' : 'Slett'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
