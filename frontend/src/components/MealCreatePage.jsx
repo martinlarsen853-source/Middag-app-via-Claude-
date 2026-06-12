@@ -229,47 +229,57 @@ export default function MealCreatePage() {
             }}
           />
 
-          {/* Grunnoppskrifter — tap to prefill the whole wizard */}
-          <div style={{ marginTop: '20px' }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: colors.textSecond, fontWeight: '600', marginBottom: '8px' }}>
-              … eller hent en grunnoppskrift
-            </label>
-            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '6px', WebkitOverflowScrolling: 'touch' }}>
-              {BASE_RECIPES.map(recipe => {
-                const active = appliedRecipe === recipe.name;
-                return (
+          {/* Grunnoppskrift-forslag — live while typing, tap to prefill */}
+          {(() => {
+            const q = mealData.name.trim().toLowerCase();
+            if (!q || appliedRecipe === mealData.name) return null;
+            const matches = BASE_RECIPES.filter(r => r.name.toLowerCase().includes(q)).slice(0, 5);
+            if (matches.length === 0) return null;
+            return (
+              <div style={{
+                marginTop: '6px', borderRadius: radius.md, overflow: 'hidden',
+                border: `1px solid ${colors.border}`, background: colors.white,
+                boxShadow: shadows.md,
+              }}>
+                <p style={{
+                  fontSize: '0.68rem', fontWeight: '700', color: colors.textTertiary,
+                  textTransform: 'uppercase', letterSpacing: '0.06em',
+                  margin: 0, padding: '8px 14px 6px',
+                }}>
+                  Grunnoppskrifter
+                </p>
+                {matches.map((recipe, idx) => (
                   <button
                     key={recipe.name}
                     onClick={() => applyBaseRecipe(recipe)}
                     style={{
-                      flex: '0 0 auto', width: '110px',
-                      padding: '12px 8px 10px', borderRadius: radius.md,
-                      background: active ? colors.bgAccent : colors.white,
-                      border: active ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                      cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s',
+                      display: 'flex', alignItems: 'center', gap: '12px', width: '100%',
+                      padding: '11px 14px', background: 'none', textAlign: 'left',
+                      border: 'none', cursor: 'pointer',
+                      borderTop: idx === 0 ? 'none' : `1px solid ${colors.hairline}`,
                     }}
                   >
-                    <div style={{ fontSize: '1.7rem', lineHeight: 1, marginBottom: '6px' }}>{recipe.emoji}</div>
-                    <div style={{
-                      fontSize: '0.76rem', fontWeight: '700', color: colors.text,
-                      lineHeight: 1.25, marginBottom: '3px',
-                      overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-                    }}>
-                      {recipe.name}
-                    </div>
-                    <div style={{ fontSize: '0.68rem', color: colors.textTertiary }}>
-                      ⏱ {recipe.time_minutes} min · {recipe.ingredients.length} ingr.
-                    </div>
+                    <span style={{ fontSize: '1.5rem', lineHeight: 1, flexShrink: 0 }}>{recipe.emoji}</span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'block', fontWeight: '700', color: colors.text, fontSize: '0.95rem' }}>
+                        {recipe.name}
+                      </span>
+                      <span style={{ display: 'block', fontSize: '0.76rem', color: colors.textTertiary }}>
+                        ⏱ {recipe.time_minutes} min · {recipe.ingredients.length} ingredienser
+                      </span>
+                    </span>
+                    <span style={{ color: colors.accent, fontSize: '1.2rem', fontWeight: '700', flexShrink: 0 }}>+</span>
                   </button>
-                );
-              })}
-            </div>
-            {appliedRecipe && (
-              <p style={{ fontSize: '0.78rem', color: colors.accent, fontWeight: '600', margin: '6px 0 0' }}>
-                ✓ {appliedRecipe} hentet — navn, ingredienser og tid er fylt ut. Juster fritt!
-              </p>
-            )}
-          </div>
+                ))}
+              </div>
+            );
+          })()}
+
+          {appliedRecipe === mealData.name && (
+            <p style={{ fontSize: '0.78rem', color: colors.accent, fontWeight: '600', margin: '8px 0 0' }}>
+              ✓ Grunnoppskrift hentet — ingredienser og tid er fylt ut. Juster fritt!
+            </p>
+          )}
 
           <div style={{ marginTop: '16px', marginBottom: '16px' }}>
             <label style={{ display: 'block', fontSize: '0.8rem', color: colors.textSecond, fontWeight: '600', marginBottom: '8px' }}>
