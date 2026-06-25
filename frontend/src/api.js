@@ -131,7 +131,7 @@ export async function getShoppingList(mealId, storeId, persons = 2) {
     const section = ing.section || 'Diverse';
     if (!grouped[section]) grouped[section] = [];
     const qty = Math.ceil(ing.quantity * scale * 10) / 10;
-    grouped[section].push({ name: ing.ingredient_name, quantity: qty, unit: ing.unit, section });
+    grouped[section].push({ id: `${section}::${ing.ingredient_name}`, name: ing.ingredient_name, quantity: qty, unit: ing.unit, section });
   }
 
   const sections = sectionOrder
