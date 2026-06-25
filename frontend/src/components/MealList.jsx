@@ -446,7 +446,7 @@ function MealCard({ meal, onSelect }) {
             <span key={tag} style={s.tagChip}>{tag}</span>
           ))}
           <span style={{ ...s.tagChip, ...s.priceChip }}>
-            {meal.estimated_price ? `ca. ${meal.estimated_price} kr` : PRICE_LABEL[meal.price_level]}
+            {`ca. ${getMealPrice(meal)} kr`}
           </span>
         </div>
       </div>

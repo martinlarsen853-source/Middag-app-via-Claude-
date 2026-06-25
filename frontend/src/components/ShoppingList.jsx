@@ -265,8 +265,9 @@ export default function ShoppingList() {
                 {items.map((item, idx) => {
                   const isChecked = !!checked[item.id];
                   return (
-                    <label
+                    <div
                       key={item.id}
+                      onClick={() => toggleItem(item.id)}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -277,6 +278,8 @@ export default function ShoppingList() {
                         opacity: isChecked ? 0.5 : 1,
                         background: isChecked ? colors.hairline : 'transparent',
                         borderBottom: idx < items.length - 1 ? `1px solid ${colors.hairline}` : 'none',
+                        userSelect: 'none',
+                        WebkitUserSelect: 'none',
                       }}
                     >
                       <div style={{
@@ -297,12 +300,6 @@ export default function ShoppingList() {
                           </svg>
                         )}
                       </div>
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={() => toggleItem(item.id)}
-                        style={{ display: 'none' }}
-                      />
                       <span style={{
                         flex: 1,
                         fontSize: '0.95rem',
@@ -321,7 +318,7 @@ export default function ShoppingList() {
                       }}>
                         {item.quantity} {item.unit}
                       </span>
-                    </label>
+                    </div>
                   );
                 })}
               </div>
