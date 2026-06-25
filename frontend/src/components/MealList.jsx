@@ -321,7 +321,7 @@ export default function MealList() {
             <button onClick={clearFilters} style={s.resetBtn}>Nullstill filter</button>
           </div>
         ) : filtered.map((meal, i) => (
-          <MealCard key={meal.id} meal={meal} index={i} onSelect={() => handleSelect(meal)} />
+          <MealCard key={meal.id} meal={meal} index={i} onSelect={() => handleSelect(meal)} getMealPrice={getMealPrice} />
         ))}
       </div>
     </div>
@@ -391,7 +391,7 @@ function getMealBadge(meal) {
   return null;
 }
 
-function MealCard({ meal, onSelect }) {
+function MealCard({ meal, onSelect, getMealPrice }) {
   const [pressed, setPressed] = useState(false);
   const [imgError, setImgError] = useState(false);
   const badge = getMealBadge(meal);
