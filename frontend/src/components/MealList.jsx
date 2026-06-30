@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMeals, markEaten, updatePersons } from '../api.js';
+import { getMeals, getInspirationMeals, createMeal, markEaten, updatePersons } from '../api.js';
 import { colors, radius, shadows, mealGradients, defaultMealGradient, mealPhotos } from '../theme.js';
 
 const TERRA = '#E25A33';
@@ -86,21 +86,6 @@ const rangeInputCSS = `
   }
 `;
 
-const INSPIRATION_MEALS = [
-  { id: 'ins-1', name: 'Spaghetti bolognese', emoji: '🍝', time: 45, category: 'Pasta', description: 'Klassisk italiensk kjøttsaus med kjøttdeig', photo_url: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&w=800&q=70', tags: ['Pasta', 'Hverdags'] },
-  { id: 'ins-2', name: 'Kyllingwok', emoji: '🍜', time: 20, category: 'Asiatisk', description: 'Sprø grønnsaker og saftig kylling i wok', photo_url: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=70', tags: ['Kylling', 'Asiatisk', 'Enkelt'] },
-  { id: 'ins-3', name: 'Biff med bearnaisesaus', emoji: '🥩', time: 30, category: 'Kjøtt', description: 'Indrefilet med klassisk bearnaise', photo_url: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=70', tags: ['Kjøtt', 'Helg'] },
-  { id: 'ins-4', name: 'Fiskesuppe', emoji: '🐟', time: 35, category: 'Fisk', description: 'Kremete suppe med torsk og grønnsaker', photo_url: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=70', tags: ['Fisk', 'Suppe'] },
-  { id: 'ins-5', name: 'Hjemmelaget pizza', emoji: '🍕', time: 60, category: 'Pizza', description: 'Sprø bunn med dine favorittoppings', photo_url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=70', tags: ['Pizza', 'Helg', 'Barn'] },
-  { id: 'ins-6', name: 'Laks i ovn', emoji: '🐟', time: 25, category: 'Fisk', description: 'Ovnsbakt laks med sitron og urter', photo_url: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=800&q=70', tags: ['Fisk', 'Enkelt', 'Hverdags'] },
-  { id: 'ins-7', name: 'Caesar salat', emoji: '🥗', time: 20, category: 'Salat', description: 'Kylling, parmesan og sprø krutonger', photo_url: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=70', tags: ['Salat', 'Kylling', 'Rask'] },
-  { id: 'ins-8', name: 'Karbonadedeig med pasta', emoji: '🍝', time: 25, category: 'Kjøtt', description: 'Enkel og rask hverdagsmiddag', photo_url: 'https://images.unsplash.com/photo-1565086869529-8c7802cca7a0?auto=format&fit=crop&w=800&q=70', tags: ['Kjøtt', 'Pasta', 'Barn'] },
-  { id: 'ins-9', name: 'Kyllingsuppe', emoji: '🍲', time: 40, category: 'Suppe', description: 'Varmende suppe med grønnsaker', photo_url: 'https://images.unsplash.com/photo-1469307517101-0b99d8fb0c33?auto=format&fit=crop&w=800&q=70', tags: ['Kylling', 'Suppe', 'Hverdags'] },
-  { id: 'ins-10', name: 'Tacos', emoji: '🌮', time: 30, category: 'Meksikansk', description: 'Fredagstaco med alle tilbehørene', photo_url: 'https://images.unsplash.com/photo-1599974579688-8dbdd335c77f?auto=format&fit=crop&w=800&q=70', tags: ['Meksikansk', 'Barn', 'Helg'] },
-  { id: 'ins-11', name: 'Pannekaker', emoji: '🥞', time: 25, category: 'Annet', description: 'Tynne norske pannekaker med rømme og bær', photo_url: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?auto=format&fit=crop&w=800&q=70', tags: ['Barn', 'Enkelt', 'Kos'] },
-  { id: 'ins-12', name: 'Laksepasta', emoji: '🍝', time: 20, category: 'Pasta', description: 'Kremet pasta med røkt laks', photo_url: 'https://images.unsplash.com/photo-1559058789-672da06263d8?auto=format&fit=crop&w=800&q=70', tags: ['Fisk', 'Pasta', 'Enkelt'] },
-];
-
 const SORT_OPTIONS = [
   { key: 'random', label: '🎲 Tilfeldig' },
   { key: 'time',   label: '⏱ Raskest' },
@@ -131,8 +116,32 @@ export default function MealList() {
     catch { return 2; }
   });
   const [mode, setMode] = useState('mine');
+  const [inspiration, setInspiration] = useState([]);
+  const [addedIds, setAddedIds] = useState(new Set());
 
   useEffect(() => { loadMeals(sort); }, [sort]);
+  useEffect(() => { getInspirationMeals().then(setInspiration).catch(() => {}); }, []);
+
+  async function handleAddInspiration(meal) {
+    try {
+      await createMeal({
+        name: meal.name,
+        emoji: meal.emoji,
+        description: meal.description || '',
+        time_minutes: meal.time_minutes,
+        persons: 4,
+        category: meal.category || 'Annet',
+        photo_url: meal.photo_url || null,
+        ingredients: (meal.ingredients || []).map(i => ({
+          name: i.name, quantity: i.quantity, unit: i.unit, section: i.section,
+        })),
+      });
+      setAddedIds(prev => new Set(prev).add(meal.id));
+      loadMeals(sort);
+    } catch (e) {
+      console.error(e);
+    }
+  }
 
   // Inject range input styles
   useEffect(() => {
@@ -377,11 +386,24 @@ export default function MealList() {
       </div>{/* /header */}
 
       {mode === 'inspirasjon' ? (
-        <div className="meal-grid">
-          {INSPIRATION_MEALS.map((meal, i) => (
-            <InspirationCard key={meal.id} meal={meal} index={i} onAdd={() => navigate('/meals/new')} />
-          ))}
-        </div>
+        <>
+          <p style={s.inspoIntro}>
+            Ferdige forslag du kan legge rett til i <strong>Mine retter</strong>. Trykk på et kort for å se detaljer.
+          </p>
+          <div className="meal-grid">
+            {inspiration.map((meal, i) => (
+              <InspirationCard
+                key={meal.id}
+                meal={meal}
+                index={i}
+                added={addedIds.has(meal.id)}
+                getMealPrice={getMealPrice}
+                onOpen={() => navigate(`/meal/${meal.id}`)}
+                onAdd={() => handleAddInspiration(meal)}
+              />
+            ))}
+          </div>
+        </>
       ) : (
         <>
           {/* ── VELG FOR MEG ── */}
@@ -400,10 +422,22 @@ export default function MealList() {
                 <span style={s.loadingEmoji}>🍽</span>
                 <p style={s.loadingText}>Henter middager…</p>
               </div>
+            ) : meals.length === 0 ? (
+              <div style={s.emptyWrap}>
+                <span style={s.emptyEmoji}>🍳</span>
+                <h3 style={s.emptyTitle}>Ingen egne retter ennå</h3>
+                <p style={s.emptyText}>
+                  Lag din første rett, eller bla i <strong>Inspirasjon</strong> og legg til ferdige forslag.
+                </p>
+                <div style={s.emptyActions}>
+                  <button onClick={() => navigate('/meals/new')} style={s.emptyPrimary}>+ Lag ny rett</button>
+                  <button onClick={() => setMode('inspirasjon')} style={s.emptySecondary}>✨ Se inspirasjon</button>
+                </div>
+              </div>
             ) : filtered.length === 0 ? (
               <div style={s.loadingWrap}>
                 <span style={s.loadingEmoji}>🔍</span>
-                <p style={s.loadingText}>Ingen middager matcher filteret</p>
+                <p style={s.loadingText}>Ingen av dine retter matcher filteret</p>
                 <button onClick={clearFilters} style={s.resetBtn}>Nullstill filter</button>
               </div>
             ) : (
@@ -547,8 +581,7 @@ function MealCard({ meal, onSelect, getMealPrice }) {
   );
 }
 
-function InspirationCard({ meal, onAdd }) {
-  const [pressed, setPressed] = useState(false);
+function InspirationCard({ meal, added, getMealPrice, onOpen, onAdd }) {
   const [imgError, setImgError] = useState(false);
   const gradient = mealGradients[meal.category] || defaultMealGradient;
   const photo = meal.photo_url || mealPhotos[meal.emoji];
@@ -556,42 +589,46 @@ function InspirationCard({ meal, onAdd }) {
   const tags = (meal.tags || []).slice(0, 3);
 
   return (
-    <div style={{ ...s.card, transform: pressed ? 'scale(0.985)' : 'scale(1)', cursor: 'default' }}>
-      <div className="card-hero" style={{ ...s.cardHero, background: gradient }}>
-        {showPhoto ? (
-          <>
-            <img src={photo} alt={meal.name} loading="lazy" onError={() => setImgError(true)} style={s.heroImg} />
-            <span style={s.heroEmojiSmall}>{meal.emoji}</span>
-          </>
-        ) : (
-          <span style={s.heroEmoji}>{meal.emoji}</span>
-        )}
-        <span style={s.heroTime}>⏱ {meal.time} min</span>
-      </div>
-      <div style={s.cardContent}>
-        <h3 style={s.mealName}>{meal.name}</h3>
-        {meal.description && <p style={s.desc}>{meal.description}</p>}
-        <div style={s.tagRow}>
-          {tags.map(tag => (
-            <span key={tag} style={s.tagChip}>{tag}</span>
-          ))}
+    <div style={{ ...s.card, cursor: 'default', display: 'flex', flexDirection: 'column' }}>
+      <div onClick={onOpen} style={{ cursor: 'pointer' }}>
+        <div className="card-hero" style={{ ...s.cardHero, background: gradient }}>
+          {showPhoto ? (
+            <>
+              <img src={photo} alt={meal.name} loading="lazy" onError={() => setImgError(true)} style={s.heroImg} />
+              <span style={s.heroEmojiSmall}>{meal.emoji}</span>
+            </>
+          ) : (
+            <span style={s.heroEmoji}>{meal.emoji}</span>
+          )}
+          <span style={s.heroTime}>⏱ {meal.time_minutes} min</span>
         </div>
+        <div style={{ ...s.cardContent, paddingBottom: 8 }}>
+          <h3 style={s.mealName}>{meal.name}</h3>
+          {meal.description && <p style={s.desc}>{meal.description}</p>}
+          <div style={s.tagRow}>
+            {tags.map(tag => (
+              <span key={tag} style={s.tagChip}>{tag}</span>
+            ))}
+            <span style={{ ...s.tagChip, ...s.priceChip }}>{`ca. ${getMealPrice(meal)} kr`}</span>
+          </div>
+        </div>
+      </div>
+      <div style={{ padding: '0 16px 16px', marginTop: 'auto' }}>
         <button
-          onMouseDown={() => setPressed(true)}
-          onMouseUp={() => setPressed(false)}
-          onMouseLeave={() => setPressed(false)}
-          onTouchStart={() => setPressed(true)}
-          onTouchEnd={() => { setPressed(false); onAdd(); }}
           onClick={onAdd}
+          disabled={added}
           style={{
-            marginTop: 10, width: '100%',
-            background: `linear-gradient(135deg, ${TERRA}, #C8431F)`,
-            color: '#fff', border: 'none', borderRadius: 10,
-            padding: '10px', fontSize: '0.88rem', fontWeight: 700,
-            cursor: 'pointer', boxShadow: '0 4px 12px rgba(226,90,51,0.25)',
+            width: '100%',
+            background: added ? colors.bgLight : `linear-gradient(135deg, ${TERRA}, #C8431F)`,
+            color: added ? colors.success : '#fff',
+            border: added ? `1.5px solid ${colors.border}` : 'none',
+            borderRadius: 10, padding: '11px', fontSize: '0.9rem', fontWeight: 700,
+            cursor: added ? 'default' : 'pointer',
+            boxShadow: added ? 'none' : '0 4px 12px rgba(226,90,51,0.25)',
+            transition: 'all 0.15s',
           }}
         >
-          + Legg til i mine retter
+          {added ? '✓ Lagt til i Mine retter' : '+ Legg til i Mine retter'}
         </button>
       </div>
     </div>
@@ -600,6 +637,32 @@ function InspirationCard({ meal, onAdd }) {
 
 const s = {
   page: { background: colors.bg, minHeight: '100%', fontFamily: 'system-ui, sans-serif' },
+
+  inspoIntro: {
+    maxWidth: 1600, margin: '0 auto', padding: '14px 16px 0',
+    color: colors.textSecond, fontSize: '0.9rem', lineHeight: 1.5,
+  },
+
+  // Empty state for "Mine retter"
+  emptyWrap: {
+    maxWidth: 460, margin: '0 auto', padding: '48px 24px',
+    textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center',
+  },
+  emptyEmoji: { fontSize: '3.4rem', marginBottom: 8 },
+  emptyTitle: { fontSize: '1.25rem', fontWeight: 800, color: colors.text, margin: '0 0 8px', letterSpacing: '-0.01em' },
+  emptyText: { color: colors.textSecond, fontSize: '0.95rem', lineHeight: 1.55, margin: '0 0 24px' },
+  emptyActions: { display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 320 },
+  emptyPrimary: {
+    width: '100%', background: colors.dark, color: colors.white,
+    border: 'none', borderRadius: radius.round, padding: '14px',
+    fontSize: '1rem', fontWeight: 800, cursor: 'pointer',
+    boxShadow: `0 8px 28px ${colors.accent}40`,
+  },
+  emptySecondary: {
+    width: '100%', background: colors.white, color: colors.text,
+    border: `1.5px solid ${colors.border}`, borderRadius: radius.round, padding: '13px',
+    fontSize: '0.95rem', fontWeight: 700, cursor: 'pointer',
+  },
 
   // Drawer
   backdrop: {

@@ -82,6 +82,25 @@ export async function getMeals(sort = '') {
   return data;
 }
 
+// Inspiration catalog — pre-made suggestions, kept separate from "Mine retter".
+// Always the curated catalog regardless of demo/prod.
+export async function getInspirationMeals() {
+  return mock.getInspirationMeals();
+}
+
+// Import a recipe by pasting a URL. Backend scrapes schema.org Recipe data.
+export async function importRecipe(url) {
+  const res = await fetch('/api/import-recipe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url }),
+  });
+  let data;
+  try { data = await res.json(); } catch { data = {}; }
+  if (!res.ok) throw new Error(data.error || 'Klarte ikke å hente oppskriften');
+  return data;
+}
+
 export async function getMeal(id) {
   if (isDemoMode()) return mock.getMeal(id);
   const { data, error } = await supabase
@@ -220,7 +239,7 @@ export async function deleteIngredient(id) {
 
 // --- Meals CRUD (NEW) ---
 export async function createMeal(mealData) {
-  if (isDemoMode()) return {};
+  if (isDemoMode()) return mock.createMeal(mealData);
 
   const { name, emoji, description, time_minutes, category, ingredients } = mealData;
 
@@ -267,7 +286,7 @@ export async function createMeal(mealData) {
 }
 
 export async function updateMeal(id, mealData) {
-  if (isDemoMode()) return {};
+  if (isDemoMode()) return mock.updateMeal(id, mealData);
 
   const { name, emoji, description, time_minutes, category } = mealData;
 
@@ -289,7 +308,7 @@ export async function updateMeal(id, mealData) {
 }
 
 export async function deleteMeal(id) {
-  if (isDemoMode()) return { ok: true };
+  if (isDemoMode()) return mock.deleteMeal(id);
 
   const { error } = await supabase
     .from('meals')

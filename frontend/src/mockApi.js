@@ -16,6 +16,21 @@ function getEatenDates() {
   try { return JSON.parse(localStorage.getItem('middag_eaten') || '{}'); } catch { return {}; }
 }
 
+// ── User-created meals ("Mine retter") — persisted in localStorage ──────────────
+// These are kept completely separate from the inspiration catalog (MEALS).
+function getMyMeals() {
+  try { return JSON.parse(localStorage.getItem('middag_my_meals') || '[]'); } catch { return []; }
+}
+function saveMyMeals(meals) {
+  localStorage.setItem('middag_my_meals', JSON.stringify(meals));
+}
+// price_level estimate from ingredient count when none is given
+function estimatePriceLevel(meal) {
+  if (meal.price_level) return meal.price_level;
+  const n = (meal.ingredients || []).length;
+  return n <= 4 ? 1 : n <= 8 ? 2 : 3;
+}
+
 // --- Auth ---
 export async function login(email, password) {
   const users = JSON.parse(localStorage.getItem('middag_users') || '[]');
@@ -38,10 +53,10 @@ export async function register(name, email, password, default_persons = 2) {
   return { token, user: { id, name, email, default_persons, household_id: id } };
 }
 
-// --- Meals ---
+// --- Meals ("Mine retter" — only user-created) ---
 export async function getMeals(sort = '') {
   const eaten = getEatenDates();
-  let meals = [...MEALS];
+  let meals = getMyMeals();
   if (sort === 'time') {
     meals.sort((a, b) => a.time_minutes - b.time_minutes);
   } else if (sort === 'price') {
@@ -58,11 +73,80 @@ export async function getMeals(sort = '') {
   return meals.map(m => ({ ...m, last_eaten: eaten[m.id] || null }));
 }
 
+// --- Inspiration catalog (pre-made suggestions, never mixed with Mine retter) ---
+export async function getInspirationMeals() {
+  return MEALS.map(m => ({ ...m }));
+}
+
 export async function getMeal(id) {
-  const meal = MEALS.find(m => m.id === Number(id));
+  // Look in user meals first, then the inspiration catalog
+  const numId = Number(id);
+  const meal = getMyMeals().find(m => Number(m.id) === numId)
+    || MEALS.find(m => Number(m.id) === numId);
   if (!meal) throw new Error('Middag ikke funnet');
   const eaten = getEatenDates();
   return { ...meal, last_eaten: eaten[meal.id] || null };
+}
+
+// --- Meal CRUD (persisted to localStorage in demo mode) ---
+export async function createMeal(mealData) {
+  const meals = getMyMeals();
+  const id = Date.now();
+  const ingredients = (mealData.ingredients || []).map(ing => ({
+    ingredient_id: ing.ingredient_id ?? null,
+    ingredient_name: ing.name || ing.ingredient_name,
+    name: ing.name || ing.ingredient_name,
+    quantity: ing.quantity ?? 1,
+    unit: ing.unit || 'stk',
+    section: ing.section || 'Diverse',
+  }));
+  const meal = {
+    id,
+    name: mealData.name,
+    emoji: mealData.emoji || '🍽',
+    description: mealData.description || '',
+    time_minutes: mealData.time_minutes || 30,
+    persons: mealData.persons || 4,
+    category: mealData.category || 'Annet',
+    photo_url: mealData.photo_url || null,
+    ingredients,
+  };
+  meal.price_level = estimatePriceLevel(meal);
+  meals.push(meal);
+  saveMyMeals(meals);
+  return meal;
+}
+
+export async function updateMeal(id, mealData) {
+  const meals = getMyMeals();
+  const idx = meals.findIndex(m => Number(m.id) === Number(id));
+  if (idx === -1) throw new Error('Middag ikke funnet');
+  const ingredients = (mealData.ingredients || []).map(ing => ({
+    ingredient_id: ing.ingredient_id ?? null,
+    ingredient_name: ing.name || ing.ingredient_name,
+    name: ing.name || ing.ingredient_name,
+    quantity: ing.quantity ?? 1,
+    unit: ing.unit || 'stk',
+    section: ing.section || 'Diverse',
+  }));
+  meals[idx] = {
+    ...meals[idx],
+    name: mealData.name,
+    emoji: mealData.emoji,
+    description: mealData.description || '',
+    time_minutes: mealData.time_minutes,
+    persons: mealData.persons ?? meals[idx].persons,
+    category: mealData.category,
+    ingredients: ingredients.length ? ingredients : meals[idx].ingredients,
+  };
+  meals[idx].price_level = estimatePriceLevel(meals[idx]);
+  saveMyMeals(meals);
+  return meals[idx];
+}
+
+export async function deleteMeal(id) {
+  saveMyMeals(getMyMeals().filter(m => Number(m.id) !== Number(id)));
+  return { ok: true };
 }
 
 export async function markEaten(id) {
@@ -79,7 +163,9 @@ export async function getStores() {
 
 // --- Shopping list ---
 export async function getShoppingList(mealId, storeId, persons = 2) {
-  const meal = MEALS.find(m => m.id === Number(mealId));
+  const numId = Number(mealId);
+  const meal = getMyMeals().find(m => Number(m.id) === numId)
+    || MEALS.find(m => Number(m.id) === numId);
   if (!meal) throw new Error('Middag ikke funnet');
   const store = STORES.find(s => s.id === Number(storeId));
   if (!store) throw new Error('Butikk ikke funnet');

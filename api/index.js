@@ -47,6 +47,23 @@ async function getUserHouseholdId(sb, userId) {
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', message: 'Middagshjulet API er oppe!' }));
 
+// ─── Recipe import ─────────────────────────────────────────────────────────────
+// POST /api/import-recipe { url } → { name, time_minutes, persons, ingredients[] }
+// Public utility (no auth, no DB): scrapes schema.org Recipe JSON-LD from a page.
+app.post('/api/import-recipe', async (req, res) => {
+  const { url } = req.body || {};
+  if (!url || typeof url !== 'string') {
+    return res.status(400).json({ error: 'Mangler nettadresse' });
+  }
+  try {
+    const { importRecipeFromUrl } = await import('./recipeImport.js');
+    const result = await importRecipeFromUrl(url);
+    res.json(result);
+  } catch (e) {
+    res.status(422).json({ error: e.message || 'Klarte ikke å lese oppskriften' });
+  }
+});
+
 // ─── Cron Jobs ────────────────────────────────────────────────────────────────
 
 // POST /api/cron/sync-ingredients — Scheduled sync from Vercel cron (no auth required)

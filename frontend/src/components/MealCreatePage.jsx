@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getIngredients, getIngredientCategories, createMeal, getMeal, updateMeal, removeMealIngredient } from '../api.js';
+import { getIngredients, getIngredientCategories, createMeal, getMeal, updateMeal, removeMealIngredient, importRecipe } from '../api.js';
 import { colors, shadows, radius } from '../theme.js';
 import { BASE_RECIPES } from '../baseRecipes.js';
 
@@ -62,8 +62,44 @@ export default function MealCreatePage() {
   const [error, setError] = useState('');
   const [editingQtyId, setEditingQtyId] = useState(null);
   const [appliedRecipe, setAppliedRecipe] = useState(null);
+  const [importUrl, setImportUrl] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState('');
 
   useEffect(() => { loadData(); }, [mealId]);
+
+  // Responsive modal styling: full-screen on mobile, centered card on desktop
+  useEffect(() => {
+    if (document.getElementById('create-modal-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'create-modal-styles';
+    style.textContent = `
+      .create-overlay {
+        position: fixed; inset: 0; z-index: 90;
+        display: flex; align-items: stretch; justify-content: center;
+        background: ${colors.bg};
+      }
+      .create-card {
+        width: 100%; max-width: 640px;
+        background: ${colors.bg};
+        display: flex; flex-direction: column;
+        min-height: 0;
+      }
+      @media (min-width: 700px) {
+        .create-overlay {
+          align-items: center; padding: 32px 16px;
+          background: rgba(28,25,23,0.45);
+          -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+        }
+        .create-card {
+          max-height: 90vh; border-radius: 20px;
+          box-shadow: 0 24px 64px rgba(0,0,0,0.28);
+          overflow: hidden;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }, []);
 
   async function loadData() {
     try {
@@ -198,6 +234,52 @@ export default function MealCreatePage() {
     return selectedIngredients.reduce((sum, i) => sum + ((i.price || 0) * i.quantity), 0).toFixed(0);
   }
 
+  // Import a recipe from a pasted URL — prefills the whole wizard
+  async function handleImport() {
+    const url = importUrl.trim();
+    if (!url) return;
+    setImporting(true);
+    setImportError('');
+    try {
+      const r = await importRecipe(url);
+      const KNOWN = ['Pasta', 'Fisk', 'Kjøtt', 'Suppe', 'Salat'];
+      setMealData(prev => ({
+        ...prev,
+        name: r.name || prev.name,
+        emoji: guessEmojiFromName(r.name || ''),
+        description: '',
+        time_minutes: r.time_minutes || prev.time_minutes,
+        persons: r.persons || prev.persons,
+        category: r.category && KNOWN.includes(r.category) ? r.category : prev.category,
+        photo_url: r.image || null,
+      }));
+      setSelectedIngredients((r.ingredients || []).map((ing, idx) => {
+        const match = allIngredients.find(ai => ai.name.toLowerCase() === ing.name.toLowerCase());
+        return {
+          id: match ? match.id : `import:${idx}:${ing.name}`,
+          name: ing.name,
+          category: match ? match.category : (ing.section || 'Diverse'),
+          price: match?.price || 0,
+          quantity: ing.quantity ?? 1,
+          unit: ing.unit || 'stk',
+        };
+      }));
+      setImportUrl('');
+      setStep(2); // jump to ingredient review
+    } catch (e) {
+      setImportError(e.message || 'Klarte ikke å hente oppskriften');
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  // Cancel the whole wizard — confirm only if there is unsaved work
+  function handleCancel() {
+    const hasData = mealData.name.trim() || selectedIngredients.length > 0;
+    if (hasData && !isEditing && !window.confirm('Avbryte? Det du har lagt inn blir ikke lagret.')) return;
+    navigate(isEditing ? `/meal/${mealId}` : '/app');
+  }
+
   async function saveMeal() {
     if (!mealData.name.trim()) { alert('Skriv inn navn'); return; }
     try {
@@ -244,34 +326,97 @@ export default function MealCreatePage() {
   const btnNext = (active = true) => ({ flex: 2, padding: '12px', borderRadius: radius.md, background: active ? colors.accent : colors.borderLight, color: active ? colors.white : colors.textTertiary, border: 'none', fontWeight: '600', cursor: active ? 'pointer' : 'not-allowed', fontSize: '0.95rem', boxShadow: active ? shadows.accent : 'none' });
 
   return (
-    <div style={{ background: colors.bg, flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-    <div style={{ width: '100%', maxWidth: '640px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+    <div className="create-overlay" onClick={e => { if (e.target === e.currentTarget) handleCancel(); }}>
+    <div className="create-card">
 
-      {/* Step progress bar */}
-      <div style={{ padding: '16px 24px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {[1, 2, 3].map(n => (
-          <React.Fragment key={n}>
-            <div style={{
+      {/* Step progress bar + close */}
+      <div style={{ padding: '16px 20px 4px', display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
+          {[1, 2, 3].map(n => (
+            <div key={n} style={{
               height: '4px', flex: 1, borderRadius: '2px',
               background: n <= step ? colors.accent : colors.borderLight,
               transition: 'background 0.3s',
             }} />
-          </React.Fragment>
-        ))}
+          ))}
+        </div>
         <span style={{ fontSize: '0.75rem', color: colors.textTertiary, fontWeight: '600', whiteSpace: 'nowrap' }}>
           {step} / 3
         </span>
+        <button
+          onClick={handleCancel}
+          title="Lukk"
+          aria-label="Lukk"
+          style={{
+            width: '34px', height: '34px', borderRadius: '50%', flexShrink: 0,
+            border: `1.5px solid ${colors.border}`, background: colors.bgAlt,
+            color: colors.textSecond, fontSize: '1rem', cursor: 'pointer', lineHeight: 1,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = colors.accent; e.currentTarget.style.color = colors.accent; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.textSecond; }}
+        >
+          ✕
+        </button>
       </div>
 
       {/* STEP 1: Navn + beskrivelse */}
       {step === 1 && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px 24px 16px' }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '12px 24px 24px' }}>
           <h1 style={{ color: colors.text, fontSize: '1.3rem', fontWeight: '700', margin: '4px 0 2px', letterSpacing: '-0.01em' }}>
             {isEditing ? 'Rediger måltid' : 'Nytt måltid'}
           </h1>
           <p style={{ color: colors.textTertiary, fontSize: '0.85rem', margin: '0 0 16px' }}>
             Navn og kort beskrivelse
           </p>
+
+          {/* ── Import from URL ── */}
+          {!isEditing && (
+            <div style={{
+              background: colors.bgAccent, border: `1px solid ${colors.accentAltLight}`,
+              borderRadius: radius.md, padding: '14px', marginBottom: '20px',
+            }}>
+              <label style={{ fontSize: '0.85rem', color: colors.text, fontWeight: '700', marginBottom: '4px', display: 'block' }}>
+                🔗 Hent fra nettside
+              </label>
+              <p style={{ fontSize: '0.78rem', color: colors.textSecond, margin: '0 0 10px' }}>
+                Lim inn lenke til en oppskrift, så fyller vi inn ingrediensene for deg.
+              </p>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="url"
+                  inputMode="url"
+                  value={importUrl}
+                  onChange={e => { setImportUrl(e.target.value); setImportError(''); }}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleImport(); } }}
+                  placeholder="https://www.matprat.no/oppskrifter/…"
+                  style={{
+                    flex: 1, minWidth: 0, padding: '11px 12px', borderRadius: radius.sm,
+                    border: `1.5px solid ${colors.border}`, background: colors.bgAlt,
+                    fontSize: '0.95rem', color: colors.text, outline: 'none', boxSizing: 'border-box',
+                  }}
+                  onFocus={e => e.target.style.borderColor = colors.accent}
+                  onBlur={e => e.target.style.borderColor = colors.border}
+                />
+                <button
+                  onClick={handleImport}
+                  disabled={!importUrl.trim() || importing}
+                  style={{
+                    flexShrink: 0, padding: '0 16px', borderRadius: radius.sm, border: 'none',
+                    background: (!importUrl.trim() || importing) ? colors.borderLight : colors.accent,
+                    color: (!importUrl.trim() || importing) ? colors.textTertiary : colors.white,
+                    fontWeight: '700', fontSize: '0.9rem',
+                    cursor: (!importUrl.trim() || importing) ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {importing ? 'Henter…' : 'Hent'}
+                </button>
+              </div>
+              {importError && (
+                <p style={{ fontSize: '0.78rem', color: colors.error, margin: '8px 0 0' }}>{importError}</p>
+              )}
+            </div>
+          )}
 
           <label style={{ fontSize: '0.8rem', color: colors.textSecond, fontWeight: '600', marginBottom: '6px', display: 'block' }}>
             Navn på måltid
@@ -365,7 +510,7 @@ export default function MealCreatePage() {
           </div>
 
           <div style={{ display: 'flex', gap: '10px', paddingTop: '20px' }}>
-            <button onClick={() => navigate(isEditing ? `/meal/${mealId}` : '/app')} style={btnBack}>Avbryt</button>
+            <button onClick={handleCancel} style={btnBack}>Avbryt</button>
             <button onClick={() => setStep(2)} disabled={!mealData.name.trim()} style={btnNext(!!mealData.name.trim())}>Neste →</button>
           </div>
         </div>
@@ -604,7 +749,7 @@ export default function MealCreatePage() {
 
       {/* STEP 3: Tid + personer + kategori + lagre */}
       {step === 3 && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px 24px 16px' }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '12px 24px 24px' }}>
           <h1 style={{ color: colors.text, fontSize: '1.2rem', fontWeight: '600', margin: '12px 0 2px' }}>Detaljer</h1>
           <p style={{ color: colors.textTertiary, fontSize: '0.85rem', margin: '0 0 20px' }}>Tid, personer, kategori</p>
 
