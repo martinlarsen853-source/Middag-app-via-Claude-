@@ -176,7 +176,7 @@ export default function MealCreatePage() {
       ...mealData,
       name: recipe.name,
       emoji: recipe.emoji,
-      description: recipe.description,
+      description: '',
       time_minutes: recipe.time_minutes,
       category: KNOWN_CATEGORIES.includes(recipe.category) ? recipe.category : 'Annet',
     });
@@ -244,11 +244,28 @@ export default function MealCreatePage() {
   const btnNext = (active = true) => ({ flex: 2, padding: '12px', borderRadius: radius.md, background: active ? colors.accent : colors.borderLight, color: active ? colors.white : colors.textTertiary, border: 'none', fontWeight: '600', cursor: active ? 'pointer' : 'not-allowed', fontSize: '0.95rem', boxShadow: active ? shadows.accent : 'none' });
 
   return (
-    <div style={{ padding: '0', background: colors.bg, flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+    <div style={{ background: colors.bg, flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div style={{ width: '100%', maxWidth: '640px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+
+      {/* Step progress bar */}
+      <div style={{ padding: '16px 24px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {[1, 2, 3].map(n => (
+          <React.Fragment key={n}>
+            <div style={{
+              height: '4px', flex: 1, borderRadius: '2px',
+              background: n <= step ? colors.accent : colors.borderLight,
+              transition: 'background 0.3s',
+            }} />
+          </React.Fragment>
+        ))}
+        <span style={{ fontSize: '0.75rem', color: colors.textTertiary, fontWeight: '600', whiteSpace: 'nowrap' }}>
+          {step} / 3
+        </span>
+      </div>
 
       {/* STEP 1: Navn + beskrivelse */}
       {step === 1 && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px 24px 16px' }}>
           <h1 style={{ color: colors.text, fontSize: '1.3rem', fontWeight: '700', margin: '4px 0 2px', letterSpacing: '-0.01em' }}>
             {isEditing ? 'Rediger måltid' : 'Nytt måltid'}
           </h1>
@@ -356,7 +373,7 @@ export default function MealCreatePage() {
 
       {/* STEP 2: Ingredienser — search-first */}
       {step === 2 && (
-        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '16px', paddingBottom: '0' }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '24px 24px 0' }}>
           <h1 style={{ color: colors.text, fontSize: '1.3rem', fontWeight: '700', margin: '4px 0 2px', letterSpacing: '-0.01em' }}>Ingredienser</h1>
           <p style={{ color: colors.textTertiary, fontSize: '0.85rem', margin: '0 0 14px' }}>
             {selectedIngredients.length > 0 ? `${selectedIngredients.length} lagt til` : 'Søk og legg til'}
@@ -587,7 +604,7 @@ export default function MealCreatePage() {
 
       {/* STEP 3: Tid + personer + kategori + lagre */}
       {step === 3 && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px 24px 16px' }}>
           <h1 style={{ color: colors.text, fontSize: '1.2rem', fontWeight: '600', margin: '12px 0 2px' }}>Detaljer</h1>
           <p style={{ color: colors.textTertiary, fontSize: '0.85rem', margin: '0 0 20px' }}>Tid, personer, kategori</p>
 
@@ -699,6 +716,7 @@ export default function MealCreatePage() {
           </div>
         </div>
       )}
+    </div>{/* /maxWidth inner */}
     </div>
   );
 }
