@@ -35,7 +35,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={localStorage.getItem('middag_token') ? <Navigate to="/app" replace /> : <LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route
@@ -94,7 +94,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to={localStorage.getItem('middag_token') ? '/app' : '/'} replace />} />
       </Routes>
     </BrowserRouter>
   );

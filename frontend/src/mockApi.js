@@ -1,5 +1,5 @@
 // Full localStorage-based API for GitHub Pages / demo mode (no backend needed)
-import { MEALS, STORES, INGREDIENTS, INGREDIENT_CATEGORIES } from './mockData.js';
+import { MEALS, STORES, INGREDIENTS, INGREDIENT_CATEGORIES, computeMealPrice } from './mockData.js';
 
 const BASE_PERSONS = 4; // seed data quantities are based on 4 persons
 
@@ -70,12 +70,12 @@ export async function getMeals(sort = '') {
   } else {
     meals = shuffle(meals);
   }
-  return meals.map(m => ({ ...m, last_eaten: eaten[m.id] || null }));
+  return meals.map(m => ({ ...m, estimated_price: computeMealPrice(m), last_eaten: eaten[m.id] || null }));
 }
 
 // --- Inspiration catalog (pre-made suggestions, never mixed with Mine retter) ---
 export async function getInspirationMeals() {
-  return MEALS.map(m => ({ ...m }));
+  return MEALS.map(m => ({ ...m, estimated_price: computeMealPrice(m) }));
 }
 
 export async function getMeal(id) {
@@ -85,7 +85,7 @@ export async function getMeal(id) {
     || MEALS.find(m => Number(m.id) === numId);
   if (!meal) throw new Error('Middag ikke funnet');
   const eaten = getEatenDates();
-  return { ...meal, last_eaten: eaten[meal.id] || null };
+  return { ...meal, estimated_price: computeMealPrice(meal), last_eaten: eaten[meal.id] || null };
 }
 
 // --- Meal CRUD (persisted to localStorage in demo mode) ---
@@ -205,7 +205,8 @@ export async function getHousehold() {
   const me = users.find(u => u.id === user.id);
   const householdId = me?.household_id || user.id;
   const members = users.filter(u => u.household_id === householdId).map(u => ({ id: u.id, name: u.name, email: u.email }));
-  return { household_id: householdId, invite_code: me?.invite_code || '------', members };
+  const name = me?.name ? `${me.name.split(' ')[0]}s husholdning` : 'Min husholdning';
+  return { household_id: householdId, name, invite_code: me?.invite_code || '------', members };
 }
 
 export async function joinHousehold(invite_code) {

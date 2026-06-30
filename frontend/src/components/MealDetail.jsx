@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getMeal, deleteMeal } from '../api.js';
 import PersonCounter from './PersonCounter.jsx';
-import { colors, shadows, radius } from '../theme.js';
+import { colors, shadows, radius, fonts, foodPhotoFor } from '../theme.js';
 
 const sectionColors = {
   'Frukt & grønt': { bg: '#e9f7ee', text: '#1d7a40' },
@@ -86,10 +86,10 @@ export default function MealDetail() {
         <div>
           <p style={{ color: colors.error, marginBottom: '16px' }}>{error || 'Måltid ikke funnet'}</p>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/app')}
             style={{ color: colors.accent, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
           >
-            Tilbake
+            Tilbake til mine retter
           </button>
         </div>
       </div>
@@ -103,7 +103,7 @@ export default function MealDetail() {
     <div style={{ maxWidth: '448px', margin: '0 auto', width: '100%', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Back button */}
       <button
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/app')}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -120,64 +120,83 @@ export default function MealDetail() {
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
-        Tilbake til hjulet
+        Tilbake til mine retter
       </button>
 
       {/* Hero card */}
       <div style={{
         background: colors.bgAlt,
         borderRadius: radius.xl,
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
         border: `1px solid ${colors.border}`,
         boxShadow: shadows.md,
       }}>
-        <div style={{ fontSize: '4rem', marginBottom: '16px', lineHeight: 1 }}>{meal.emoji}</div>
-        <h1 style={{
-          fontSize: '1.8rem',
-          fontWeight: 700,
-          color: colors.text,
-          margin: '0 0 8px',
-          letterSpacing: '-0.02em',
-        }}>
-          {meal.name}
-        </h1>
-        <p style={{ color: colors.textSecond, fontSize: '0.85rem', marginBottom: '16px', margin: '0 0 16px' }}>
-          {meal.category}
-        </p>
+        {/* Photo */}
+        <div style={{ position: 'relative', height: '220px', background: colors.bgLight }}>
+          <img
+            src={foodPhotoFor(meal)}
+            alt={meal.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+          <span style={{
+            position: 'absolute', bottom: '12px', left: '14px',
+            fontSize: '1.6rem', lineHeight: 1,
+            background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(4px)',
+            borderRadius: '50%', width: '46px', height: '46px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: shadows.sm,
+          }}>{meal.emoji}</span>
+        </div>
 
-        {meal.description && (
-          <p style={{ color: colors.textSecond, fontSize: '0.9rem', lineHeight: 1.5, marginBottom: '16px' }}>
-            {meal.description}
+        <div style={{ padding: '20px 24px 24px', textAlign: 'center' }}>
+          <h1 style={{
+            fontFamily: fonts.display,
+            fontSize: '2rem',
+            fontWeight: 700,
+            color: colors.text,
+            margin: '0 0 6px',
+            letterSpacing: '0.01em',
+            lineHeight: 1.1,
+          }}>
+            {meal.name}
+          </h1>
+          <p style={{ color: colors.textTertiary, fontSize: '0.85rem', margin: '0 0 16px' }}>
+            {meal.category}
           </p>
-        )}
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px', marginTop: '16px' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>⏱</div>
-            <div style={{ color: colors.text, fontWeight: 700 }}>{meal.time_minutes} min</div>
-            <div style={{ color: colors.textTertiary, fontSize: '0.7rem' }}>tilbereding</div>
-          </div>
-          <div style={{ width: '1px', height: '40px', background: colors.border }} />
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ marginBottom: '4px' }}><PriceDots level={meal.price_level} /></div>
-            <div style={{ color: colors.text, fontWeight: 700 }}>
-              {meal.price_level === 1 ? 'Billig' : meal.price_level === 2 ? 'Middels' : 'Dyrere'}
-            </div>
-            <div style={{ color: colors.textTertiary, fontSize: '0.7rem' }}>prisnivå</div>
-          </div>
-          {meal.last_eaten && (
-            <>
-              <div style={{ width: '1px', height: '40px', background: colors.border }} />
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>📅</div>
-                <div style={{ color: colors.text, fontWeight: 700, fontSize: '0.9rem' }}>
-                  {new Date(meal.last_eaten).toLocaleDateString('no-NO', { month: 'short', day: 'numeric' })}
-                </div>
-                <div style={{ color: colors.textTertiary, fontSize: '0.7rem' }}>sist spist</div>
-              </div>
-            </>
+          {meal.description && (
+            <p style={{ color: colors.textSecond, fontSize: '0.92rem', lineHeight: 1.55, margin: '0 0 16px' }}>
+              {meal.description}
+            </p>
           )}
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px', marginTop: '8px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>⏱</div>
+              <div style={{ color: colors.text, fontWeight: 700 }}>{meal.time_minutes} min</div>
+              <div style={{ color: colors.textTertiary, fontSize: '0.7rem' }}>tilbereding</div>
+            </div>
+            <div style={{ width: '1px', height: '40px', background: colors.border }} />
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>🛒</div>
+              <div style={{ color: colors.accent, fontWeight: 800 }}>
+                ca. {meal.estimated_price || '–'} kr
+              </div>
+              <div style={{ color: colors.textTertiary, fontSize: '0.7rem' }}>handlekurv</div>
+            </div>
+            {meal.last_eaten && (
+              <>
+                <div style={{ width: '1px', height: '40px', background: colors.border }} />
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>📅</div>
+                  <div style={{ color: colors.text, fontWeight: 700, fontSize: '0.9rem' }}>
+                    {new Date(meal.last_eaten).toLocaleDateString('no-NO', { month: 'short', day: 'numeric' })}
+                  </div>
+                  <div style={{ color: colors.textTertiary, fontSize: '0.7rem' }}>sist spist</div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -206,11 +225,13 @@ export default function MealDetail() {
       }}>
         <h3 style={{ color: colors.text, fontWeight: 600, marginBottom: '16px', margin: '0 0 16px' }}>Ingredienser</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          {meal.ingredients.map(ing => {
+          {meal.ingredients.map((ing, idx) => {
             const scaled = Math.round(ing.quantity * scale * 10) / 10;
-            const sectionColor = sectionColors[ing.section] || sectionColors['Diverse'];
+            const section = ing.section || 'Diverse';
+            const name = ing.ingredient_name || ing.name;
+            const sectionColor = sectionColors[section] || sectionColors['Diverse'];
             return (
-              <div key={ing.id} style={{
+              <div key={ing.id || `${name}-${idx}`} style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -228,9 +249,9 @@ export default function MealDetail() {
                     whiteSpace: 'nowrap',
                     flexShrink: 0,
                   }}>
-                    {ing.section.split(' ')[0]}
+                    {section.split(' ')[0]}
                   </span>
-                  <span style={{ color: colors.text, fontSize: '0.9rem' }}>{ing.ingredient_name}</span>
+                  <span style={{ color: colors.text, fontSize: '0.9rem' }}>{name}</span>
                 </div>
                 <span style={{ color: colors.textSecond, fontSize: '0.9rem', fontWeight: 600, marginLeft: '8px', flexShrink: 0 }}>
                   {scaled} {ing.unit}

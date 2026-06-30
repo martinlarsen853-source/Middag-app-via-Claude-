@@ -3,11 +3,29 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getMeal, getStores } from '../api.js';
 import { colors, radius } from '../theme.js';
 
-const storeEmojis = {
-  'Rema 1000': '🔴',
-  'Kiwi': '🟡',
-  'Coop Extra': '🟢'
+// Brand-approximate wordmark logos (own design, not the stores' actual logo files)
+const storeBrands = {
+  'Rema 1000': { bg: '#003d7a', fg: '#ffffff', top: 'REMA', bottom: '1000' },
+  'Kiwi':      { bg: '#5fb524', fg: '#ffffff', top: 'KIWI' },
+  'Coop Extra':{ bg: '#00833e', fg: '#ffffff', top: 'Coop', bottom: 'EXTRA' },
+  'Meny':      { bg: '#e30613', fg: '#ffffff', top: 'MENY' },
+  'Spar':      { bg: '#e30613', fg: '#ffffff', top: 'SPAR' },
 };
+
+function StoreLogo({ name }) {
+  const b = storeBrands[name] || { bg: '#1A1A1A', fg: '#fff', top: (name || '?').slice(0, 4).toUpperCase() };
+  return (
+    <div style={{
+      width: '52px', height: '52px', borderRadius: '12px', flexShrink: 0,
+      background: b.bg, color: b.fg,
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      lineHeight: 1, boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+    }}>
+      <span style={{ fontWeight: 900, fontSize: b.top.length > 4 ? '0.78rem' : '0.92rem', letterSpacing: '0.02em' }}>{b.top}</span>
+      {b.bottom && <span style={{ fontWeight: 800, fontSize: '0.6rem', letterSpacing: '0.08em', marginTop: '2px', opacity: 0.95 }}>{b.bottom}</span>}
+    </div>
+  );
+}
 
 const storeDescriptions = {
   'Rema 1000': 'Enkelt og billig hverdagshandel',
@@ -133,7 +151,7 @@ export default function StoreSelector() {
                 e.currentTarget.style.background = colors.bgAlt;
               }}
             >
-              <div style={{ fontSize: '2.2rem' }}>{storeEmojis[store.name] || '🏪'}</div>
+              <StoreLogo name={store.name} />
               <div style={{ flex: 1 }}>
                 <h3 style={{ color: colors.text, fontWeight: 700, fontSize: '1rem', margin: 0 }}>
                   {store.name}

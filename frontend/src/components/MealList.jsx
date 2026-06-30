@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMeals, getInspirationMeals, createMeal, markEaten, updatePersons } from '../api.js';
-import { colors, radius, shadows, fonts, mealGradients, defaultMealGradient, mealPhotos } from '../theme.js';
+import { colors, radius, shadows, fonts, mealGradients, defaultMealGradient, foodPhotoFor } from '../theme.js';
 
 const TERRA = colors.accent;
 
@@ -579,7 +579,7 @@ function MealCard({ meal, onSelect, getMealPrice }) {
   const badge = getMealBadge(meal);
   const gradient = mealGradients[meal.category] || defaultMealGradient;
   const tags = (meal.tags || []).slice(0, 3);
-  const photo = meal.photo_url || mealPhotos[meal.emoji];
+  const photo = foodPhotoFor(meal);
   const showPhoto = photo && !imgError;
 
   return (
@@ -628,7 +628,7 @@ function MealCard({ meal, onSelect, getMealPrice }) {
 function InspirationCard({ meal, added, getMealPrice, onOpen, onAdd }) {
   const [imgError, setImgError] = useState(false);
   const gradient = mealGradients[meal.category] || defaultMealGradient;
-  const photo = meal.photo_url || mealPhotos[meal.emoji];
+  const photo = foodPhotoFor(meal);
   const showPhoto = photo && !imgError;
   const tags = (meal.tags || []).slice(0, 3);
 

@@ -34,8 +34,8 @@ export default function Navbar() {
   }
 
   async function handleCopyCode() {
-    if (!household?.household?.invite_code) return;
-    await navigator.clipboard.writeText(household.household.invite_code).catch(() => {});
+    if (!household?.invite_code) return;
+    await navigator.clipboard.writeText(household.invite_code).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -70,7 +70,7 @@ export default function Navbar() {
         WebkitBackdropFilter: 'blur(12px)',
         borderBottom: `1px solid ${colors.border}`,
       }} className="no-print">
-        <Link to="/" style={{
+        <Link to="/app" style={{
           display: 'flex',
           flexDirection: 'column',
           textDecoration: 'none',
@@ -204,7 +204,7 @@ export default function Navbar() {
               <>
                 <div style={{ marginBottom: '20px' }}>
                   <p style={{ fontSize: '0.8rem', color: colors.textSecond, marginBottom: '4px', fontWeight: 500, margin: 0 }}>Husholdning</p>
-                  <p style={{ fontSize: '1rem', color: colors.text, fontWeight: 600, margin: 0 }}>{household.household.name}</p>
+                  <p style={{ fontSize: '1rem', color: colors.text, fontWeight: 600, margin: 0 }}>{household.name || 'Min husholdning'}</p>
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
@@ -223,7 +223,7 @@ export default function Navbar() {
                       textAlign: 'center',
                       letterSpacing: '0.1em',
                     }}>
-                      {household.household.invite_code}
+                      {household.invite_code}
                     </div>
                     <button
                       onClick={handleCopyCode}

@@ -368,14 +368,47 @@ function getCategoryFromSection(section) {
   return categoryMap[section] || 'Diverse';
 }
 
+// Per-item (package) price estimate for an ingredient, in NOK.
+export function ingredientPrice(ingredientName) {
+  const name = (ingredientName || '').toLowerCase();
+  if (/(entrecôte|entrecote|indrefilet|ytrefilet|biff|mørbrad|lam|ribbe)/.test(name)) return 180;
+  if (/(laks|torsk|ørret|scampi|reker|kamskjell|fiskefilet)/.test(name)) return 120;
+  if (/(kjøttdeig|karbonadedeig|kjøtt|kylling|svin|bacon|pølse|skinke|spekeskinke|coppa|karbonader|kjøttbolle|kjøttkake)/.test(name)) return 95;
+  if (/(parmesan|mozzarella|fetaost|brunost)/.test(name)) return 55;
+  if (/(ost|fløte|matfløte|rømme|crème|creme|kesam|yoghurt)/.test(name)) return 38;
+  if (/(smør|margarin|melk|egg)/.test(name)) return 32;
+  if (/(pinjekjerner|nøtter|mandler|valnøtter|peanøttsmør)/.test(name)) return 45;
+  if (/(vin|rødvin|hvitvin|øl|sider|champagne)/.test(name)) return 130;
+  if (/(juice|brus|saft|farris)/.test(name)) return 28;
+  if (/(pizzabunn|pinsabunn|pinsa|tortilla|naan|pita|brød|loff|baguette|rundstykk|taco-skjell|tacoskjell)/.test(name)) return 30;
+  if (/(pasta|spaghetti|penne|lasagne|nudler|ris|couscous|bulgur|quinoa|mel|sukker|havregryn|gryn)/.test(name)) return 25;
+  if (/(olje|olivenolje|eddik|balsamico|soya|fiskesaus|ketchup|sennep|majones|pesto|salsa|tomatpuré|tomatpure|buljong|fond|honning|sirup)/.test(name)) return 35;
+  if (/(hermetisk|knust tomat|passata|kokosmelk|bønner|kikerter|linser)/.test(name)) return 22;
+  return 18; // vegetables, fruit, herbs, spices
+}
+
+// Sum a believable shopping-basket price for a whole meal.
+export function computeMealPrice(meal) {
+  const ings = meal?.ingredients || [];
+  if (!ings.length) {
+    const map = { 1: 100, 2: 350, 3: 900 };
+    return map[meal?.price_level] || 250;
+  }
+  let total = 0;
+  for (const ing of ings) {
+    if (typeof ing.price === 'number' && ing.price > 0) { total += ing.price; continue; }
+    const unitPrice = ingredientPrice(ing.ingredient_name || ing.name);
+    // Count-based units multiply by quantity; weight/volume = one package.
+    const u = (ing.unit || '').toLowerCase();
+    const countUnits = ['stk', 'boks', 'pose', 'pakke', 'pk', 'glass', 'flaske', 'beger', 'porsjon'];
+    const mult = countUnits.includes(u) ? Math.max(1, Math.round(ing.quantity || 1)) : 1;
+    total += unitPrice * mult;
+  }
+  return Math.round(total);
+}
+
 function getDefaultPrice(ingredientName) {
-  // Estimate prices based on ingredient type
-  const name = ingredientName.toLowerCase();
-  if (name.includes('kjøtt') || name.includes('kjøttdeig') || name.includes('entrecôte') || name.includes('fisk') || name.includes('laks') || name.includes('kylling') || name.includes('torsk') || name.includes('reker') || name.includes('bacon') || name.includes('pølse') || name.includes('karbonader')) return 100;
-  if (name.includes('ost') || name.includes('fløte') || name.includes('smør') || name.includes('melk') || name.includes('egg') || name.includes('rømme')) return 30;
-  if (name.includes('pasta') || name.includes('ris') || name.includes('mel') || name.includes('brød')) return 20;
-  if (name.includes('vin') || name.includes('øl') || name.includes('drikk')) return 50;
-  return 15; // Default for vegetables, spices, etc.
+  return ingredientPrice(ingredientName);
 }
 
 export const INGREDIENTS = extractUniqueIngredients();
