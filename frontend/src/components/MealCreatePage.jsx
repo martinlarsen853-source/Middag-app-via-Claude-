@@ -51,6 +51,7 @@ export default function MealCreatePage() {
     time_minutes: 30,
     persons: 4,
     category: 'Annet',
+    instructions: [],
   });
   const [selectedIngredients, setSelectedIngredients] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -124,6 +125,7 @@ export default function MealCreatePage() {
           time_minutes: meal.time_minutes || 30,
           persons: meal.persons || 4,
           category: meal.category || 'Annet',
+          instructions: Array.isArray(meal.instructions) ? meal.instructions : [],
         });
         setSelectedIngredients(meal.ingredients.map(ing => ({
           id: ing.ingredient_id,
@@ -252,6 +254,7 @@ export default function MealCreatePage() {
         persons: r.persons || prev.persons,
         category: r.category && KNOWN.includes(r.category) ? r.category : prev.category,
         photo_url: r.image || null,
+        instructions: Array.isArray(r.instructions) ? r.instructions : [],
       }));
       setSelectedIngredients((r.ingredients || []).map((ing, idx) => {
         const match = allIngredients.find(ai => ai.name.toLowerCase() === ing.name.toLowerCase());
@@ -561,17 +564,33 @@ export default function MealCreatePage() {
                       key={ing.id}
                       onClick={() => addIngredient(ing)}
                       style={{
-                        display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
-                        padding: '12px 14px', background: 'none', textAlign: 'left',
+                        display: 'flex', alignItems: 'center', gap: '12px', width: '100%',
+                        padding: '10px 12px', background: selected ? colors.bgAccent : 'none', textAlign: 'left',
                         border: 'none', cursor: 'pointer',
                         borderTop: idx === 0 ? 'none' : `1px solid ${colors.hairline}`,
                       }}
                     >
-                      <span style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ display: 'block', fontWeight: '600', color: colors.text, fontSize: '0.95rem' }}>{ing.name}</span>
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: colors.textTertiary }}>{ing.category}{ing.unit ? ` · ${ing.unit}` : ''}</span>
+                      <span style={{
+                        flexShrink: 0, width: '42px', height: '42px', borderRadius: '10px',
+                        background: colors.bgLight, display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', fontSize: '1.3rem',
+                      }}>
+                        {CATEGORY_EMOJIS[ing.category] || '🛒'}
                       </span>
-                      <span style={{ color: selected ? colors.success : colors.accent, fontSize: '1.15rem', fontWeight: '700', flexShrink: 0 }}>
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ display: 'block', fontWeight: '700', color: colors.text, fontSize: '0.95rem' }}>{ing.name}</span>
+                        <span style={{ display: 'block', fontSize: '0.76rem', color: colors.textTertiary }}>
+                          {ing.category}{ing.unit ? ` · selges per ${ing.unit}` : ''}
+                        </span>
+                      </span>
+                      <span style={{
+                        flexShrink: 0, width: '30px', height: '30px', borderRadius: '50%',
+                        border: `1.5px solid ${selected ? colors.success : colors.accent}`,
+                        color: selected ? colors.success : colors.accent,
+                        background: colors.white,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '1.1rem', fontWeight: '700',
+                      }}>
                         {selected ? '✓' : '+'}
                       </span>
                     </button>

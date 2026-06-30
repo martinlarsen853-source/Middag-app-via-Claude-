@@ -194,6 +194,32 @@ function findRecipeNode(data) {
   return null;
 }
 
+// schema.org recipeInstructions -> flat array of step strings.
+function parseInstructions(raw) {
+  const out = [];
+  const walk = (node) => {
+    if (node == null) return;
+    if (typeof node === 'string') {
+      const t = decodeEntities(node).replace(/\s+/g, ' ').trim();
+      if (t) out.push(t);
+      return;
+    }
+    if (Array.isArray(node)) { node.forEach(walk); return; }
+    if (typeof node === 'object') {
+      const type = node['@type'];
+      if (type === 'HowToSection' || node.itemListElement) { walk(node.itemListElement); return; }
+      if (node.text) { walk(node.text); return; }
+      if (node.name) { walk(node.name); return; }
+    }
+  };
+  walk(raw);
+  // Some sites cram all steps into one big string with line breaks
+  if (out.length === 1 && out[0].length > 200) {
+    return out[0].split(/\r?\n|(?<=\.)\s+(?=[A-ZÆØÅ])/).map(s => s.trim()).filter(s => s.length > 4);
+  }
+  return out;
+}
+
 function pickImage(img) {
   if (!img) return null;
   if (typeof img === 'string') return img;
@@ -283,5 +309,6 @@ export async function importRecipeFromUrl(url) {
     image: pickImage(recipe.image),
     source_url: parsed.href,
     ingredients,
+    instructions: parseInstructions(recipe.recipeInstructions),
   };
 }

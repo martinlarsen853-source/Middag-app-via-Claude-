@@ -109,6 +109,7 @@ export async function createMeal(mealData) {
     persons: mealData.persons || 4,
     category: mealData.category || 'Annet',
     photo_url: mealData.photo_url || null,
+    instructions: Array.isArray(mealData.instructions) ? mealData.instructions : [],
     ingredients,
   };
   meal.price_level = estimatePriceLevel(meal);
@@ -137,6 +138,7 @@ export async function updateMeal(id, mealData) {
     time_minutes: mealData.time_minutes,
     persons: mealData.persons ?? meals[idx].persons,
     category: mealData.category,
+    instructions: Array.isArray(mealData.instructions) ? mealData.instructions : (meals[idx].instructions || []),
     ingredients: ingredients.length ? ingredients : meals[idx].ingredients,
   };
   meals[idx].price_level = estimatePriceLevel(meals[idx]);

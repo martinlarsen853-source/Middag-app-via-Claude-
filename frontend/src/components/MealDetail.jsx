@@ -262,6 +262,36 @@ export default function MealDetail() {
         </div>
       </div>
 
+      {/* Cooking steps — HelloFresh-style numbered list */}
+      {Array.isArray(meal.instructions) && meal.instructions.length > 0 && (
+        <div style={{
+          background: colors.bgAlt,
+          borderRadius: radius.xl,
+          padding: '16px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <h3 style={{ color: colors.text, fontWeight: 700, margin: '0 0 16px', fontFamily: fonts.display, fontSize: '1.25rem', letterSpacing: '0.01em' }}>
+            Slik lager du den
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {meal.instructions.map((step, i) => (
+              <div key={i} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+                <span style={{
+                  flexShrink: 0,
+                  width: '30px', height: '30px', borderRadius: '50%',
+                  background: colors.bgAccent, color: colors.accent,
+                  fontWeight: 800, fontSize: '0.95rem',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>{i + 1}</span>
+                <p style={{ margin: 0, color: colors.textSecond, fontSize: '0.95rem', lineHeight: 1.55, paddingTop: '3px' }}>
+                  {step}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Actions */}
       <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
         <button
