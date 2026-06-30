@@ -20,7 +20,7 @@ export const STORES = [
 export const MEALS = [
   {
     id: 1, name: 'Spaghetti Bolognese', emoji: '🍝',
-    photo_url: 'https://images.pexels.com/photos/30406652/pexels-photo-30406652.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/5fu4ew1760524857.jpg/preview',
     description: 'Klassisk italiensk kjøttsaus med spaghetti – alltid en favoritt hos hele familien.',
     time_minutes: 45, price_level: 2, category: 'Pasta',
     tags: ['Kjøtt', 'Pasta', 'Kos', 'Hverdags'],
@@ -37,7 +37,7 @@ export const MEALS = [
   },
   {
     id: 2, name: 'Tacos', emoji: '🌮',
-    photo_url: 'https://images.pexels.com/photos/36498696/pexels-photo-36498696.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/uvuyxu1503067369.jpg/preview',
     description: 'Fredagstacos! Sprø taco-skjell med krydret kjøttfyll og alle tilbehørene.',
     time_minutes: 30, price_level: 2, category: 'Meksikansk',
     tags: ['Kjøtt', 'Meksikansk', 'Barn', 'Helg', 'Kos'],
@@ -54,7 +54,7 @@ export const MEALS = [
   },
   {
     id: 3, name: 'Laksepasta', emoji: '🐟',
-    photo_url: 'https://images.pexels.com/photos/4518833/pexels-photo-4518833.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/ikizdm1763760862.jpg/preview',
     description: 'Rask og deilig pasta med laksefilet i fløtesaus med dill.',
     time_minutes: 25, price_level: 2, category: 'Fisk',
     tags: ['Fisk', 'Pasta', 'Hverdags'],
@@ -69,7 +69,7 @@ export const MEALS = [
   },
   {
     id: 4, name: 'Pizza Margherita', emoji: '🍕',
-    photo_url: 'https://images.pexels.com/photos/31596394/pexels-photo-31596394.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/lrfdwz1764438393.jpg/preview',
     description: 'Hjemmelaget pizza med sprø bunn, tomatsaus og frisk mozzarella.',
     time_minutes: 40, price_level: 1, category: 'Pizza',
     tags: ['Vegetar', 'Hverdags', 'Barn'],
@@ -84,7 +84,7 @@ export const MEALS = [
   },
   {
     id: 5, name: 'Kyllingsuppe', emoji: '🍲',
-    photo_url: 'https://images.pexels.com/photos/10172749/pexels-photo-10172749.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/7kb44y1763589084.jpg/preview',
     description: 'Varm og næringsrik kyllingsuppe med rotgrønnsaker – perfekt til høst og vinter.',
     time_minutes: 50, price_level: 1, category: 'Suppe',
     tags: ['Kylling', 'Suppe', 'Langtids', 'Kos'],
@@ -100,7 +100,7 @@ export const MEALS = [
   },
   {
     id: 6, name: 'Biff med potet', emoji: '🥩',
-    photo_url: 'https://images.pexels.com/photos/4661503/pexels-photo-4661503.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/pbzcrx1763765096.jpg/preview',
     description: 'Saftig entrecôte med hjemmelaget béarnaisesaus, ovnsstekte poteter og grønn salat.',
     time_minutes: 30, price_level: 3, category: 'Kjøtt',
     tags: ['Kjøtt', 'Helg', 'Fest'],
@@ -115,7 +115,7 @@ export const MEALS = [
   },
   {
     id: 7, name: 'Omelett', emoji: '🍳',
-    photo_url: 'https://images.pexels.com/photos/20422125/pexels-photo-20422125.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/hqaejl1695738653.jpg/preview',
     description: 'Enkel og mettende omelett med grønnsaker og ost – klar på 15 minutter.',
     time_minutes: 15, price_level: 1, category: 'Egg',
     tags: ['Vegetar', 'Enkelt', 'Barn'],
@@ -130,7 +130,7 @@ export const MEALS = [
   },
   {
     id: 8, name: 'Fiskegrateng', emoji: '🐠',
-    photo_url: 'https://images.pexels.com/photos/32039641/pexels-photo-32039641.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/ysxwuq1487323065.jpg/preview',
     description: 'Tradisjonsrik norsk fiskegrateng med hvit saus og makaroni – hjemmelagd komfort.',
     time_minutes: 60, price_level: 2, category: 'Fisk',
     tags: ['Fisk', 'Kos', 'Langtids'],
@@ -146,7 +146,7 @@ export const MEALS = [
   },
   {
     id: 9, name: 'Tortellini med tomatsaus', emoji: '🫙',
-    photo_url: 'https://images.pexels.com/photos/2412950/pexels-photo-2412950.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/wvqpwt1468339226.jpg/preview',
     description: 'Fersk ostepasta med enkel hjemmelaget tomatsaus og frisk basilikum.',
     time_minutes: 20, price_level: 2, category: 'Pasta',
     tags: ['Vegetar', 'Pasta', 'Enkelt'],
@@ -161,7 +161,7 @@ export const MEALS = [
   },
   {
     id: 10, name: 'Kyllingwok', emoji: '🥢',
-    photo_url: 'https://images.pexels.com/photos/35873820/pexels-photo-35873820.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/wyxwsp1486979827.jpg/preview',
     description: 'Rask asiatisk wok med kylling, fargerike grønnsaker og søtlig soyasaus.',
     time_minutes: 35, price_level: 2, category: 'Asiatisk',
     tags: ['Kylling', 'Asiatisk', 'Hverdags'],
@@ -177,7 +177,7 @@ export const MEALS = [
   },
   {
     id: 11, name: 'Pannekaker', emoji: '🥞',
-    photo_url: 'https://images.pexels.com/photos/5317627/pexels-photo-5317627.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/rwuyqx1511383174.jpg/preview',
     description: 'Tynne og myke norske pannekaker med rømme og jordbærsyltetøy. Barna elsker det!',
     time_minutes: 20, price_level: 1, category: 'Enkelt',
     tags: ['Vegetar', 'Enkelt', 'Barn', 'Kos'],
@@ -192,7 +192,7 @@ export const MEALS = [
   },
   {
     id: 12, name: 'Kjøttboller i saus', emoji: '🍖',
-    photo_url: 'https://images.pexels.com/photos/5720891/pexels-photo-5720891.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/72fgzj1764109947.jpg/preview',
     description: 'Svenske-inspirerte kjøttboller i brun saus med potetmos og tyttebær.',
     time_minutes: 40, price_level: 2, category: 'Kjøtt',
     tags: ['Kjøtt', 'Kos', 'Barn'],
@@ -208,7 +208,7 @@ export const MEALS = [
   },
   {
     id: 13, name: 'Grønnsakssuppe', emoji: '🥦',
-    photo_url: 'https://images.pexels.com/photos/8738017/pexels-photo-8738017.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/x2fw9e1560460636.jpg/preview',
     description: 'Sunn og fargerik grønnsakssuppe – enkel å lage og full av smak.',
     time_minutes: 45, price_level: 1, category: 'Suppe',
     tags: ['Vegetar', 'Suppe', 'Langtids', 'Hverdags'],
@@ -224,7 +224,7 @@ export const MEALS = [
   },
   {
     id: 14, name: 'Laks i ovn', emoji: '🐟',
-    photo_url: 'https://images.pexels.com/photos/12077942/pexels-photo-12077942.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/1548772327.jpg/preview',
     description: 'Saftig ovnsbakt laksefilet med sitronskorpe, dampet brokkoli og dillpotet.',
     time_minutes: 30, price_level: 3, category: 'Fisk',
     tags: ['Fisk', 'Helg', 'Hverdags'],
@@ -239,7 +239,7 @@ export const MEALS = [
   },
   {
     id: 15, name: 'Pølse og potetstappe', emoji: '🌭',
-    photo_url: 'https://images.pexels.com/photos/128641/pexels-photo-128641.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/vc08jn1628769553.jpg/preview',
     description: 'Norsk hverdagsklassiker med grillpølser og kremete potetstappe. Raskt og trygt!',
     time_minutes: 25, price_level: 1, category: 'Enkelt',
     tags: ['Gris', 'Enkelt', 'Barn', 'Hverdags'],
@@ -253,7 +253,7 @@ export const MEALS = [
   },
   {
     id: 16, name: 'Karbonader', emoji: '🥩',
-    photo_url: 'https://images.pexels.com/photos/7837694/pexels-photo-7837694.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/wsqqsw1515364068.jpg/preview',
     description: 'Norske karbonader av svinekjøtt med stekt løk, kokte poteter og brun saus.',
     time_minutes: 35, price_level: 2, category: 'Kjøtt',
     tags: ['Kjøtt', 'Gris', 'Hverdags', 'Kos'],
@@ -268,7 +268,7 @@ export const MEALS = [
   },
   {
     id: 17, name: 'Caesar salat', emoji: '🥗',
-    photo_url: 'https://images.pexels.com/photos/28618639/pexels-photo-28618639.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/bqx8mc1782684286.jpg/preview',
     description: 'Frisk og mettende Caesar-salat med sprøtt bacon, krutonger og klassisk dressing.',
     time_minutes: 20, price_level: 2, category: 'Salat',
     tags: ['Kylling', 'Salat', 'Hverdags'],
@@ -283,7 +283,7 @@ export const MEALS = [
   },
   {
     id: 18, name: 'Chili con carne', emoji: '🌶️',
-    photo_url: 'https://images.pexels.com/photos/1618906/pexels-photo-1618906.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/uwxqwy1483389553.jpg/preview',
     description: 'Varm og krydret chili med kjøttdeig, kidneybønner og mais – server med ris.',
     time_minutes: 50, price_level: 2, category: 'Meksikansk',
     tags: ['Kjøtt', 'Meksikansk', 'Langtids', 'Helg', 'Fest'],
@@ -299,7 +299,7 @@ export const MEALS = [
   },
   {
     id: 19, name: 'Lasagne', emoji: '🫙',
-    photo_url: 'https://images.pexels.com/photos/5724557/pexels-photo-5724557.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/rvxxuy1468312893.jpg/preview',
     description: 'Italiensk lasagne med saftig kjøttsaus, kremet bechamel og sprø ostetopp.',
     time_minutes: 70, price_level: 2, category: 'Pasta',
     tags: ['Kjøtt', 'Pasta', 'Langtids', 'Fest', 'Kos'],
@@ -316,7 +316,7 @@ export const MEALS = [
   },
   {
     id: 20, name: 'Reker med brød', emoji: '🦐',
-    photo_url: 'https://images.pexels.com/photos/17628583/pexels-photo-17628583.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    photo_url: 'https://www.themealdb.com/images/media/meals/1525873040.jpg/preview',
     description: 'Ferske reker servert med nystekt brød, majones og sitron – en norsk sommerklassiker.',
     time_minutes: 10, price_level: 3, category: 'Fisk',
     tags: ['Fisk', 'Enkelt', 'Fest', 'Helg'],

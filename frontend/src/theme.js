@@ -63,16 +63,25 @@ export const defaultMealGradient = mealGradients['Annet'];
 // Cards fall back to the category gradient + emoji if a photo fails to load.
 const unsplash = (id) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=800&q=60`;
 export const mealPhotos = {
-  '🍝': unsplash('photo-1621996346565-e3dbc646d9a9'), // pasta
+  '🍝': unsplash('photo-1621996346565-e3dbc646d9a9'), // spaghetti
   '🍕': unsplash('photo-1565299624946-b28f40a0ae38'), // pizza
   '🍔': unsplash('photo-1568901346375-23c9450c58cd'), // burger
-  '🥗': unsplash('photo-1546069901-ba9599a7e63c'),    // salad bowl
+  '🥗': unsplash('photo-1546069901-ba9599a7e63c'),    // salad
   '🐟': unsplash('photo-1467003909585-2f8a72700288'), // salmon
+  '🐠': unsplash('photo-1467003909585-2f8a72700288'), // fish (fiskegrateng)
   '🍗': unsplash('photo-1598103442097-8b74394b95c6'), // chicken
-  '🍖': unsplash('photo-1546833999-b9f581a1996d'),    // steak
+  '🍖': unsplash('photo-1546833999-b9f581a1996d'),    // meat
+  '🥩': unsplash('photo-1546833999-b9f581a1996d'),    // steak/biff
   '🍲': unsplash('photo-1547592166-23ac45744acd'),    // soup
   '🌮': unsplash('photo-1551504734-5ee1c4a1479b'),    // tacos
-  '🍳': unsplash('photo-1525351484163-7529414344d8'), // eggs / breakfast
-  '🍛': unsplash('photo-1512058564366-18510be2db19'), // rice / curry
+  '🍳': unsplash('photo-1525351484163-7529414344d8'), // eggs/omelett
+  '🍛': unsplash('photo-1512058564366-18510be2db19'), // rice/curry
   '🍞': unsplash('photo-1509440159596-0249088772ff'), // bread
+  '🥞': unsplash('photo-1565299507177-b0ac66763028'), // pancakes
+  '🥢': unsplash('photo-1512058564366-18510be2db19'), // wok/asian
+  '🥦': unsplash('photo-1547592166-23ac45744acd'),    // veg soup
+  '🌭': unsplash('photo-1619881590738-a111d176d906'), // sausage
+  '🌶️': unsplash('photo-1547592180-85f173990554'),   // chili
+  '🫙': unsplash('photo-1621996346565-e3dbc646d9a9'), // pasta jar (tortellini/lasagne)
+  '🦐': unsplash('photo-1565680018434-b6e2f27b2949'), // shrimp
 };
