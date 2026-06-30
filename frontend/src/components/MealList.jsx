@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMeals, getInspirationMeals, createMeal, markEaten, updatePersons } from '../api.js';
-import { colors, radius, shadows, mealGradients, defaultMealGradient, mealPhotos } from '../theme.js';
+import { colors, radius, shadows, fonts, mealGradients, defaultMealGradient, mealPhotos } from '../theme.js';
 
-const TERRA = '#E25A33';
+const TERRA = colors.accent;
 
 // Range input styling
 const rangeInputCSS = `
@@ -84,6 +84,63 @@ const rangeInputCSS = `
     .pick-wrap { max-width: 1600px; margin: 0 auto; padding: 20px 24px 0; }
     .pick-wrap button { max-width: 400px; }
   }
+
+  /* ── Card interactions (matprat-style hover lift + photo zoom) ── */
+  .meal-card .card-hero img {
+    transition: transform 0.45s cubic-bezier(0.2,0,0.2,1);
+  }
+  @media (hover: hover) {
+    .meal-card { transition: transform 0.18s ease, box-shadow 0.2s ease; }
+    .meal-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(26,26,26,0.12), 0 4px 10px rgba(26,26,26,0.06);
+    }
+    .meal-card:hover .card-hero img { transform: scale(1.07); }
+  }
+  .meal-card:active { transform: scale(0.99); }
+
+  /* ── Filter sheet: slides up (mobile) / pops in (desktop) ── */
+  .filter-backdrop {
+    position: fixed; inset: 0; z-index: 45;
+    background: rgba(26,24,23,0.42);
+    -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.26s ease;
+  }
+  .filter-backdrop.open { opacity: 1; pointer-events: auto; }
+
+  .filter-sheet {
+    position: fixed; z-index: 50;
+    left: 0; right: 0; bottom: 0;
+    max-height: 86vh;
+    background: #fff;
+    border-radius: 22px 22px 0 0;
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.16);
+    display: flex; flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
+    will-change: transform;
+  }
+  .filter-sheet.open { transform: translateY(0); }
+
+  .filter-grabber {
+    width: 40px; height: 4px; border-radius: 999px;
+    background: #d8d5cf; margin: 10px auto 2px;
+  }
+
+  @media (min-width: 700px) {
+    .filter-sheet {
+      left: 50%; right: auto; bottom: auto; top: 50%;
+      width: 440px; max-height: 82vh;
+      border-radius: 18px;
+      transform: translate(-50%, -46%) scale(0.96);
+      opacity: 0;
+      transition: transform 0.24s cubic-bezier(0.2,0,0.2,1), opacity 0.24s ease;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.28);
+    }
+    .filter-sheet.open { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    .filter-grabber { display: none; }
+  }
 `;
 
 const SORT_OPTIONS = [
@@ -118,6 +175,13 @@ export default function MealList() {
   const [mode, setMode] = useState('mine');
   const [inspiration, setInspiration] = useState([]);
   const [addedIds, setAddedIds] = useState(new Set());
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => { loadMeals(sort); }, [sort]);
   useEffect(() => { getInspirationMeals().then(setInspiration).catch(() => {}); }, []);
@@ -228,22 +292,14 @@ export default function MealList() {
     <div style={s.page}>
     <div className="meal-page-inner">
 
-      {/* ── FILTER DRAWER ── */}
-      {/* Backdrop */}
+      {/* ── FILTER SHEET (slides up on mobile, pops in on desktop) ── */}
       <div
+        className={`filter-backdrop${drawerOpen ? ' open' : ''}`}
         onClick={() => setDrawerOpen(false)}
-        style={{
-          ...s.backdrop,
-          opacity: drawerOpen ? 1 : 0,
-          pointerEvents: drawerOpen ? 'all' : 'none',
-        }}
       />
 
-      {/* Panel */}
-      <div style={{
-        ...s.drawer,
-        transform: drawerOpen ? 'translateX(0)' : 'translateX(-100%)',
-      }}>
+      <div className={`filter-sheet${drawerOpen ? ' open' : ''}`}>
+        <div className="filter-grabber" />
         <div style={s.drawerHeader}>
           <span style={s.drawerTitle}>Filter</span>
           <button onClick={() => setDrawerOpen(false)} style={s.closeBtn}>✕</button>
@@ -312,7 +368,7 @@ export default function MealList() {
       </div>
 
       {/* ── STICKY HEADER ── */}
-      <div style={s.header}>
+      <div style={{ ...s.header, boxShadow: scrolled ? '0 4px 16px rgba(26,26,26,0.07)' : 'none', borderBottomColor: scrolled ? 'transparent' : colors.borderLight }}>
       <div className="meal-header-inner">
         <div style={s.headerTop}>
           <div style={s.modeToggle}>
@@ -519,7 +575,6 @@ function getMealBadge(meal) {
 }
 
 function MealCard({ meal, onSelect, getMealPrice }) {
-  const [pressed, setPressed] = useState(false);
   const [imgError, setImgError] = useState(false);
   const badge = getMealBadge(meal);
   const gradient = mealGradients[meal.category] || defaultMealGradient;
@@ -528,18 +583,7 @@ function MealCard({ meal, onSelect, getMealPrice }) {
   const showPhoto = photo && !imgError;
 
   return (
-    <div
-      onClick={onSelect}
-      onMouseDown={() => setPressed(true)}
-      onMouseUp={() => setPressed(false)}
-      onMouseLeave={() => setPressed(false)}
-      onTouchStart={() => setPressed(true)}
-      onTouchEnd={() => setPressed(false)}
-      style={{
-        ...s.card,
-        transform: pressed ? 'scale(0.985)' : 'scale(1)',
-      }}
-    >
+    <div className="meal-card" onClick={onSelect} style={s.card}>
       {/* Hero area — food photo, falls back to category gradient + big emoji */}
       <div className="card-hero" style={{ ...s.cardHero, background: gradient }}>
         {showPhoto ? (
@@ -589,7 +633,7 @@ function InspirationCard({ meal, added, getMealPrice, onOpen, onAdd }) {
   const tags = (meal.tags || []).slice(0, 3);
 
   return (
-    <div style={{ ...s.card, cursor: 'default', display: 'flex', flexDirection: 'column' }}>
+    <div className="meal-card" style={{ ...s.card, cursor: 'default', display: 'flex', flexDirection: 'column' }}>
       <div onClick={onOpen} style={{ cursor: 'pointer' }}>
         <div className="card-hero" style={{ ...s.cardHero, background: gradient }}>
           {showPhoto ? (
@@ -636,7 +680,7 @@ function InspirationCard({ meal, added, getMealPrice, onOpen, onAdd }) {
 }
 
 const s = {
-  page: { background: colors.bg, minHeight: '100%', fontFamily: 'system-ui, sans-serif' },
+  page: { background: colors.bg, minHeight: '100%', fontFamily: fonts.body },
 
   inspoIntro: {
     maxWidth: 1600, margin: '0 auto', padding: '14px 16px 0',
@@ -746,7 +790,7 @@ const s = {
     background: colors.white, color: colors.text,
     boxShadow: '0 1px 4px rgba(26,26,26,0.12)',
   },
-  heading: { fontSize: '1.5rem', fontWeight: 800, color: colors.text, margin: 0, letterSpacing: '-0.02em' },
+  heading: { fontFamily: fonts.display, fontSize: '1.75rem', fontWeight: 700, color: colors.text, margin: 0, letterSpacing: '0.01em', textTransform: 'uppercase' },
   sub: { color: colors.textTertiary, fontSize: '0.8rem', margin: '2px 0 0' },
   personBox: { display: 'flex', alignItems: 'center', gap: 6 },
   personBtn: {
@@ -807,10 +851,10 @@ const s = {
   // Cards — magazine style: big hero, badge, bold title, tag chips
   list: { padding: '16px 16px 32px', display: 'flex', flexDirection: 'column', gap: 20 },
   card: {
-    background: colors.white, borderRadius: 18, overflow: 'hidden',
+    background: colors.white, borderRadius: 12, overflow: 'hidden',
     border: `1px solid ${colors.border}`,
-    boxShadow: shadows.md,
-    cursor: 'pointer', transition: 'transform 0.12s',
+    boxShadow: shadows.sm,
+    cursor: 'pointer', transition: 'transform 0.12s, box-shadow 0.15s',
     userSelect: 'none',
   },
   cardHero: {
@@ -846,7 +890,7 @@ const s = {
     padding: '4px 10px', borderRadius: 999,
   },
   cardContent: { padding: '14px 16px 16px' },
-  mealName: { fontWeight: 800, fontSize: '1.15rem', color: colors.text, margin: '0 0 4px', letterSpacing: '-0.01em' },
+  mealName: { fontFamily: fonts.display, fontWeight: 700, fontSize: '1.3rem', color: colors.text, margin: '0 0 4px', letterSpacing: '0.01em', lineHeight: 1.1 },
   desc: {
     color: colors.textSecond, fontSize: '0.85rem', lineHeight: 1.5, margin: '0 0 10px',
     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
@@ -857,7 +901,7 @@ const s = {
     background: colors.bgLight, border: `1px solid ${colors.hairline}`,
     borderRadius: 8, padding: '4px 10px',
   },
-  priceChip: { color: '#E25A33', background: 'rgba(226,90,51,0.15)', border: '1px solid rgba(226,90,51,0.25)' },
+  priceChip: { color: colors.accentDark, background: colors.bgAccent, border: `1px solid ${colors.accent}33` },
 
   loadingWrap: { textAlign: 'center', paddingTop: 80 },
   loadingEmoji: { fontSize: '3rem', display: 'block', marginBottom: 12 },

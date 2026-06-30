@@ -1,4 +1,6 @@
-// Mettr design system — clean, premium, modern. High contrast, food-forward.
+// Handleklar design system — fresh, food-forward, inspired by Norwegian recipe
+// sites: off-white canvas, near-black ink, a confident green accent and soft
+// green chips. Condensed bold display type, generous pill buttons.
 export const colors = {
   // Backgrounds
   bg: '#FAF8F5',            // Warm off-white page
@@ -11,10 +13,10 @@ export const colors = {
   textSecond: '#52504C',    // Secondary text
   textTertiary: '#9A9892',  // Placeholders / tertiary
 
-  // Accents — Mettr orange
+  // Accents — Handleklar orange
   accent: '#E2552B',        // Primary brand orange
   accentDark: '#C4431C',    // Darker on hover/press
-  accentAlt: '#FF8C5A',     // Lighter orange for backgrounds
+  accentAlt: '#FF8C5A',     // Lighter orange
   accentAltLight: '#FEF0EB',// Tinted bg for accent elements
 
   // Buttons
@@ -39,8 +41,14 @@ export const shadows = {
   accent: '0 6px 20px rgba(226,85,43,0.35)',
 };
 
+// Condensed bold display for headings (matprat-like feel), grotesque for body.
+export const fonts = {
+  display: "'Saira Condensed', 'Archivo', 'Arial Narrow', system-ui, sans-serif",
+  body: "'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif",
+};
+
 export const radius = {
-  sm: '6px',
+  sm: '8px',
   md: '10px',
   lg: '14px',
   xl: '18px',
