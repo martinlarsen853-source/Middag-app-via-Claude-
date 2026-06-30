@@ -86,6 +86,21 @@ const rangeInputCSS = `
   }
 `;
 
+const INSPIRATION_MEALS = [
+  { id: 'ins-1', name: 'Spaghetti bolognese', emoji: '🍝', time: 45, category: 'Pasta', description: 'Klassisk italiensk kjøttsaus med kjøttdeig', photo_url: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&w=800&q=70', tags: ['Pasta', 'Hverdags'] },
+  { id: 'ins-2', name: 'Kyllingwok', emoji: '🍜', time: 20, category: 'Asiatisk', description: 'Sprø grønnsaker og saftig kylling i wok', photo_url: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=70', tags: ['Kylling', 'Asiatisk', 'Enkelt'] },
+  { id: 'ins-3', name: 'Biff med bearnaisesaus', emoji: '🥩', time: 30, category: 'Kjøtt', description: 'Indrefilet med klassisk bearnaise', photo_url: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=70', tags: ['Kjøtt', 'Helg'] },
+  { id: 'ins-4', name: 'Fiskesuppe', emoji: '🐟', time: 35, category: 'Fisk', description: 'Kremete suppe med torsk og grønnsaker', photo_url: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=70', tags: ['Fisk', 'Suppe'] },
+  { id: 'ins-5', name: 'Hjemmelaget pizza', emoji: '🍕', time: 60, category: 'Pizza', description: 'Sprø bunn med dine favorittoppings', photo_url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=70', tags: ['Pizza', 'Helg', 'Barn'] },
+  { id: 'ins-6', name: 'Laks i ovn', emoji: '🐟', time: 25, category: 'Fisk', description: 'Ovnsbakt laks med sitron og urter', photo_url: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=800&q=70', tags: ['Fisk', 'Enkelt', 'Hverdags'] },
+  { id: 'ins-7', name: 'Caesar salat', emoji: '🥗', time: 20, category: 'Salat', description: 'Kylling, parmesan og sprø krutonger', photo_url: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=70', tags: ['Salat', 'Kylling', 'Rask'] },
+  { id: 'ins-8', name: 'Karbonadedeig med pasta', emoji: '🍝', time: 25, category: 'Kjøtt', description: 'Enkel og rask hverdagsmiddag', photo_url: 'https://images.unsplash.com/photo-1565086869529-8c7802cca7a0?auto=format&fit=crop&w=800&q=70', tags: ['Kjøtt', 'Pasta', 'Barn'] },
+  { id: 'ins-9', name: 'Kyllingsuppe', emoji: '🍲', time: 40, category: 'Suppe', description: 'Varmende suppe med grønnsaker', photo_url: 'https://images.unsplash.com/photo-1469307517101-0b99d8fb0c33?auto=format&fit=crop&w=800&q=70', tags: ['Kylling', 'Suppe', 'Hverdags'] },
+  { id: 'ins-10', name: 'Tacos', emoji: '🌮', time: 30, category: 'Meksikansk', description: 'Fredagstaco med alle tilbehørene', photo_url: 'https://images.unsplash.com/photo-1599974579688-8dbdd335c77f?auto=format&fit=crop&w=800&q=70', tags: ['Meksikansk', 'Barn', 'Helg'] },
+  { id: 'ins-11', name: 'Pannekaker', emoji: '🥞', time: 25, category: 'Annet', description: 'Tynne norske pannekaker med rømme og bær', photo_url: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?auto=format&fit=crop&w=800&q=70', tags: ['Barn', 'Enkelt', 'Kos'] },
+  { id: 'ins-12', name: 'Laksepasta', emoji: '🍝', time: 20, category: 'Pasta', description: 'Kremet pasta med røkt laks', photo_url: 'https://images.unsplash.com/photo-1559058789-672da06263d8?auto=format&fit=crop&w=800&q=70', tags: ['Fisk', 'Pasta', 'Enkelt'] },
+];
+
 const SORT_OPTIONS = [
   { key: 'random', label: '🎲 Tilfeldig' },
   { key: 'time',   label: '⏱ Raskest' },
@@ -115,6 +130,7 @@ export default function MealList() {
     try { return JSON.parse(localStorage.getItem('middag_user') || '{}').default_persons || 2; }
     catch { return 2; }
   });
+  const [mode, setMode] = useState('mine');
 
   useEffect(() => { loadMeals(sort); }, [sort]);
 
@@ -290,8 +306,19 @@ export default function MealList() {
       <div style={s.header}>
       <div className="meal-header-inner">
         <div style={s.headerTop}>
-          <div>
-            <h2 style={s.heading}>Ukens retter</h2>
+          <div style={s.modeToggle}>
+            <button
+              onClick={() => setMode('mine')}
+              style={{ ...s.modeBtn, ...(mode === 'mine' ? s.modeBtnActive : {}) }}
+            >
+              Mine retter
+            </button>
+            <button
+              onClick={() => setMode('inspirasjon')}
+              style={{ ...s.modeBtn, ...(mode === 'inspirasjon' ? s.modeBtnActive : {}) }}
+            >
+              ✨ Inspirasjon
+            </button>
           </div>
           <div style={s.personBox}>
             <button onClick={() => setPersons(p => Math.max(1, p - 1))} style={s.personBtn}>−</button>
@@ -301,7 +328,7 @@ export default function MealList() {
           </div>
         </div>
 
-        <div style={s.toolRow}>
+        {mode === 'mine' && <div style={s.toolRow}>
           {/* Filter button */}
           {(() => {
             const activeCount = selectedTags.size + (timeRange.min > 10 || timeRange.max < 100 ? 1 : 0) + (priceRange.min > 50 || priceRange.max < 1500 ? 1 : 0);
@@ -333,10 +360,10 @@ export default function MealList() {
               </button>
             ))}
           </div>
-        </div>
+        </div>}
 
-        {/* Active filter tags */}
-        {selectedTags.size > 0 && (
+        {/* Active filter tags — only when in Mine modus */}
+        {mode === 'mine' && selectedTags.size > 0 && (
           <div style={s.activeTagRow}>
             <span style={s.activeTagLabel}>Filtrert:</span>
             {[...selectedTags].map(tag => (
@@ -349,34 +376,44 @@ export default function MealList() {
       </div>{/* /meal-header-inner */}
       </div>{/* /header */}
 
-      {/* ── VELG FOR MEG ── */}
-      {!loading && filtered.length > 0 && (
-        <div className="pick-wrap">
-          <button onClick={pickForMe} style={s.pickBtn}>
-            🎲 Velg for meg
-          </button>
-          <p style={s.pickHint}>Foreslår noe dere ikke har spist på lenge</p>
-        </div>
-      )}
-
-      {/* ── LIST ── */}
-      {loading ? (
-        <div style={s.loadingWrap}>
-          <span style={s.loadingEmoji}>🍽</span>
-          <p style={s.loadingText}>Henter middager…</p>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div style={s.loadingWrap}>
-          <span style={s.loadingEmoji}>🔍</span>
-          <p style={s.loadingText}>Ingen middager matcher filteret</p>
-          <button onClick={clearFilters} style={s.resetBtn}>Nullstill filter</button>
-        </div>
-      ) : (
+      {mode === 'inspirasjon' ? (
         <div className="meal-grid">
-          {filtered.map((meal, i) => (
-            <MealCard key={meal.id} meal={meal} index={i} onSelect={() => handleSelect(meal)} getMealPrice={getMealPrice} />
+          {INSPIRATION_MEALS.map((meal, i) => (
+            <InspirationCard key={meal.id} meal={meal} index={i} onAdd={() => navigate('/meals/new')} />
           ))}
         </div>
+      ) : (
+        <>
+          {/* ── VELG FOR MEG ── */}
+          {!loading && filtered.length > 0 && (
+            <div className="pick-wrap">
+              <button onClick={pickForMe} style={s.pickBtn}>
+                🎲 Velg for meg
+              </button>
+              <p style={s.pickHint}>Foreslår noe dere ikke har spist på lenge</p>
+            </div>
+          )}
+
+          {/* ── LIST ── */}
+          {loading ? (
+              <div style={s.loadingWrap}>
+                <span style={s.loadingEmoji}>🍽</span>
+                <p style={s.loadingText}>Henter middager…</p>
+              </div>
+            ) : filtered.length === 0 ? (
+              <div style={s.loadingWrap}>
+                <span style={s.loadingEmoji}>🔍</span>
+                <p style={s.loadingText}>Ingen middager matcher filteret</p>
+                <button onClick={clearFilters} style={s.resetBtn}>Nullstill filter</button>
+              </div>
+            ) : (
+              <div className="meal-grid">
+                {filtered.map((meal, i) => (
+                  <MealCard key={meal.id} meal={meal} index={i} onSelect={() => handleSelect(meal)} getMealPrice={getMealPrice} />
+                ))}
+              </div>
+            )}
+        </>
       )}
 
     </div>{/* /meal-page-inner */}
@@ -510,6 +547,57 @@ function MealCard({ meal, onSelect, getMealPrice }) {
   );
 }
 
+function InspirationCard({ meal, onAdd }) {
+  const [pressed, setPressed] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const gradient = mealGradients[meal.category] || defaultMealGradient;
+  const photo = meal.photo_url || mealPhotos[meal.emoji];
+  const showPhoto = photo && !imgError;
+  const tags = (meal.tags || []).slice(0, 3);
+
+  return (
+    <div style={{ ...s.card, transform: pressed ? 'scale(0.985)' : 'scale(1)', cursor: 'default' }}>
+      <div className="card-hero" style={{ ...s.cardHero, background: gradient }}>
+        {showPhoto ? (
+          <>
+            <img src={photo} alt={meal.name} loading="lazy" onError={() => setImgError(true)} style={s.heroImg} />
+            <span style={s.heroEmojiSmall}>{meal.emoji}</span>
+          </>
+        ) : (
+          <span style={s.heroEmoji}>{meal.emoji}</span>
+        )}
+        <span style={s.heroTime}>⏱ {meal.time} min</span>
+      </div>
+      <div style={s.cardContent}>
+        <h3 style={s.mealName}>{meal.name}</h3>
+        {meal.description && <p style={s.desc}>{meal.description}</p>}
+        <div style={s.tagRow}>
+          {tags.map(tag => (
+            <span key={tag} style={s.tagChip}>{tag}</span>
+          ))}
+        </div>
+        <button
+          onMouseDown={() => setPressed(true)}
+          onMouseUp={() => setPressed(false)}
+          onMouseLeave={() => setPressed(false)}
+          onTouchStart={() => setPressed(true)}
+          onTouchEnd={() => { setPressed(false); onAdd(); }}
+          onClick={onAdd}
+          style={{
+            marginTop: 10, width: '100%',
+            background: `linear-gradient(135deg, ${TERRA}, #C8431F)`,
+            color: '#fff', border: 'none', borderRadius: 10,
+            padding: '10px', fontSize: '0.88rem', fontWeight: 700,
+            cursor: 'pointer', boxShadow: '0 4px 12px rgba(226,90,51,0.25)',
+          }}
+        >
+          + Legg til i mine retter
+        </button>
+      </div>
+    </div>
+  );
+}
+
 const s = {
   page: { background: colors.bg, minHeight: '100%', fontFamily: 'system-ui, sans-serif' },
 
@@ -581,6 +669,20 @@ const s = {
     borderBottom: `1px solid ${colors.borderLight}`, padding: '16px 16px 12px',
   },
   headerTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  modeToggle: {
+    display: 'flex', background: colors.bgLight,
+    borderRadius: 999, padding: 3, gap: 2,
+  },
+  modeBtn: {
+    padding: '6px 16px', borderRadius: 999, border: 'none',
+    background: 'transparent', color: colors.textSecond,
+    fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer',
+    transition: 'all 0.18s', whiteSpace: 'nowrap',
+  },
+  modeBtnActive: {
+    background: colors.white, color: colors.text,
+    boxShadow: '0 1px 4px rgba(26,26,26,0.12)',
+  },
   heading: { fontSize: '1.5rem', fontWeight: 800, color: colors.text, margin: 0, letterSpacing: '-0.02em' },
   sub: { color: colors.textTertiary, fontSize: '0.8rem', margin: '2px 0 0' },
   personBox: { display: 'flex', alignItems: 'center', gap: 6 },
