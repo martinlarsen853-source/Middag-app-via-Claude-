@@ -4,7 +4,7 @@ import { login, register } from '../api.js';
 import * as mock from '../mockApi.js';
 import { colors, radius, shadows } from '../theme.js';
 
-const TEST_EMAIL = 'test@tallerken.no';
+const TEST_EMAIL = 'test@handleklar.no';
 const TEST_PASS  = 'test1234';
 
 export default function Login() {
@@ -56,9 +56,9 @@ export default function Login() {
 
         {/* Logo */}
         <div style={s.logoArea}>
-          <span style={s.logoEmoji}>🍽</span>
-          <h1 style={s.appName}>Tallerken</h1>
-          <p style={s.tagline}>Aldri lure på hva du skal lage</p>
+          <span style={s.logoEmoji}>🛒</span>
+          <h1 style={s.appName}>Handleklar</h1>
+          <p style={s.tagline}>Fra null til handleliste på ett minutt</p>
         </div>
 
         {/* Test-knapp */}

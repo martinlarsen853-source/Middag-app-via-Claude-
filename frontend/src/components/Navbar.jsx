@@ -58,14 +58,17 @@ export default function Navbar() {
   return (
     <>
       <nav style={{
-        position: 'relative',
+        position: 'sticky',
+        top: 0,
         zIndex: 40,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '14px 16px',
-        background: colors.accent,
-        boxShadow: shadows.sm,
+        padding: '12px 16px',
+        background: 'rgba(250,248,245,0.92)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottom: `1px solid ${colors.border}`,
       }} className="no-print">
         <Link to="/" style={{
           display: 'flex',
@@ -74,21 +77,21 @@ export default function Navbar() {
           gap: '1px',
         }}>
           <span style={{
-            fontSize: '1.15rem',
+            fontSize: '1.2rem',
             fontWeight: 800,
-            letterSpacing: '-0.01em',
-            color: colors.white,
+            letterSpacing: '-0.02em',
+            color: colors.text,
             lineHeight: 1.2,
           }}>
-            🍽️ Tallerken
+            🛒 Handleklar
           </span>
           {user && (
             <span style={{
-              fontSize: '0.78rem',
-              color: 'rgba(255,255,255,0.85)',
+              fontSize: '0.75rem',
+              color: colors.textTertiary,
               fontWeight: 500,
             }}>
-              Hei, {user.name.split(' ')[0]}! Hva blir det i dag?
+              Hei, {user.name.split(' ')[0]}!
             </span>
           )}
         </Link>
@@ -96,24 +99,24 @@ export default function Navbar() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
             onClick={() => setShowModal(true)}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.28)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+            onMouseEnter={e => { e.currentTarget.style.background = colors.bgLight; e.currentTarget.style.borderColor = colors.accent; }}
+            onMouseLeave={e => { e.currentTarget.style.background = colors.bgAlt; e.currentTarget.style.borderColor = colors.border; }}
             title="Husholdning"
             style={{
-              background: 'rgba(255,255,255,0.15)',
-              border: 'none',
+              background: colors.bgAlt,
+              border: `1.5px solid ${colors.border}`,
               borderRadius: radius.round,
-              width: '38px',
-              height: '38px',
+              width: '40px',
+              height: '40px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               transition: 'all 0.2s',
-              color: colors.white,
+              color: colors.textSecond,
             }}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg style={{ width: 18, height: 18 }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
               />
@@ -122,24 +125,24 @@ export default function Navbar() {
 
           <button
             onClick={handleLogout}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.28)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+            onMouseEnter={e => { e.currentTarget.style.background = colors.bgLight; e.currentTarget.style.borderColor = colors.accent; }}
+            onMouseLeave={e => { e.currentTarget.style.background = colors.bgAlt; e.currentTarget.style.borderColor = colors.border; }}
             title="Logg ut"
             style={{
-              background: 'rgba(255,255,255,0.15)',
-              border: 'none',
+              background: colors.bgAlt,
+              border: `1.5px solid ${colors.border}`,
               borderRadius: radius.round,
-              width: '38px',
-              height: '38px',
+              width: '40px',
+              height: '40px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               transition: 'all 0.2s',
-              color: colors.white,
+              color: colors.textSecond,
             }}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg style={{ width: 18, height: 18 }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
               />

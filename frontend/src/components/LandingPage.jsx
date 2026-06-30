@@ -492,7 +492,7 @@ export default function LandingPage() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <span style={{ fontFamily: FRAUNCES, fontSize: '1.25rem', fontWeight: 700, color: T.cream, letterSpacing: '-0.02em' }}>
-            🍽 Tallerken
+            🛒 Handleklar
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {token ? (
@@ -652,7 +652,7 @@ export default function LandingPage() {
         textAlign: 'center',
         fontSize: '0.82rem', color: T.cream55, fontFamily: INTER,
       }}>
-        © 2026 Tallerken
+        © 2026 Handleklar
       </footer>
 
       <style>{`

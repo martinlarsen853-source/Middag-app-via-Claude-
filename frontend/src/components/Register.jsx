@@ -47,7 +47,7 @@ export default function Register() {
       <div style={{ width: '100%', maxWidth: '384px' }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>🍽️</div>
+          <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>🛒</div>
           <h1 style={{
             fontSize: '2rem',
             fontWeight: 700,
@@ -55,7 +55,7 @@ export default function Register() {
             marginBottom: '8px',
             letterSpacing: '-0.02em',
           }}>
-            Tallerken
+            Handleklar
           </h1>
           <p style={{ color: colors.textSecond, fontSize: '1rem', margin: 0 }}>Lag din konto</p>
         </div>
