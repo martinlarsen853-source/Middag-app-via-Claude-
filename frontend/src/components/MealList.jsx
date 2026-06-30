@@ -453,7 +453,7 @@ function MealCard({ meal, onSelect, getMealPrice }) {
   const badge = getMealBadge(meal);
   const gradient = mealGradients[meal.category] || defaultMealGradient;
   const tags = (meal.tags || []).slice(0, 3);
-  const photo = mealPhotos[meal.emoji];
+  const photo = meal.photo_url || mealPhotos[meal.emoji];
   const showPhoto = photo && !imgError;
 
   return (
