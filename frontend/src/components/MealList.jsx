@@ -35,6 +35,55 @@ const rangeInputCSS = `
     background: transparent;
     border: none;
   }
+
+  /* Responsive meal grid */
+  .meal-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 16px 16px 32px;
+  }
+  @media (min-width: 640px) {
+    .meal-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; padding: 20px 24px 40px; }
+  }
+  @media (min-width: 1024px) {
+    .meal-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; padding: 24px 32px 48px; }
+  }
+  @media (min-width: 1400px) {
+    .meal-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  /* Desktop: wider page container */
+  .meal-page-inner {
+    max-width: 100%;
+    width: 100%;
+  }
+  @media (min-width: 640px) {
+    .meal-page-inner { max-width: 1600px; margin: 0 auto; }
+  }
+
+  /* Desktop: wider header with centered content */
+  .meal-header-inner {
+    max-width: 100%;
+  }
+  @media (min-width: 640px) {
+    .meal-header-inner { max-width: 1600px; margin: 0 auto; }
+  }
+
+  /* Desktop: hero image taller */
+  @media (min-width: 640px) {
+    .card-hero { height: 200px !important; }
+  }
+
+  /* Velg for meg: centered on desktop */
+  .pick-wrap {
+    padding: 16px 16px 0;
+    text-align: center;
+  }
+  @media (min-width: 640px) {
+    .pick-wrap { max-width: 1600px; margin: 0 auto; padding: 20px 24px 0; }
+    .pick-wrap button { max-width: 400px; }
+  }
 `;
 
 const SORT_OPTIONS = [
@@ -152,6 +201,7 @@ export default function MealList() {
 
   return (
     <div style={s.page}>
+    <div className="meal-page-inner">
 
       {/* ── FILTER DRAWER ── */}
       {/* Backdrop */}
@@ -238,6 +288,7 @@ export default function MealList() {
 
       {/* ── STICKY HEADER ── */}
       <div style={s.header}>
+      <div className="meal-header-inner">
         <div style={s.headerTop}>
           <div>
             <h2 style={s.heading}>Ukens retter</h2>
@@ -295,11 +346,12 @@ export default function MealList() {
             ))}
           </div>
         )}
-      </div>
+      </div>{/* /meal-header-inner */}
+      </div>{/* /header */}
 
       {/* ── VELG FOR MEG ── */}
       {!loading && filtered.length > 0 && (
-        <div style={s.pickWrap}>
+        <div className="pick-wrap">
           <button onClick={pickForMe} style={s.pickBtn}>
             🎲 Velg for meg
           </button>
@@ -308,22 +360,26 @@ export default function MealList() {
       )}
 
       {/* ── LIST ── */}
-      <div style={s.list}>
-        {loading ? (
-          <div style={s.loadingWrap}>
-            <span style={s.loadingEmoji}>🍽</span>
-            <p style={s.loadingText}>Henter middager…</p>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div style={s.loadingWrap}>
-            <span style={s.loadingEmoji}>🔍</span>
-            <p style={s.loadingText}>Ingen middager matcher filteret</p>
-            <button onClick={clearFilters} style={s.resetBtn}>Nullstill filter</button>
-          </div>
-        ) : filtered.map((meal, i) => (
-          <MealCard key={meal.id} meal={meal} index={i} onSelect={() => handleSelect(meal)} getMealPrice={getMealPrice} />
-        ))}
-      </div>
+      {loading ? (
+        <div style={s.loadingWrap}>
+          <span style={s.loadingEmoji}>🍽</span>
+          <p style={s.loadingText}>Henter middager…</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div style={s.loadingWrap}>
+          <span style={s.loadingEmoji}>🔍</span>
+          <p style={s.loadingText}>Ingen middager matcher filteret</p>
+          <button onClick={clearFilters} style={s.resetBtn}>Nullstill filter</button>
+        </div>
+      ) : (
+        <div className="meal-grid">
+          {filtered.map((meal, i) => (
+            <MealCard key={meal.id} meal={meal} index={i} onSelect={() => handleSelect(meal)} getMealPrice={getMealPrice} />
+          ))}
+        </div>
+      )}
+
+    </div>{/* /meal-page-inner */}
     </div>
   );
 }
@@ -414,7 +470,7 @@ function MealCard({ meal, onSelect, getMealPrice }) {
       }}
     >
       {/* Hero area — food photo, falls back to category gradient + big emoji */}
-      <div style={{ ...s.cardHero, background: gradient }}>
+      <div className="card-hero" style={{ ...s.cardHero, background: gradient }}>
         {showPhoto ? (
           <>
             <img
