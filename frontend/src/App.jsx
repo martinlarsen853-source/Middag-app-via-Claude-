@@ -24,7 +24,9 @@ function ProtectedRoute({ children }) {
     <div style={{ minHeight: '100vh', background: '#FAF8F5', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingBottom: '72px' }}>
-        {children}
+        <div key={location.pathname} className="route-fade" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          {children}
+        </div>
       </main>
       <BottomNav />
     </div>

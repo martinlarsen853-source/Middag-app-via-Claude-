@@ -52,6 +52,17 @@ h1, h2, h3, .display {
   font-family: 'Saira Condensed', 'Archivo', 'Arial Narrow', sans-serif;
 }
 
+/* Route transition — subtle slide-up fade on navigation (matprat-like) */
+@keyframes routeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.route-fade { animation: routeIn 0.30s cubic-bezier(0.2, 0, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .route-fade { animation: none; }
+  html, body { scroll-behavior: auto; }
+}
+
 #root {
   height: 100%;
 }
