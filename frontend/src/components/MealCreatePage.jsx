@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getIngredients, getIngredientCategories, createMeal, getMeal, updateMeal, removeMealIngredient, importRecipe } from '../api.js';
+import { getIngredients, getIngredientCategories, createMeal, getMeal, updateMeal, removeMealIngredient, importRecipe, searchProducts, categoryToSection } from '../api.js';
 import { colors, shadows, radius } from '../theme.js';
 import { BASE_RECIPES } from '../baseRecipes.js';
 
@@ -66,6 +66,9 @@ export default function MealCreatePage() {
   const [importUrl, setImportUrl] = useState('');
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState('');
+  const [productResults, setProductResults] = useState([]);
+  const [productsUnavailable, setProductsUnavailable] = useState(false);
+  const [productsLoading, setProductsLoading] = useState(false);
 
   useEffect(() => { loadData(); }, [mealId]);
 
@@ -163,6 +166,40 @@ export default function MealCreatePage() {
         price: ingredient.price || 0,
         quantity: ingredient.unit === 'g' || ingredient.unit === 'ml' ? 200 : 1,
         unit: ingredient.unit || 'stk'
+      }]);
+    }
+    setSearchTerm('');
+  }
+
+  // Debounced real-product search (Kassalapp). Falls back silently to the
+  // built-in ingredient list when the API is unavailable (e.g. no key).
+  useEffect(() => {
+    const q = searchTerm.trim();
+    if (productsUnavailable || q.length < 2) { setProductResults([]); return; }
+    let cancelled = false;
+    setProductsLoading(true);
+    const t = setTimeout(async () => {
+      const { products, unavailable } = await searchProducts(q);
+      if (cancelled) return;
+      if (unavailable) { setProductsUnavailable(true); setProductResults([]); }
+      else setProductResults(products || []);
+      setProductsLoading(false);
+    }, 300);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [searchTerm, productsUnavailable]);
+
+  function addProduct(product) {
+    const id = `kassal:${product.id}`;
+    if (!selectedIngredients.some(i => i.id === id)) {
+      setSelectedIngredients(prev => [...prev, {
+        id,
+        name: product.name,
+        category: product.category || 'Diverse',
+        price: product.price || 0,
+        quantity: 1,
+        unit: product.unit || 'stk',
+        image: product.image || null,
+        size: product.size || null,
       }]);
     }
     setSearchTerm('');
@@ -289,11 +326,11 @@ export default function MealCreatePage() {
       const mealPayload = {
         ...mealData,
         ingredients: selectedIngredients.map(ing => ({
-          ingredient_id: typeof ing.id === 'string' && (ing.id.startsWith('base:') || ing.id.startsWith('custom:')) ? null : ing.id,
+          ingredient_id: typeof ing.id === 'string' && (ing.id.startsWith('base:') || ing.id.startsWith('custom:') || ing.id.startsWith('import:') || ing.id.startsWith('kassal:')) ? null : ing.id,
           name: ing.name,
           quantity: ing.quantity,
           unit: ing.unit,
-          section: ing.category
+          section: categoryToSection(ing.category),
         }))
       };
 
@@ -553,10 +590,66 @@ export default function MealCreatePage() {
 
             {/* ── Searching: live suggestions ── */}
             {searchQuery ? (
+              <>
+              {/* Real grocery products (Kassalapp) with photo, size and price */}
+              {productResults.length > 0 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <p style={{ color: colors.textSecond, fontSize: '0.7rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>
+                    Varer i butikk
+                  </p>
+                  <div style={{ borderRadius: radius.md, overflow: 'hidden', border: `1px solid ${colors.border}`, background: colors.white }}>
+                    {productResults.map((prod, idx) => {
+                      const selected = isIngredientSelected(`kassal:${prod.id}`);
+                      return (
+                        <button
+                          key={prod.id}
+                          onClick={() => addProduct(prod)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '12px', width: '100%',
+                            padding: '10px 12px', background: selected ? colors.bgAccent : 'none', textAlign: 'left',
+                            border: 'none', cursor: 'pointer',
+                            borderTop: idx === 0 ? 'none' : `1px solid ${colors.hairline}`,
+                          }}
+                        >
+                          {prod.image ? (
+                            <img src={prod.image} alt="" style={{ width: '46px', height: '46px', borderRadius: '8px', objectFit: 'contain', background: '#fff', border: `1px solid ${colors.hairline}`, flexShrink: 0 }} />
+                          ) : (
+                            <span style={{ width: '46px', height: '46px', borderRadius: '8px', background: colors.bgLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem', flexShrink: 0 }}>
+                              {CATEGORY_EMOJIS[prod.category] || '🛒'}
+                            </span>
+                          )}
+                          <span style={{ flex: 1, minWidth: 0 }}>
+                            <span style={{ display: 'block', fontWeight: '700', color: colors.text, fontSize: '0.92rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{prod.name}</span>
+                            <span style={{ display: 'block', fontSize: '0.75rem', color: colors.textTertiary }}>
+                              {[prod.brand, prod.size].filter(Boolean).join(' · ') || prod.category}
+                            </span>
+                          </span>
+                          {prod.price != null && (
+                            <span style={{ fontWeight: '700', color: colors.text, fontSize: '0.85rem', flexShrink: 0 }}>{prod.price.toFixed(2)} kr</span>
+                          )}
+                          <span style={{
+                            flexShrink: 0, width: '30px', height: '30px', borderRadius: '50%',
+                            border: `1.5px solid ${selected ? colors.success : colors.accent}`,
+                            color: selected ? colors.success : colors.accent, background: colors.white,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', fontWeight: '700',
+                          }}>{selected ? '✓' : '+'}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {(suggestions.length > 0 || !productResults.length) && (
               <div style={{
                 borderRadius: radius.md, overflow: 'hidden',
                 border: `1px solid ${colors.border}`, background: colors.white,
               }}>
+                {productResults.length > 0 && (
+                  <p style={{ color: colors.textSecond, fontSize: '0.7rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0, padding: '10px 12px 4px' }}>
+                    Generelle varer
+                  </p>
+                )}
                 {suggestions.map((ing, idx) => {
                   const selected = isIngredientSelected(ing.id);
                   return (
@@ -615,7 +708,8 @@ export default function MealCreatePage() {
                   </button>
                 )}
               </div>
-
+              )}
+              </>
             ) : (
               <>
                 {/* ── Added ingredients: one clean card with divider rows ── */}

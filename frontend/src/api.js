@@ -88,6 +88,37 @@ export async function getInspirationMeals() {
   return mock.getInspirationMeals();
 }
 
+// Search real grocery products (Kassalapp) for the ingredient picker.
+// Returns { products, unavailable } — unavailable=true means fall back to the
+// built-in ingredient list (e.g. no API key configured).
+export async function searchProducts(query) {
+  try {
+    const res = await fetch('/api/search-products?q=' + encodeURIComponent(query));
+    if (!res.ok) return { products: [], unavailable: true };
+    return await res.json();
+  } catch {
+    return { products: [], unavailable: true };
+  }
+}
+
+// Map a Middag ingredient category to the store-aisle section used for grouping.
+export function categoryToSection(category) {
+  const sections = ['Frukt & grønt', 'Kjøtt & fisk', 'Meieri', 'Tørrmat', 'Frys', 'Bakeri', 'Krydder & sauser', 'Drikkevarer', 'Diverse'];
+  if (sections.includes(category)) return category;
+  const map = {
+    'Grønnsaker': 'Frukt & grønt',
+    'Frukt': 'Frukt & grønt',
+    'Kjøtt': 'Kjøtt & fisk',
+    'Fisk': 'Kjøtt & fisk',
+    'Meieri': 'Meieri',
+    'Bakeri': 'Bakeri',
+    'Tørrmat': 'Tørrmat',
+    'Krydder & sauser': 'Krydder & sauser',
+    'Diverse': 'Diverse',
+  };
+  return map[category] || 'Diverse';
+}
+
 // Import a recipe by pasting a URL. Backend scrapes schema.org Recipe data.
 export async function importRecipe(url) {
   const res = await fetch('/api/import-recipe', {

@@ -64,6 +64,48 @@ app.post('/api/import-recipe', async (req, res) => {
   }
 });
 
+// GET /api/search-products?q=... → real grocery products from Kassalapp.
+// Gracefully returns { products: [], unavailable: true } when no API key or on error,
+// so the frontend can fall back to its built-in ingredient list.
+app.get('/api/search-products', async (req, res) => {
+  const q = (req.query.q || '').toString().trim();
+  if (!q) return res.json({ products: [] });
+  if (!process.env.KASSALAPP_API_KEY) {
+    return res.json({ products: [], unavailable: true, reason: 'no_key' });
+  }
+  try {
+    const client = await import('./kassaappClient.js');
+    const tf = await import('./kassaappTransformer.js');
+    const resp = await client.searchProducts(q, { limit: 12 });
+    const seen = new Set();
+    const products = (resp.data || [])
+      .map(p => {
+        const size = p.weight && p.weight_unit ? `${p.weight} ${p.weight_unit}` : null;
+        return {
+          id: p.id,
+          name: p.name,
+          brand: p.brand || p.vendor || '',
+          image: p.image || null,
+          price: typeof p.current_price === 'number' ? p.current_price : null,
+          size,
+          store: p.store?.name || null,
+          category: tf.mapCategory(p.category),
+          unit: tf.inferQuantity(p).unit,
+        };
+      })
+      .filter(p => {
+        const key = p.name?.toLowerCase();
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, 12);
+    res.json({ products });
+  } catch (e) {
+    res.json({ products: [], unavailable: true, error: e.message });
+  }
+});
+
 // ─── Cron Jobs ────────────────────────────────────────────────────────────────
 
 // POST /api/cron/sync-ingredients — Scheduled sync from Vercel cron (no auth required)
