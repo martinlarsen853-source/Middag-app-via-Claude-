@@ -81,8 +81,11 @@ app.get('/api/search-products', async (req, res) => {
 
     // Rank toward staple groceries: query early in the name wins, shorter
     // names (e.g. "Spaghetti 500g") beat long descriptive ones (baby food).
+    // Drop noise that isn't a normal grocery staple (baby food, pet food).
+    const isNoise = (name) => /\b\d+\s?mnd\b|barnemat|baby|smoothie beba|hund|katt|kattemat|hundemat|petcare/i.test(name);
+
     const scored = (resp.data || [])
-      .filter(p => p && p.name)
+      .filter(p => p && p.name && !isNoise(p.name))
       .map(p => {
         const nl = p.name.toLowerCase();
         const idx = nl.indexOf(ql);
