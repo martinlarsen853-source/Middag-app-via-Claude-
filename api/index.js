@@ -76,30 +76,46 @@ app.get('/api/search-products', async (req, res) => {
   try {
     const client = await import('./kassaappClient.js');
     const tf = await import('./kassaappTransformer.js');
-    const resp = await client.searchProducts(q, { limit: 12 });
-    const seen = new Set();
-    const products = (resp.data || [])
+    const resp = await client.searchProducts(q, { limit: 40 });
+    const ql = q.toLowerCase();
+
+    // Rank toward staple groceries: query early in the name wins, shorter
+    // names (e.g. "Spaghetti 500g") beat long descriptive ones (baby food).
+    const scored = (resp.data || [])
+      .filter(p => p && p.name)
       .map(p => {
-        const size = p.weight && p.weight_unit ? `${p.weight} ${p.weight_unit}` : null;
-        return {
-          id: p.id,
-          name: p.name,
-          brand: p.brand || p.vendor || '',
-          image: p.image || null,
-          price: typeof p.current_price === 'number' ? p.current_price : null,
-          size,
-          store: p.store?.name || null,
-          category: tf.mapCategory(p.category),
-          unit: tf.inferQuantity(p).unit,
-        };
+        const nl = p.name.toLowerCase();
+        const idx = nl.indexOf(ql);
+        const starts = nl.startsWith(ql) ? 0 : 5;
+        const score = (idx === -1 ? 500 : idx) + starts + p.name.length * 0.03;
+        return { p, score };
       })
-      .filter(p => {
-        const key = p.name?.toLowerCase();
-        if (!key || seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      })
-      .slice(0, 12);
+      .sort((a, b) => a.score - b.score);
+
+    const seen = new Set();
+    const products = [];
+    for (const { p } of scored) {
+      const key = p.name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      let size = p.weight && p.weight_unit ? `${p.weight} ${p.weight_unit}` : null;
+      if (!size) {
+        const m = p.name.match(/(\d+(?:[.,]\d+)?)\s?(kg|g|dl|cl|ml|l|stk|pk|pakke)\b/i);
+        if (m) size = `${m[1]} ${m[2].toLowerCase()}`;
+      }
+      products.push({
+        id: p.id,
+        name: p.name,
+        brand: p.brand || p.vendor || '',
+        image: p.image || null,
+        price: typeof p.current_price === 'number' ? p.current_price : null,
+        size,
+        store: p.store?.name || null,
+        category: tf.mapCategory(p.category),
+        unit: tf.inferQuantity(p).unit,
+      });
+      if (products.length >= 12) break;
+    }
     res.json({ products });
   } catch (e) {
     res.json({ products: [], unavailable: true, error: e.message });
