@@ -1,5 +1,5 @@
 // Full localStorage-based API for GitHub Pages / demo mode (no backend needed)
-import { MEALS, STORES, INGREDIENTS, INGREDIENT_CATEGORIES, computeMealPrice } from './mockData.js';
+import { MEALS, STORES, INGREDIENTS, INGREDIENT_CATEGORIES, computeMealPrice, MEAL_INSTRUCTIONS } from './mockData.js';
 
 const BASE_PERSONS = 4; // seed data quantities are based on 4 persons
 
@@ -85,7 +85,8 @@ export async function getMeal(id) {
     || MEALS.find(m => Number(m.id) === numId);
   if (!meal) throw new Error('Middag ikke funnet');
   const eaten = getEatenDates();
-  return { ...meal, estimated_price: computeMealPrice(meal), last_eaten: eaten[meal.id] || null };
+  const instructions = (meal.instructions && meal.instructions.length) ? meal.instructions : (MEAL_INSTRUCTIONS[meal.id] || []);
+  return { ...meal, instructions, estimated_price: computeMealPrice(meal), last_eaten: eaten[meal.id] || null };
 }
 
 // --- Meal CRUD (persisted to localStorage in demo mode) ---
