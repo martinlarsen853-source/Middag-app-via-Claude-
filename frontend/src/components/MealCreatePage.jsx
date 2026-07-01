@@ -722,11 +722,23 @@ export default function MealCreatePage() {
                     {selectedIngredients.map((ing, idx) => (
                       <div key={ing.id} style={{
                         display: 'flex', alignItems: 'center', gap: '10px',
-                        padding: '11px 14px',
+                        padding: '10px 14px',
                         borderTop: idx === 0 ? 'none' : `1px solid ${colors.hairline}`,
                       }}>
-                        <span style={{ flex: 1, minWidth: 0, fontWeight: '600', color: colors.text, fontSize: '0.95rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {ing.name}
+                        {ing.image ? (
+                          <img src={ing.image} alt="" style={{ width: '38px', height: '38px', borderRadius: '8px', objectFit: 'contain', background: '#fff', border: `1px solid ${colors.hairline}`, flexShrink: 0 }} />
+                        ) : (
+                          <span style={{ width: '38px', height: '38px', borderRadius: '8px', background: colors.bgLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.15rem', flexShrink: 0 }}>
+                            {CATEGORY_EMOJIS[ing.category] || '🛒'}
+                          </span>
+                        )}
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ display: 'block', fontWeight: '600', color: colors.text, fontSize: '0.95rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {ing.name}
+                          </span>
+                          {ing.size && (
+                            <span style={{ display: 'block', fontSize: '0.72rem', color: colors.textTertiary }}>{ing.size}</span>
+                          )}
                         </span>
 
                         {/* − qty unit + */}
