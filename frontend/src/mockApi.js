@@ -81,12 +81,14 @@ export async function getInspirationMeals() {
 export async function getMeal(id) {
   // Look in user meals first, then the inspiration catalog
   const numId = Number(id);
-  const meal = getMyMeals().find(m => Number(m.id) === numId)
-    || MEALS.find(m => Number(m.id) === numId);
+  const mine = getMyMeals().find(m => Number(m.id) === numId);
+  const meal = mine || MEALS.find(m => Number(m.id) === numId);
   if (!meal) throw new Error('Middag ikke funnet');
   const eaten = getEatenDates();
   const instructions = (meal.instructions && meal.instructions.length) ? meal.instructions : (MEAL_INSTRUCTIONS[meal.id] || []);
-  return { ...meal, instructions, estimated_price: computeMealPrice(meal), last_eaten: eaten[meal.id] || null };
+  // is_catalog: meal comes from the inspiration catalog, not the user's own list —
+  // it cannot be edited/deleted, only copied into Mine retter.
+  return { ...meal, is_catalog: !mine, instructions, estimated_price: computeMealPrice(meal), last_eaten: eaten[meal.id] || null };
 }
 
 // --- Meal CRUD (persisted to localStorage in demo mode) ---

@@ -187,6 +187,8 @@ export default function MealList() {
   useEffect(() => { getInspirationMeals().then(setInspiration).catch(() => {}); }, []);
 
   async function handleAddInspiration(meal) {
+    if (addedIds.has(meal.id) || meals.some(m => m.name === meal.name)) return;
+    setAddedIds(prev => new Set(prev).add(meal.id));
     try {
       await createMeal({
         name: meal.name,
@@ -200,10 +202,10 @@ export default function MealList() {
           name: i.name, quantity: i.quantity, unit: i.unit, section: i.section,
         })),
       });
-      setAddedIds(prev => new Set(prev).add(meal.id));
       loadMeals(sort);
     } catch (e) {
       console.error(e);
+      setAddedIds(prev => { const next = new Set(prev); next.delete(meal.id); return next; });
     }
   }
 
@@ -452,7 +454,7 @@ export default function MealList() {
                 key={meal.id}
                 meal={meal}
                 index={i}
-                added={addedIds.has(meal.id)}
+                added={addedIds.has(meal.id) || meals.some(m => m.name === meal.name)}
                 getMealPrice={getMealPrice}
                 onOpen={() => navigate(`/meal/${meal.id}`)}
                 onAdd={() => handleAddInspiration(meal)}

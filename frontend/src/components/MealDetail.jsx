@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getMeal, deleteMeal } from '../api.js';
+import { getMeal, deleteMeal, createMeal } from '../api.js';
 import PersonCounter from './PersonCounter.jsx';
 import { colors, shadows, radius, fonts, foodPhotoFor } from '../theme.js';
 
@@ -45,6 +45,8 @@ export default function MealDetail() {
   });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [addingToMine, setAddingToMine] = useState(false);
+  const [addedToMine, setAddedToMine] = useState(false);
 
   useEffect(() => {
     getMeal(id)
@@ -69,6 +71,34 @@ export default function MealDetail() {
     } catch (err) {
       setError(err.message);
       setDeleting(false);
+    }
+  }
+
+  // Copy an inspiration (catalog) meal into the user's own list
+  async function handleAddToMine() {
+    setAddingToMine(true);
+    try {
+      await createMeal({
+        name: meal.name,
+        emoji: meal.emoji,
+        description: meal.description || '',
+        time_minutes: meal.time_minutes,
+        persons: meal.persons || 4,
+        category: meal.category || 'Annet',
+        photo_url: meal.photo_url || null,
+        instructions: meal.instructions || [],
+        ingredients: (meal.ingredients || []).map(i => ({
+          name: i.ingredient_name || i.name,
+          quantity: i.quantity,
+          unit: i.unit,
+          section: i.section || 'Diverse',
+        })),
+      });
+      setAddedToMine(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setAddingToMine(false);
     }
   }
 
@@ -314,44 +344,67 @@ export default function MealDetail() {
         >
           🛒 Gå til butikk
         </button>
-        <button
-          onClick={() => navigate(`/meal/${id}/edit`)}
-          style={{
-            width: '100%',
-            background: colors.bgAlt,
-            color: colors.text,
-            fontWeight: 600,
-            padding: '14px',
-            borderRadius: radius.md,
-            border: `1.5px solid ${colors.border}`,
-            fontSize: '1rem',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-          }}
-          onMouseEnter={e => Object.assign(e.target.style, { borderColor: colors.accent, color: colors.accent })}
-          onMouseLeave={e => Object.assign(e.target.style, { borderColor: colors.border, color: colors.text })}
-        >
-          ✏️ Rediger
-        </button>
-        <button
-          onClick={() => setShowDeleteConfirm(true)}
-          style={{
-            width: '100%',
-            background: colors.bgAlt,
-            color: colors.error,
-            fontWeight: 600,
-            padding: '14px',
-            borderRadius: radius.md,
-            border: `1.5px solid ${colors.error}33`,
-            fontSize: '1rem',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-          }}
-          onMouseEnter={e => Object.assign(e.target.style, { borderColor: colors.error, background: `${colors.error}08` })}
-          onMouseLeave={e => Object.assign(e.target.style, { borderColor: `${colors.error}33`, background: colors.bgAlt })}
-        >
-          🗑️ Slett
-        </button>
+        {meal.is_catalog ? (
+          <button
+            onClick={handleAddToMine}
+            disabled={addingToMine || addedToMine}
+            style={{
+              width: '100%',
+              background: addedToMine ? colors.bgLight : colors.bgAlt,
+              color: addedToMine ? colors.success : colors.text,
+              fontWeight: 600,
+              padding: '14px',
+              borderRadius: radius.md,
+              border: `1.5px solid ${addedToMine ? colors.border : colors.accent}`,
+              fontSize: '1rem',
+              cursor: addedToMine ? 'default' : 'pointer',
+              transition: 'all 0.2s',
+            }}
+          >
+            {addedToMine ? '✓ Lagt til i Mine retter' : addingToMine ? 'Legger til…' : '➕ Legg til i Mine retter'}
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={() => navigate(`/meal/${id}/edit`)}
+              style={{
+                width: '100%',
+                background: colors.bgAlt,
+                color: colors.text,
+                fontWeight: 600,
+                padding: '14px',
+                borderRadius: radius.md,
+                border: `1.5px solid ${colors.border}`,
+                fontSize: '1rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => Object.assign(e.target.style, { borderColor: colors.accent, color: colors.accent })}
+              onMouseLeave={e => Object.assign(e.target.style, { borderColor: colors.border, color: colors.text })}
+            >
+              ✏️ Rediger
+            </button>
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              style={{
+                width: '100%',
+                background: colors.bgAlt,
+                color: colors.error,
+                fontWeight: 600,
+                padding: '14px',
+                borderRadius: radius.md,
+                border: `1.5px solid ${colors.error}33`,
+                fontSize: '1rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => Object.assign(e.target.style, { borderColor: colors.error, background: `${colors.error}08` })}
+              onMouseLeave={e => Object.assign(e.target.style, { borderColor: `${colors.error}33`, background: colors.bgAlt })}
+            >
+              🗑️ Slett
+            </button>
+          </>
+        )}
       </div>
 
       {/* Delete confirmation modal */}

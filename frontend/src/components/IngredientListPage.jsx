@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getIngredients, getIngredientCategories, deleteIngredient } from '../api.js';
+import { getIngredients, getIngredientCategories } from '../api.js';
 import { colors, radius, shadows } from '../theme.js';
 
 export default function IngredientListPage() {
@@ -10,10 +10,8 @@ export default function IngredientListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadCategories();
-    loadIngredients();
-  }, [selectedCategory, search]);
+  useEffect(() => { loadCategories(); }, []);
+  useEffect(() => { loadIngredients(); }, [selectedCategory, search]);
 
   async function loadCategories() {
     try {
@@ -33,17 +31,6 @@ export default function IngredientListPage() {
       setError(e.message);
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleDelete(id) {
-    if (confirm('Slett ingrediens?')) {
-      try {
-        await deleteIngredient(id);
-        loadIngredients();
-      } catch (e) {
-        alert('Error: ' + e.message);
-      }
     }
   }
 
@@ -103,16 +90,9 @@ export default function IngredientListPage() {
                     <div key={ing.id} style={s.ingredientCard}>
                       <div style={s.ingredientInfo}>
                         <h3 style={s.ingredientName}>{ing.name}</h3>
-                        <p style={s.ingredientPrice}>{ing.price} kr / {ing.unit}</p>
+                        <p style={s.ingredientPrice}>ca. {ing.price} kr / {ing.unit}</p>
                         {ing.brand && <p style={s.ingredientBrand}>{ing.brand}</p>}
                       </div>
-                      <button
-                        onClick={() => handleDelete(ing.id)}
-                        style={s.deleteBtn}
-                        title="Slett"
-                      >
-                        ✕
-                      </button>
                     </div>
                   ))}
                 </div>

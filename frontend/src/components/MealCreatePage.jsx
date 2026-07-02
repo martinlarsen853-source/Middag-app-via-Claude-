@@ -130,14 +130,19 @@ export default function MealCreatePage() {
           category: meal.category || 'Annet',
           instructions: Array.isArray(meal.instructions) ? meal.instructions : [],
         });
-        setSelectedIngredients(meal.ingredients.map(ing => ({
-          id: ing.ingredient_id,
-          name: ing.ingredient_name,
-          category: ing.section,
-          price: 0,
-          quantity: ing.quantity,
-          unit: ing.unit,
-        })));
+        setSelectedIngredients((meal.ingredients || []).map((ing, idx) => {
+          const name = ing.ingredient_name || ing.name;
+          return {
+            // Custom/imported ingredients have no ingredient_id — give each row a
+            // unique local id so remove/adjust doesn't hit every null-id row.
+            id: ing.ingredient_id ?? `edit:${idx}:${name}`,
+            name,
+            category: ing.section || 'Diverse',
+            price: 0,
+            quantity: ing.quantity,
+            unit: ing.unit,
+          };
+        }));
       }
     } catch (e) {
       setError('Feil ved lasting: ' + e.message);
