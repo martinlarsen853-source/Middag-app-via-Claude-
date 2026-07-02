@@ -86,13 +86,13 @@ export const mealPhotos = {
   '🍳': unsplash('photo-1525351484163-7529414344d8'),
   '🍛': unsplash('photo-1512058564366-18510be2db19'),
   '🍞': unsplash('photo-1509440159596-0249088772ff'),
-  '🥞': unsplash('photo-1565299507177-b0ac66763028'),
+  '🥞': unsplash('photo-1528207776546-365bb710ee93'),
   '🥢': unsplash('photo-1512058564366-18510be2db19'),
   '🥦': unsplash('photo-1547592166-23ac45744acd'),
   '🌭': unsplash('photo-1619881590738-a111d176d906'),
   '🌶️': unsplash('photo-1547592180-85f173990554'),
   '🫙': unsplash('photo-1621996346565-e3dbc646d9a9'),
-  '🦐': unsplash('photo-1565680018434-b6e2f27b2949'),
+  '🦐': unsplash('photo-1581867286869-fd02aaaef2f2'),
 };
 
 // Keyword → curated royalty-free food photo (own images, recipe-site style).
@@ -104,7 +104,7 @@ const NAME_PHOTOS = [
   [/(spaghetti|bolognese|pasta|penne|carbonara|tortellini)/, 'photo-1621996346565-e3dbc646d9a9'],
   [/(laks|salmon|ørret)/, 'photo-1467003909585-2f8a72700288'],
   [/(torsk|sei|hyse|fisk|fiskekake|fiskegrateng)/, 'photo-1535140728325-a4d3707eee61'],
-  [/(reke|scampi|skalldyr)/, 'photo-1565680018434-b6e2f27b2949'],
+  [/(reke|scampi|skalldyr)/, 'photo-1581867286869-fd02aaaef2f2'],
   [/(kylling|chicken|satay|wok)/, 'photo-1598103442097-8b74394b95c6'],
   [/(biff|entrecôte|entrecote|steak|indrefilet|ytrefilet)/, 'photo-1600891964092-4316c288032e'],
   [/(kjøttbolle|kjøttkake|karbonade|kjøttdeig|chili con)/, 'photo-1529042410759-befb1204b468'],

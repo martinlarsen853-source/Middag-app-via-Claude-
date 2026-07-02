@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getMeal, deleteMeal, createMeal } from '../api.js';
 import PersonCounter from './PersonCounter.jsx';
-import { colors, shadows, radius, fonts, foodPhotoFor } from '../theme.js';
+import { colors, shadows, radius, fonts, foodPhotoFor, mealGradients, defaultMealGradient } from '../theme.js';
 
 const sectionColors = {
   'Frukt & grønt': { bg: '#e9f7ee', text: '#1d7a40' },
@@ -47,6 +47,7 @@ export default function MealDetail() {
   const [deleting, setDeleting] = useState(false);
   const [addingToMine, setAddingToMine] = useState(false);
   const [addedToMine, setAddedToMine] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     getMeal(id)
@@ -86,6 +87,7 @@ export default function MealDetail() {
         persons: meal.persons || 4,
         category: meal.category || 'Annet',
         photo_url: meal.photo_url || null,
+        tags: meal.tags || [],
         instructions: meal.instructions || [],
         ingredients: (meal.ingredients || []).map(i => ({
           name: i.ingredient_name || i.name,
@@ -162,13 +164,24 @@ export default function MealDetail() {
         border: `1px solid ${colors.border}`,
         boxShadow: shadows.md,
       }}>
-        {/* Photo */}
-        <div style={{ position: 'relative', height: '220px', background: colors.bgLight }}>
-          <img
-            src={foodPhotoFor(meal)}
-            alt={meal.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          />
+        {/* Photo — falls back to the category gradient + emoji if the image fails */}
+        <div style={{
+          position: 'relative', height: '220px',
+          background: mealGradients[meal.category] || defaultMealGradient,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {imgError ? (
+            <span style={{ fontSize: '4.5rem', lineHeight: 1, filter: 'drop-shadow(0 6px 12px rgba(28,28,26,0.18))' }}>
+              {meal.emoji}
+            </span>
+          ) : (
+            <img
+              src={foodPhotoFor(meal)}
+              alt={meal.name}
+              onError={() => setImgError(true)}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+          )}
           <span style={{
             position: 'absolute', bottom: '12px', left: '14px',
             fontSize: '1.6rem', lineHeight: 1,

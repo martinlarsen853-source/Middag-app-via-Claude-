@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getShoppingList } from '../api.js';
+import { getShoppingList, markEaten } from '../api.js';
 import PersonCounter from './PersonCounter.jsx';
 import { colors, radius, shadows } from '../theme.js';
 
@@ -441,7 +441,7 @@ export default function ShoppingList() {
           ✕
         </button>
         <button
-          onClick={() => navigate('/app')}
+          onClick={() => { markEaten(mealId).catch(() => {}); navigate('/app'); }}
           style={{
             flex: 1,
             background: isComplete ? colors.success : colors.accent,

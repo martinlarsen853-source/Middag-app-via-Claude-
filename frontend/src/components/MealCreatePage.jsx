@@ -335,11 +335,12 @@ export default function MealCreatePage() {
       const mealPayload = {
         ...mealData,
         ingredients: selectedIngredients.map(ing => ({
-          ingredient_id: typeof ing.id === 'string' && (ing.id.startsWith('base:') || ing.id.startsWith('custom:') || ing.id.startsWith('import:') || ing.id.startsWith('kassal:')) ? null : ing.id,
+          ingredient_id: typeof ing.id === 'string' && (ing.id.startsWith('base:') || ing.id.startsWith('custom:') || ing.id.startsWith('import:') || ing.id.startsWith('kassal:') || ing.id.startsWith('edit:')) ? null : ing.id,
           name: ing.name,
           quantity: ing.quantity,
           unit: ing.unit,
           section: categoryToSection(ing.category),
+          price: ing.price || 0,
         }))
       };
 

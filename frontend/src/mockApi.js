@@ -60,7 +60,7 @@ export async function getMeals(sort = '') {
   if (sort === 'time') {
     meals.sort((a, b) => a.time_minutes - b.time_minutes);
   } else if (sort === 'price') {
-    meals.sort((a, b) => a.price_level - b.price_level);
+    meals.sort((a, b) => computeMealPrice(a) - computeMealPrice(b));
   } else if (sort === 'rarely') {
     meals.sort((a, b) => {
       const da = eaten[a.id] ? new Date(eaten[a.id]).getTime() : 0;
@@ -75,7 +75,11 @@ export async function getMeals(sort = '') {
 
 // --- Inspiration catalog (pre-made suggestions, never mixed with Mine retter) ---
 export async function getInspirationMeals() {
-  return MEALS.map(m => ({ ...m, estimated_price: computeMealPrice(m) }));
+  return MEALS.map(m => ({
+    ...m,
+    instructions: MEAL_INSTRUCTIONS[m.id] || [],
+    estimated_price: computeMealPrice(m),
+  }));
 }
 
 export async function getMeal(id) {
@@ -102,7 +106,12 @@ export async function createMeal(mealData) {
     quantity: ing.quantity ?? 1,
     unit: ing.unit || 'stk',
     section: ing.section || 'Diverse',
+    price: ing.price || 0,
   }));
+  // Tags make the meal findable via the filter chips; fall back to the category
+  const tags = Array.isArray(mealData.tags) && mealData.tags.length
+    ? mealData.tags
+    : (mealData.category && mealData.category !== 'Annet' ? [mealData.category] : []);
   const meal = {
     id,
     name: mealData.name,
@@ -111,6 +120,7 @@ export async function createMeal(mealData) {
     time_minutes: mealData.time_minutes || 30,
     persons: mealData.persons || 4,
     category: mealData.category || 'Annet',
+    tags,
     photo_url: mealData.photo_url || null,
     instructions: Array.isArray(mealData.instructions) ? mealData.instructions : [],
     ingredients,
@@ -132,6 +142,7 @@ export async function updateMeal(id, mealData) {
     quantity: ing.quantity ?? 1,
     unit: ing.unit || 'stk',
     section: ing.section || 'Diverse',
+    price: ing.price || 0,
   }));
   meals[idx] = {
     ...meals[idx],
@@ -141,6 +152,11 @@ export async function updateMeal(id, mealData) {
     time_minutes: mealData.time_minutes,
     persons: mealData.persons ?? meals[idx].persons,
     category: mealData.category,
+    tags: Array.isArray(mealData.tags) && mealData.tags.length
+      ? mealData.tags
+      : (meals[idx].tags && meals[idx].tags.length
+          ? meals[idx].tags
+          : (mealData.category && mealData.category !== 'Annet' ? [mealData.category] : [])),
     instructions: Array.isArray(mealData.instructions) ? mealData.instructions : (meals[idx].instructions || []),
     ingredients: ingredients.length ? ingredients : meals[idx].ingredients,
   };

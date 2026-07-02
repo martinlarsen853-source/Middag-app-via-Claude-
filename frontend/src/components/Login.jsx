@@ -141,7 +141,7 @@ const s = {
     display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20,
   },
   dividerLine: { flex: 1, height: 1, background: colors.border },
-  dividerText: { color: 'colors.textTertiary', fontSize: '0.8rem', whiteSpace: 'nowrap' },
+  dividerText: { color: colors.textTertiary, fontSize: '0.8rem', whiteSpace: 'nowrap' },
 
   card: {
     background: colors.bgAlt, borderRadius: radius.xl, padding: 28,
@@ -156,11 +156,11 @@ const s = {
   input: {
     width: '100%', boxSizing: 'border-box',
     background: colors.bg, border: `1.5px solid ${colors.border}`, borderRadius: 10,
-    padding: '11px 14px', fontSize: '1rem', color: 'colors.text',
+    padding: '11px 14px', fontSize: '1rem', color: colors.text,
     outline: 'none', transition: 'border-color 0.2s',
   },
   submitBtn: {
-    width: '100%', background: 'colors.text', color: '#fff',
+    width: '100%', background: colors.text, color: '#fff',
     border: 'none', borderRadius: 10, padding: '13px',
     fontSize: '1rem', fontWeight: 600, cursor: 'pointer', marginTop: 20,
     transition: 'background 0.2s',

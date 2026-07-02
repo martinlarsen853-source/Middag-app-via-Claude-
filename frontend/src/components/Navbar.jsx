@@ -58,8 +58,7 @@ export default function Navbar() {
   return (
     <>
       <nav style={{
-        position: 'sticky',
-        top: 0,
+        position: 'relative',
         zIndex: 40,
         display: 'flex',
         alignItems: 'center',

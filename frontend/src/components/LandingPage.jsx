@@ -106,7 +106,7 @@ function Receipt() {
       }}>
         {/* Header */}
         <div style={{ textAlign: 'center', paddingBottom: 10, marginBottom: 10, borderBottom: `1px dashed ${T.ink}50` }}>
-          <div style={{ fontWeight: 700, fontSize: '0.88rem', letterSpacing: '0.18em' }}>TALLERKEN</div>
+          <div style={{ fontWeight: 700, fontSize: '0.88rem', letterSpacing: '0.18em' }}>HANDLEKLAR</div>
           <div style={{ fontSize: '0.68rem', color: `${T.ink}90`, marginTop: 2 }}>🌮 Tacos · 2 pers</div>
           <div style={{ fontSize: '0.68rem', color: `${T.ink}80` }}>{norwegianDate()}</div>
         </div>

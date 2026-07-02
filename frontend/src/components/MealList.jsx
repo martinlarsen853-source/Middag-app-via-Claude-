@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMeals, getInspirationMeals, createMeal, markEaten, updatePersons } from '../api.js';
+import { getMeals, getInspirationMeals, createMeal, updatePersons } from '../api.js';
 import { colors, radius, shadows, fonts, mealGradients, defaultMealGradient, foodPhotoFor } from '../theme.js';
 
 const TERRA = colors.accent;
@@ -120,8 +120,9 @@ const rangeInputCSS = `
     transform: translateY(100%);
     transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
     will-change: transform;
+    pointer-events: none; /* closed sheet must never intercept clicks */
   }
-  .filter-sheet.open { transform: translateY(0); }
+  .filter-sheet.open { transform: translateY(0); pointer-events: auto; }
 
   .filter-grabber {
     width: 40px; height: 4px; border-radius: 999px;
@@ -197,7 +198,9 @@ export default function MealList() {
         time_minutes: meal.time_minutes,
         persons: 4,
         category: meal.category || 'Annet',
+        tags: meal.tags || [],
         photo_url: meal.photo_url || null,
+        instructions: meal.instructions || [],
         ingredients: (meal.ingredients || []).map(i => ({
           name: i.name, quantity: i.quantity, unit: i.unit, section: i.section,
         })),
@@ -271,23 +274,33 @@ export default function MealList() {
     handleSelect(filtered[filtered.length - 1]);
   }
 
-  // Check if meal matches active filters
+  // Check if meal matches active filters. Slider endpoints mean "no limit" so
+  // untouched defaults never hide meals outside the 10-100 min / 50-1500 kr span.
   function isFilterMatch(meal) {
     const tagMatch = selectedTags.size === 0 || meal.tags?.some(t => selectedTags.has(t));
-    const timeMatch = meal.time_minutes >= timeRange.min && meal.time_minutes <= timeRange.max;
-    const priceMatch = getMealPrice(meal) >= priceRange.min && getMealPrice(meal) <= priceRange.max;
+    const price = getMealPrice(meal);
+    const timeMatch =
+      (timeRange.min <= 10 || meal.time_minutes >= timeRange.min) &&
+      (timeRange.max >= 100 || meal.time_minutes <= timeRange.max);
+    const priceMatch =
+      (priceRange.min <= 50 || price >= priceRange.min) &&
+      (priceRange.max >= 1500 || price <= priceRange.max);
     return tagMatch && timeMatch && priceMatch;
   }
 
   const filtered = meals.filter(isFilterMatch);
 
+  // Browsing a meal does NOT mark it eaten — that happens when the shopping
+  // list is completed (the ✓ Ferdig handlet button).
   function handleSelect(meal) {
-    markEaten(meal.id).catch(() => {});
-    updatePersons(persons).catch(() => {});
-    const u = JSON.parse(localStorage.getItem('middag_user') || '{}');
-    u.default_persons = persons;
-    localStorage.setItem('middag_user', JSON.stringify(u));
     navigate(`/meal/${meal.id}`);
+  }
+
+  // Persist the person count whenever it changes, not only on card tap
+  function changePersons(next) {
+    const p = Math.min(10, Math.max(1, next));
+    setPersons(p);
+    updatePersons(p).catch(() => {});
   }
 
   return (
@@ -316,7 +329,7 @@ export default function MealList() {
             step={5}
             value={timeRange}
             onChange={setTimeRange}
-            formatLabel={(min, max) => `${min}-${max} min`}
+            formatLabel={(min, max) => `${min}-${max}${max >= 100 ? '+' : ''} min`}
           />
           <DualRangeSlider
             label="💰 Pris"
@@ -325,7 +338,7 @@ export default function MealList() {
             step={50}
             value={priceRange}
             onChange={setPriceRange}
-            formatLabel={(min, max) => `${min}-${max} kr`}
+            formatLabel={(min, max) => `${min}-${max}${max >= 1500 ? '+' : ''} kr`}
           />
 
           {/* Divider */}
@@ -388,9 +401,9 @@ export default function MealList() {
             </button>
           </div>
           <div style={s.personBox}>
-            <button onClick={() => setPersons(p => Math.max(1, p - 1))} style={s.personBtn}>−</button>
+            <button onClick={() => changePersons(persons - 1)} style={s.personBtn}>−</button>
             <span style={s.personCount}>{persons}</span>
-            <button onClick={() => setPersons(p => Math.min(10, p + 1))} style={s.personBtn}>+</button>
+            <button onClick={() => changePersons(persons + 1)} style={s.personBtn}>+</button>
             <span style={s.personLabel}>pers.</span>
           </div>
         </div>
@@ -572,7 +585,7 @@ function DualRangeSlider({ label, min, max, step, value, onChange, formatLabel }
 function getMealBadge(meal) {
   if (!meal.last_eaten) return { label: 'NYHET', bg: colors.accent, color: colors.white };
   if (meal.time_minutes <= 20) return { label: 'RASK', bg: colors.accentAlt, color: colors.white };
-  if (meal.price_level === 1) return { label: 'BUDSJETTVINNER', bg: colors.dark, color: colors.white };
+  if (typeof meal.estimated_price === 'number' && meal.estimated_price <= 150) return { label: 'BUDSJETTVINNER', bg: colors.dark, color: colors.white };
   return null;
 }
 
