@@ -126,8 +126,9 @@ export default function MealDetail() {
     );
   }
 
-  const BASE_PERSONS = 4;
-  const scale = persons / BASE_PERSONS;
+  // Recipes scale from their own base servings (user/imported meals carry it)
+  const basePersons = meal.persons || 4;
+  const scale = persons / basePersons;
 
   return (
     <div style={{ maxWidth: '448px', margin: '0 auto', width: '100%', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>

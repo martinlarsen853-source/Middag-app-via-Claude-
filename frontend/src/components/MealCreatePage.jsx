@@ -69,6 +69,8 @@ export default function MealCreatePage() {
   const [productResults, setProductResults] = useState([]);
   const [productsUnavailable, setProductsUnavailable] = useState(false);
   const [productsLoading, setProductsLoading] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => { loadData(); }, [mealId]);
 
@@ -326,7 +328,9 @@ export default function MealCreatePage() {
   }
 
   async function saveMeal() {
-    if (!mealData.name.trim()) { alert('Skriv inn navn'); return; }
+    if (!mealData.name.trim()) { setSaveError('Skriv inn navn på måltidet'); setStep(1); return; }
+    setSaving(true);
+    setSaveError('');
     try {
       const mealPayload = {
         ...mealData,
@@ -346,7 +350,9 @@ export default function MealCreatePage() {
       }
       navigate('/app');
     } catch (e) {
-      alert('Feil ved lagring: ' + e.message);
+      setSaveError('Feil ved lagring: ' + e.message);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -984,10 +990,21 @@ export default function MealCreatePage() {
             )}
           </div>
 
+          {saveError && (
+            <div style={{
+              background: '#fdeceb', border: `1px solid ${colors.error}55`, borderRadius: radius.md,
+              padding: '10px 14px', color: colors.error, fontSize: '0.88rem', marginBottom: '10px',
+            }}>
+              {saveError}
+            </div>
+          )}
+
           {/* Footer */}
           <div style={{ marginTop: 'auto', display: 'flex', gap: '10px' }}>
             <button onClick={() => setStep(2)} style={btnBack}>← Tilbake</button>
-            <button onClick={saveMeal} style={btnNext()}>Lagre måltid ✓</button>
+            <button onClick={saveMeal} disabled={saving} style={btnNext(!saving)}>
+              {saving ? 'Lagrer…' : 'Lagre måltid ✓'}
+            </button>
           </div>
         </div>
       )}

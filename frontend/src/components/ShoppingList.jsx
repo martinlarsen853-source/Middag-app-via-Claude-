@@ -404,7 +404,7 @@ export default function ShoppingList() {
           borderRadius: radius.md,
           padding: '24px',
           textAlign: 'center',
-          animation: 'fadeUp 0.4s ease-out',
+          animation: 'fade-up 0.4s ease-out',
         }} className="no-print">
           <div style={{ fontSize: '3rem', marginBottom: '16px' }}>✨🎉</div>
           <h3 style={{ color: colors.text, fontWeight: 700, fontSize: '1.2rem', margin: '0 0 8px' }}>

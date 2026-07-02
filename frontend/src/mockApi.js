@@ -175,7 +175,7 @@ export async function getShoppingList(mealId, storeId, persons = 2) {
   const store = STORES.find(s => s.id === Number(storeId));
   if (!store) throw new Error('Butikk ikke funnet');
 
-  const scale = persons / BASE_PERSONS;
+  const scale = persons / (meal.persons || BASE_PERSONS);
   const sectionOrder = store.section_order;
 
   // Group by section
