@@ -245,28 +245,70 @@ function titleFromHtml(html) {
   return t ? decodeEntities(t[1]).split('|')[0].split('-')[0].trim() : '';
 }
 
+// ── SSRF guard ────────────────────────────────────────────────────────────────
+// The importer fetches user-supplied URLs; refuse anything that could reach
+// internal/private infrastructure so the endpoint can't be used as a proxy.
+const MAX_HTML_BYTES = 3 * 1024 * 1024;
+
+function assertPublicHttpUrl(parsed) {
+  if (!/^https?:$/.test(parsed.protocol)) {
+    throw new Error('Bare http/https-lenker støttes');
+  }
+  if (parsed.port && parsed.port !== '80' && parsed.port !== '443') {
+    throw new Error('Bare standard nettsider støttes');
+  }
+  if (parsed.username || parsed.password) {
+    throw new Error('Ugyldig nettadresse');
+  }
+  const host = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  const blockedHost =
+    host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') ||
+    host.endsWith('.internal') || host === 'metadata.google.internal';
+  const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  const privateIpv4 = ipv4 && (() => {
+    const [a, b] = [Number(ipv4[1]), Number(ipv4[2])];
+    return a === 0 || a === 10 || a === 127 || (a === 100 && b >= 64 && b <= 127) ||
+      (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) || a >= 224;
+  })();
+  const privateIpv6 = host.includes(':') && /^(::1?$|f[cd]|fe80)/.test(host);
+  if (blockedHost || privateIpv4 || privateIpv6) {
+    throw new Error('Denne adressen kan ikke hentes');
+  }
+}
+
 // ── Public entry point ────────────────────────────────────────────────────────
 export async function importRecipeFromUrl(url) {
+  if (typeof url !== 'string' || url.length > 2000) {
+    throw new Error('Ugyldig nettadresse');
+  }
   let parsed;
   try {
     parsed = new URL(url);
   } catch {
     throw new Error('Ugyldig nettadresse');
   }
-  if (!/^https?:$/.test(parsed.protocol)) {
-    throw new Error('Bare http/https-lenker støttes');
-  }
+  assertPublicHttpUrl(parsed);
 
   let html;
   try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
     const resp = await fetch(parsed.href, {
       headers: { 'User-Agent': BROWSER_UA, Accept: 'text/html,application/xhtml+xml' },
       redirect: 'follow',
+      signal: controller.signal,
     });
+    clearTimeout(timer);
     if (!resp.ok) throw new Error(`Nettsiden svarte ${resp.status}`);
+    // Re-check the final URL after redirects — a public URL may redirect inward
+    try { assertPublicHttpUrl(new URL(resp.url)); } catch { throw new Error('Denne adressen kan ikke hentes'); }
+    const len = Number(resp.headers.get('content-length') || 0);
+    if (len > MAX_HTML_BYTES) throw new Error('Siden er for stor');
     html = await resp.text();
+    if (html.length > MAX_HTML_BYTES) throw new Error('Siden er for stor');
   } catch (e) {
-    throw new Error('Klarte ikke å hente nettsiden: ' + e.message);
+    throw new Error('Klarte ikke å hente nettsiden: ' + (e.name === 'AbortError' ? 'tidsavbrudd' : e.message));
   }
 
   const blocks = extractJsonLdBlocks(html);

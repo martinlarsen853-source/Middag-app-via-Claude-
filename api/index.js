@@ -47,10 +47,33 @@ async function getUserHouseholdId(sb, userId) {
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', message: 'Middagshjulet API er oppe!' }));
 
+// Simple per-IP rate limiter for the public utility endpoints (in-memory per
+// instance — enough to stop drive-by abuse of the fetch/search proxies).
+const rateBuckets = new Map();
+function rateLimit(maxPerMinute) {
+  return (req, res, next) => {
+    const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown')
+      .toString().split(',')[0].trim();
+    const key = `${req.path}:${ip}`;
+    const now = Date.now();
+    let bucket = rateBuckets.get(key);
+    if (!bucket || now > bucket.reset) {
+      bucket = { count: 0, reset: now + 60000 };
+      rateBuckets.set(key, bucket);
+    }
+    bucket.count++;
+    if (rateBuckets.size > 5000) rateBuckets.clear();
+    if (bucket.count > maxPerMinute) {
+      return res.status(429).json({ error: 'For mange forespørsler — prøv igjen om litt' });
+    }
+    next();
+  };
+}
+
 // ─── Recipe import ─────────────────────────────────────────────────────────────
 // POST /api/import-recipe { url } → { name, time_minutes, persons, ingredients[] }
 // Public utility (no auth, no DB): scrapes schema.org Recipe JSON-LD from a page.
-app.post('/api/import-recipe', async (req, res) => {
+app.post('/api/import-recipe', rateLimit(10), async (req, res) => {
   const { url } = req.body || {};
   if (!url || typeof url !== 'string') {
     return res.status(400).json({ error: 'Mangler nettadresse' });
@@ -67,7 +90,7 @@ app.post('/api/import-recipe', async (req, res) => {
 // GET /api/search-products?q=... → real grocery products from Kassalapp.
 // Gracefully returns { products: [], unavailable: true } when no API key or on error,
 // so the frontend can fall back to its built-in ingredient list.
-app.get('/api/search-products', async (req, res) => {
+app.get('/api/search-products', rateLimit(30), async (req, res) => {
   const q = (req.query.q || '').toString().trim();
   if (!q) return res.json({ products: [] });
   if (!process.env.KASSALAPP_API_KEY) {
