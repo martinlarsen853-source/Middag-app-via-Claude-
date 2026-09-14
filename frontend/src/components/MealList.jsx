@@ -304,7 +304,7 @@ export default function MealList() {
   }
 
   return (
-    <div style={s.page}>
+    <div style={{ ...s.page, background: mode === 'mine' ? colors.bgMine : colors.bgInspo }}>
     <div className="meal-page-inner">
 
       {/* ── FILTER SHEET (slides up on mobile, pops in on desktop) ── */}
@@ -695,7 +695,7 @@ function InspirationCard({ meal, added, getMealPrice, onOpen, onAdd }) {
 }
 
 const s = {
-  page: { background: colors.bg, minHeight: '100%', fontFamily: fonts.body },
+  page: { background: colors.bg, minHeight: '100%', fontFamily: fonts.body, transition: 'background 0.4s ease' },
 
   inspoIntro: {
     maxWidth: 1600, margin: '0 auto', padding: '14px 16px 0',

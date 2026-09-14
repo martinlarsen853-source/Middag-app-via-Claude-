@@ -7,6 +7,8 @@ export const colors = {
   bgAlt: '#FFFFFF',         // Cards / elevated surfaces
   bgLight: '#F2F0EC',       // Subtle fills (chips, inactive pills)
   bgAccent: '#FEF0EB',      // Tinted accent background
+  bgMine: '#FBF4EE',        // Mine retter — subtly warmer page tone
+  bgInspo: '#F3F5F4',       // Inspirasjon — subtly cooler/greyer page tone
 
   // Text
   text: '#1A1A1A',          // Near-black ink
