@@ -85,19 +85,15 @@ const rangeInputCSS = `
     .pick-wrap button { max-width: 400px; }
   }
 
-  /* ── Card interactions (matprat-style hover lift + photo zoom) ── */
+  /* ── Kortinteraksjon: kun rolig bildezoom, ingen løft eller skygge ── */
   .meal-card .card-hero img {
-    transition: transform 0.45s cubic-bezier(0.2,0,0.2,1);
+    transition: transform 0.6s cubic-bezier(0.2,0,0.2,1);
   }
   @media (hover: hover) {
-    .meal-card { transition: transform 0.18s ease, box-shadow 0.2s ease; }
-    .meal-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 28px rgba(26,26,26,0.12), 0 4px 10px rgba(26,26,26,0.06);
-    }
-    .meal-card:hover .card-hero img { transform: scale(1.07); }
+    .meal-card:hover .card-hero img { transform: scale(1.04); }
+    .meal-card:hover h3 { text-decoration: underline; text-underline-offset: 3px; }
   }
-  .meal-card:active { transform: scale(0.99); }
+  .meal-card:active { opacity: 0.85; }
 
   /* ── Filter sheet: slides up (mobile) / pops in (desktop) ── */
   .filter-backdrop {
@@ -397,7 +393,7 @@ export default function MealList() {
               onClick={() => setMode('inspirasjon')}
               style={{ ...s.modeBtn, ...(mode === 'inspirasjon' ? s.modeBtnActive : {}) }}
             >
-              ✨ Inspirasjon
+              Inspirasjon
             </button>
           </div>
           <div style={s.personBox}>
@@ -582,10 +578,12 @@ function DualRangeSlider({ label, min, max, step, value, onChange, formatLabel }
   );
 }
 
+// Redaksjonell etikett over tittelen — «NYHET · PASTA» — i stedet for et farget
+// merke oppå bildet.
 function getMealBadge(meal) {
-  if (!meal.last_eaten) return { label: 'NYHET', bg: colors.accent, color: colors.white };
-  if (meal.time_minutes <= 20) return { label: 'RASK', bg: colors.accentAlt, color: colors.white };
-  if (typeof meal.estimated_price === 'number' && meal.estimated_price <= 150) return { label: 'BUDSJETTVINNER', bg: colors.dark, color: colors.white };
+  if (!meal.last_eaten) return 'Nyhet';
+  if (meal.time_minutes <= 20) return 'Rask';
+  if (typeof meal.estimated_price === 'number' && meal.estimated_price <= 150) return 'Budsjett';
   return null;
 }
 
@@ -599,42 +597,38 @@ function MealCard({ meal, onSelect, getMealPrice }) {
 
   return (
     <div className="meal-card" onClick={onSelect} style={s.card}>
-      {/* Hero area — food photo, falls back to category gradient + big emoji */}
+      {/* Rent bilde uten pålegg — maten skal få stå i fred */}
       <div className="card-hero" style={{ ...s.cardHero, background: gradient }}>
         {showPhoto ? (
-          <>
-            <img
-              src={photo}
-              alt={meal.name}
-              loading="lazy"
-              onError={() => setImgError(true)}
-              style={s.heroImg}
-            />
-            <span style={s.heroEmojiSmall}>{meal.emoji}</span>
-          </>
+          <img
+            src={photo}
+            alt={meal.name}
+            loading="lazy"
+            onError={() => setImgError(true)}
+            style={s.heroImg}
+          />
         ) : (
           <span style={s.heroEmoji}>{meal.emoji}</span>
         )}
-        {badge && (
-          <span style={{ ...s.heroBadge, background: badge.bg, color: badge.color }}>
-            {badge.label}
-          </span>
-        )}
-        <span style={s.heroTime}>⏱ {meal.time_minutes} min</span>
       </div>
 
-      {/* Text content */}
       <div style={s.cardContent}>
+        <p className="eyebrow" style={s.cardEyebrow}>
+          {badge ? `${badge} · ${meal.category}` : meal.category}
+        </p>
         <h3 style={s.mealName}>{meal.name}</h3>
         {meal.description && <p style={s.desc}>{meal.description}</p>}
-        <div style={s.tagRow}>
-          {tags.map(tag => (
-            <span key={tag} style={s.tagChip}>{tag}</span>
-          ))}
-          <span style={{ ...s.tagChip, ...s.priceChip }}>
-            {`ca. ${getMealPrice(meal)} kr`}
-          </span>
-        </div>
+        <p style={s.metaLine}>
+          {meal.time_minutes} min
+          <span style={s.metaDot}>·</span>
+          ca. {getMealPrice(meal)} kr
+          {tags.length > 0 && (
+            <>
+              <span style={s.metaDot}>·</span>
+              {tags.slice(0, 2).join(', ')}
+            </>
+          )}
+        </p>
       </div>
     </div>
   );
@@ -652,42 +646,31 @@ function InspirationCard({ meal, added, getMealPrice, onOpen, onAdd }) {
       <div onClick={onOpen} style={{ cursor: 'pointer' }}>
         <div className="card-hero" style={{ ...s.cardHero, background: gradient }}>
           {showPhoto ? (
-            <>
-              <img src={photo} alt={meal.name} loading="lazy" onError={() => setImgError(true)} style={s.heroImg} />
-              <span style={s.heroEmojiSmall}>{meal.emoji}</span>
-            </>
+            <img src={photo} alt={meal.name} loading="lazy" onError={() => setImgError(true)} style={s.heroImg} />
           ) : (
             <span style={s.heroEmoji}>{meal.emoji}</span>
           )}
-          <span style={s.heroTime}>⏱ {meal.time_minutes} min</span>
         </div>
-        <div style={{ ...s.cardContent, paddingBottom: 8 }}>
+        <div style={{ ...s.cardContent, paddingBottom: 12 }}>
+          <p className="eyebrow" style={s.cardEyebrow}>{meal.category}</p>
           <h3 style={s.mealName}>{meal.name}</h3>
           {meal.description && <p style={s.desc}>{meal.description}</p>}
-          <div style={s.tagRow}>
-            {tags.map(tag => (
-              <span key={tag} style={s.tagChip}>{tag}</span>
-            ))}
-            <span style={{ ...s.tagChip, ...s.priceChip }}>{`ca. ${getMealPrice(meal)} kr`}</span>
-          </div>
+          <p style={s.metaLine}>
+            {meal.time_minutes} min
+            <span style={s.metaDot}>·</span>
+            ca. {getMealPrice(meal)} kr
+            {tags.length > 0 && (
+              <>
+                <span style={s.metaDot}>·</span>
+                {tags.slice(0, 2).join(', ')}
+              </>
+            )}
+          </p>
         </div>
       </div>
-      <div style={{ padding: '0 16px 16px', marginTop: 'auto' }}>
-        <button
-          onClick={onAdd}
-          disabled={added}
-          style={{
-            width: '100%',
-            background: added ? colors.bgLight : `linear-gradient(135deg, ${TERRA}, #C8431F)`,
-            color: added ? colors.success : '#fff',
-            border: added ? `1.5px solid ${colors.border}` : 'none',
-            borderRadius: 10, padding: '11px', fontSize: '0.9rem', fontWeight: 700,
-            cursor: added ? 'default' : 'pointer',
-            boxShadow: added ? 'none' : '0 4px 12px rgba(226,90,51,0.25)',
-            transition: 'all 0.15s',
-          }}
-        >
-          {added ? '✓ Lagt til i Mine retter' : '+ Legg til i Mine retter'}
+      <div style={{ padding: '0 0 4px', marginTop: 'auto' }}>
+        <button onClick={onAdd} disabled={added} style={added ? s.addBtnDone : s.addBtn}>
+          {added ? 'Lagt til i Mine retter' : 'Legg til i Mine retter'}
         </button>
       </div>
     </div>
@@ -786,24 +769,22 @@ const s = {
   // Header
   header: {
     position: 'sticky', top: 0, zIndex: 10,
-    background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)',
+    background: 'rgba(251,250,247,0.94)', backdropFilter: 'blur(12px)',
     WebkitBackdropFilter: 'blur(12px)',
-    borderBottom: `1px solid ${colors.borderLight}`, padding: '16px 16px 12px',
+    borderBottom: `1px solid ${colors.hairline}`, padding: '16px 16px 12px',
   },
   headerTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  modeToggle: {
-    display: 'flex', background: colors.bgLight,
-    borderRadius: 999, padding: 3, gap: 2,
-  },
+  // Fanene er understreket tekst, slik et magasin skiller seksjoner — ikke piller.
+  modeToggle: { display: 'flex', gap: 20 },
   modeBtn: {
-    padding: '6px 16px', borderRadius: 999, border: 'none',
-    background: 'transparent', color: colors.textSecond,
-    fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer',
-    transition: 'all 0.18s', whiteSpace: 'nowrap',
+    padding: '2px 0 6px', border: 'none', background: 'transparent',
+    color: colors.textTertiary, fontFamily: fonts.display,
+    fontSize: '1.05rem', fontWeight: 500, cursor: 'pointer',
+    borderBottom: '2px solid transparent', whiteSpace: 'nowrap',
+    transition: 'color 0.18s, border-color 0.18s',
   },
   modeBtnActive: {
-    background: colors.white, color: colors.text,
-    boxShadow: '0 1px 4px rgba(26,26,26,0.12)',
+    color: colors.text, borderBottomColor: colors.accent,
   },
   heading: { fontFamily: fonts.display, fontSize: '1.75rem', fontWeight: 700, color: colors.text, margin: 0, letterSpacing: '0.01em', textTransform: 'uppercase' },
   sub: { color: colors.textTertiary, fontSize: '0.8rem', margin: '2px 0 0' },
@@ -817,31 +798,31 @@ const s = {
   personCount: { fontWeight: 700, fontSize: '1rem', color: colors.text, minWidth: 16, textAlign: 'center' },
   personLabel: { color: colors.textTertiary, fontSize: '0.78rem' },
 
-  toolRow: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 0 },
+  toolRow: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 0 },
   filterBtn: {
     flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
-    padding: '6px 12px', borderRadius: 999,
-    border: `1.5px solid ${colors.border}`, background: colors.white,
-    color: colors.text, fontSize: '0.8rem', fontWeight: 700,
+    padding: '5px 11px', borderRadius: radius.sm,
+    border: `1px solid ${colors.border}`, background: 'transparent',
+    color: colors.textSecond, fontSize: '0.78rem', fontWeight: 600,
     cursor: 'pointer', transition: 'all 0.15s', position: 'relative',
   },
-  filterBtnActive: { background: colors.accent, borderColor: colors.accent, color: colors.white },
+  filterBtnActive: { borderColor: colors.accent, color: colors.accent },
   badge: {
-    minWidth: 18, height: 18, borderRadius: 999,
+    minWidth: 17, height: 17, borderRadius: 999,
     background: colors.accent, color: colors.white,
-    fontSize: '0.7rem', fontWeight: 800,
+    fontSize: '0.66rem', fontWeight: 700,
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
     padding: '0 4px',
   },
 
-  sortRow: { display: 'flex', gap: 6, overflowX: 'auto', flex: 1 },
+  sortRow: { display: 'flex', gap: 14, overflowX: 'auto', flex: 1 },
   pill: {
-    flexShrink: 0, padding: '6px 12px', borderRadius: 999,
-    border: `1.5px solid ${colors.border}`, background: colors.white,
-    color: colors.textSecond, fontSize: '0.78rem', fontWeight: 600,
+    flexShrink: 0, padding: '5px 0', border: 'none',
+    borderBottom: '1px solid transparent', background: 'transparent',
+    color: colors.textTertiary, fontSize: '0.78rem', fontWeight: 600,
     cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s',
   },
-  pillActive: { background: colors.accent, borderColor: colors.accent, color: colors.white },
+  pillActive: { color: colors.text, borderBottomColor: colors.text },
 
   activeTagRow: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 10 },
   activeTagLabel: { fontSize: '0.72rem', color: colors.textTertiary, fontWeight: 600 },
@@ -855,26 +836,24 @@ const s = {
   // Velg for meg
   pickWrap: { padding: '16px 16px 0', textAlign: 'center' },
   pickBtn: {
-    width: '100%', background: colors.dark, color: colors.white,
-    border: 'none', borderRadius: radius.round, padding: '16px',
-    fontSize: '1.05rem', fontWeight: 800, cursor: 'pointer',
-    letterSpacing: '-0.01em', boxShadow: `0 8px 32px ${colors.accent}40`,
-    transition: 'transform 0.12s',
+    width: '100%', background: colors.dark, color: colors.bg,
+    border: 'none', borderRadius: radius.sm, padding: '15px',
+    fontFamily: fonts.display, fontSize: '1.05rem', fontWeight: 500,
+    cursor: 'pointer', letterSpacing: '0.01em',
+    transition: 'opacity 0.15s',
   },
-  pickHint: { color: colors.textTertiary, fontSize: '0.75rem', margin: '8px 0 0' },
+  pickHint: { color: colors.textTertiary, fontSize: '0.78rem', margin: '10px 0 0' },
 
-  // Cards — magazine style: big hero, badge, bold title, tag chips
+  // Kort i matmagasin-stil: stort bilde, luft, serif-tittel, ingen ramme
   list: { padding: '16px 16px 32px', display: 'flex', flexDirection: 'column', gap: 20 },
   card: {
-    background: colors.white, borderRadius: 12, overflow: 'hidden',
-    border: `1px solid ${colors.border}`,
-    boxShadow: shadows.sm,
-    cursor: 'pointer', transition: 'transform 0.12s, box-shadow 0.15s',
+    background: 'transparent',
+    cursor: 'pointer',
     userSelect: 'none',
   },
   cardHero: {
     position: 'relative',
-    height: 170,
+    aspectRatio: '3 / 2',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     overflow: 'hidden',
   },
@@ -886,37 +865,34 @@ const s = {
     fontSize: '4.6rem', lineHeight: 1,
     filter: 'drop-shadow(0 6px 12px rgba(28,28,26,0.18))',
   },
-  heroEmojiSmall: {
-    position: 'absolute', bottom: 10, left: 12,
-    fontSize: '1.4rem', lineHeight: 1,
-    background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)',
-    borderRadius: '50%', width: 38, height: 38,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  cardContent: { padding: '14px 2px 4px' },
+  cardEyebrow: { color: colors.accent, margin: '0 0 6px' },
+  mealName: {
+    fontFamily: fonts.display, fontWeight: 600, fontSize: '1.45rem',
+    color: colors.text, margin: '0 0 6px', letterSpacing: '-0.015em', lineHeight: 1.15,
   },
-  heroBadge: {
-    position: 'absolute', top: 12, left: 12,
-    fontSize: '0.66rem', fontWeight: 800, letterSpacing: '0.06em',
-    padding: '4px 10px', borderRadius: 6,
-  },
-  heroTime: {
-    position: 'absolute', bottom: 10, right: 12,
-    fontSize: '0.75rem', fontWeight: 700, color: colors.text,
-    background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)',
-    padding: '4px 10px', borderRadius: 999,
-  },
-  cardContent: { padding: '14px 16px 16px' },
-  mealName: { fontFamily: fonts.display, fontWeight: 700, fontSize: '1.3rem', color: colors.text, margin: '0 0 4px', letterSpacing: '0.01em', lineHeight: 1.1 },
   desc: {
-    color: colors.textSecond, fontSize: '0.85rem', lineHeight: 1.5, margin: '0 0 10px',
+    color: colors.textSecond, fontSize: '0.9rem', lineHeight: 1.55, margin: '0 0 10px',
     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
   },
-  tagRow: { display: 'flex', flexWrap: 'wrap', gap: 6 },
-  tagChip: {
-    fontSize: '0.74rem', fontWeight: 600, color: colors.textTertiary,
-    background: colors.bgLight, border: `1px solid ${colors.hairline}`,
-    borderRadius: 8, padding: '4px 10px',
+  metaLine: {
+    margin: 0, fontSize: '0.8rem', color: colors.textTertiary,
+    display: 'flex', alignItems: 'center', flexWrap: 'wrap',
   },
-  priceChip: { color: colors.accentDark, background: colors.bgAccent, border: `1px solid ${colors.accent}33` },
+  metaDot: { margin: '0 7px', opacity: 0.6 },
+  addBtn: {
+    width: '100%', background: 'transparent', color: colors.accent,
+    border: `1px solid ${colors.accent}`, borderRadius: radius.sm,
+    padding: '11px', fontSize: '0.85rem', fontWeight: 600,
+    letterSpacing: '0.02em', cursor: 'pointer', marginTop: 10,
+    transition: 'background 0.15s, color 0.15s',
+  },
+  addBtnDone: {
+    width: '100%', background: 'transparent', color: colors.textTertiary,
+    border: `1px solid ${colors.border}`, borderRadius: radius.sm,
+    padding: '11px', fontSize: '0.85rem', fontWeight: 600,
+    letterSpacing: '0.02em', cursor: 'default', marginTop: 10,
+  },
 
   loadingWrap: { textAlign: 'center', paddingTop: 80 },
   loadingEmoji: { fontSize: '3rem', display: 'block', marginBottom: 12 },

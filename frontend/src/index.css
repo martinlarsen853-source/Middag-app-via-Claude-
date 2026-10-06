@@ -51,15 +51,27 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  font-family: 'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background-color: #FAF8F5;
-  color: #1A1A1A;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: #FBFAF7;
+  color: #14110F;
   -webkit-font-smoothing: antialiased;
   scroll-behavior: smooth;
 }
 
 h1, h2, h3, .display {
-  font-family: 'Saira Condensed', 'Archivo', 'Arial Narrow', sans-serif;
+  font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Redaksjonell etikett — liten, sperret og i versaler, slik matmagasiner setter
+   seksjonsoverskrifter. */
+.eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 /* Route transition — fade on navigation. Opacity only: a transform here would

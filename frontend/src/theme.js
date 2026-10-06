@@ -1,59 +1,61 @@
-// Handleklar design system — fresh, food-forward, inspired by Norwegian recipe
-// sites: off-white canvas, near-black ink, a confident green accent and soft
-// green chips. Condensed bold display type, generous pill buttons.
+// Handleklar design system — redaksjonelt matmagasin: papirhvit flate, varm
+// svart tekst, høykontrast serif i overskriftene og dempet terrakotta som eneste
+// farge. Maten skal gi fargen, ikke grensesnittet. Derfor hårtynne linjer og
+// luft i stedet for rammer, skygger og runde kort.
 export const colors = {
   // Backgrounds
-  bg: '#FAF8F5',            // Warm off-white page
-  bgAlt: '#FFFFFF',         // Cards / elevated surfaces
-  bgLight: '#F2F0EC',       // Subtle fills (chips, inactive pills)
-  bgAccent: '#FEF0EB',      // Tinted accent background
-  bgMine: '#FBF4EE',        // Mine retter — subtly warmer page tone
-  bgInspo: '#F3F5F4',       // Inspirasjon — subtly cooler/greyer page tone
+  bg: '#FBFAF7',            // Papir
+  bgAlt: '#FFFFFF',         // Hvite flater
+  bgLight: '#F4F1EA',       // Rolige fyll
+  bgAccent: '#F7EDE7',      // Svak terrakottatone
+  bgMine: '#FBFAF7',        // Mine retter — papir
+  bgInspo: '#F7F6F2',       // Inspirasjon — en nyanse kjøligere
 
   // Text
-  text: '#1A1A1A',          // Near-black ink
-  textSecond: '#52504C',    // Secondary text
-  textTertiary: '#9A9892',  // Placeholders / tertiary
+  text: '#14110F',          // Varm nærsvart
+  textSecond: '#5C564F',    // Brødtekst
+  textTertiary: '#918B82',  // Dempet
 
-  // Accents — Handleklar orange
-  accent: '#E2552B',        // Primary brand orange
-  accentDark: '#C4431C',    // Darker on hover/press
-  accentAlt: '#FF8C5A',     // Lighter orange
-  accentAltLight: '#FEF0EB',// Tinted bg for accent elements
+  // Accents — dempet terrakotta
+  accent: '#C2502B',
+  accentDark: '#A33F1F',
+  accentAlt: '#D98259',
+  accentAltLight: '#F7EDE7',
 
   // Buttons
-  dark: '#1A1A1A',          // Dark pill buttons
-  darkHover: '#333333',
+  dark: '#14110F',
+  darkHover: '#2E2822',
 
   // UI
-  border: '#E5E3DE',        // Borders
-  borderLight: '#EEECEA',   // Light borders
-  hairline: '#F2F0EC',      // Dividers
+  border: '#E6E1D8',
+  borderLight: '#EFEBE3',
+  hairline: '#E6E1D8',
   white: '#FFFFFF',
 
   // States
-  error: '#D92B2B',
-  success: '#1A7A4A',
+  error: '#B3261E',
+  success: '#2F6B4F',
 };
 
+// Nesten ingen skygge — redaksjonelle sider hviler på papiret, de svever ikke.
 export const shadows = {
-  sm: '0 1px 3px rgba(26,26,26,0.06), 0 2px 6px rgba(26,26,26,0.04)',
-  md: '0 2px 8px rgba(26,26,26,0.06), 0 8px 24px rgba(26,26,26,0.08)',
-  lg: '0 4px 12px rgba(26,26,26,0.08), 0 20px 48px rgba(26,26,26,0.12)',
-  accent: '0 6px 20px rgba(226,85,43,0.35)',
+  sm: 'none',
+  md: '0 1px 2px rgba(20,17,15,0.04)',
+  lg: '0 8px 32px rgba(20,17,15,0.10)',
+  accent: 'none',
 };
 
-// Condensed bold display for headings (matprat-like feel), grotesque for body.
+// Høykontrast serif i overskrifter, nøytral grotesk i brødtekst.
 export const fonts = {
-  display: "'Saira Condensed', 'Archivo', 'Arial Narrow', system-ui, sans-serif",
-  body: "'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif",
+  display: "'Fraunces', Georgia, 'Times New Roman', serif",
+  body: "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
 };
 
 export const radius = {
-  sm: '8px',
-  md: '10px',
-  lg: '14px',
-  xl: '18px',
+  sm: '2px',
+  md: '3px',
+  lg: '4px',
+  xl: '6px',
   round: '999px',
 };
 

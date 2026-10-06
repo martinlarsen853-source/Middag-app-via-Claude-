@@ -4,16 +4,18 @@ import { getMeal, deleteMeal, createMeal } from '../api.js';
 import PersonCounter from './PersonCounter.jsx';
 import { colors, shadows, radius, fonts, foodPhotoFor, mealGradients, defaultMealGradient } from '../theme.js';
 
+// Dempede seksjonsmerker — i handlelista har fargekodingen en jobb å gjøre,
+// men i oppskriften skal den ikke stjele oppmerksomhet fra maten.
 const sectionColors = {
-  'Frukt & grønt': { bg: '#e9f7ee', text: '#1d7a40' },
-  'Kjøtt & fisk': { bg: '#fdeceb', text: '#b3362e' },
-  'Meieri': { bg: '#fdf4e0', text: '#8a6a14' },
-  'Tørrmat': { bg: '#f8efe4', text: '#8a5a24' },
-  'Frys': { bg: '#e7f3fb', text: '#1d6291' },
-  'Bakeri': { bg: '#f9f1de', text: '#856414' },
-  'Krydder & sauser': { bg: '#f3ecfa', text: '#6b3fa3' },
-  'Drikkevarer': { bg: '#e7f3fb', text: '#1d6291' },
-  'Diverse': { bg: '#f0f0f3', text: '#5f5f68' }
+  'Frukt & grønt': { bg: 'transparent', text: '#918B82' },
+  'Kjøtt & fisk': { bg: 'transparent', text: '#918B82' },
+  'Meieri': { bg: 'transparent', text: '#918B82' },
+  'Tørrmat': { bg: 'transparent', text: '#918B82' },
+  'Frys': { bg: 'transparent', text: '#918B82' },
+  'Bakeri': { bg: 'transparent', text: '#918B82' },
+  'Krydder & sauser': { bg: 'transparent', text: '#918B82' },
+  'Drikkevarer': { bg: 'transparent', text: '#918B82' },
+  'Diverse': { bg: 'transparent', text: '#918B82' }
 };
 
 function PriceDots({ level }) {
@@ -156,24 +158,16 @@ export default function MealDetail() {
         Tilbake til mine retter
       </button>
 
-      {/* Hero card */}
-      <div style={{
-        background: colors.bgAlt,
-        borderRadius: radius.xl,
-        overflow: 'hidden',
-        border: `1px solid ${colors.border}`,
-        boxShadow: shadows.md,
-      }}>
-        {/* Photo — falls back to the category gradient + emoji if the image fails */}
+      {/* Oppslag: bilde i full bredde, tittelen under — som i et matmagasin */}
+      <div style={{ background: 'transparent' }}>
         <div style={{
-          position: 'relative', height: '220px',
+          position: 'relative', aspectRatio: '3 / 2',
           background: mealGradients[meal.category] || defaultMealGradient,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
+          overflow: 'hidden',
         }}>
           {imgError ? (
-            <span style={{ fontSize: '4.5rem', lineHeight: 1, filter: 'drop-shadow(0 6px 12px rgba(28,28,26,0.18))' }}>
-              {meal.emoji}
-            </span>
+            <span style={{ fontSize: '4.5rem', lineHeight: 1 }}>{meal.emoji}</span>
           ) : (
             <img
               src={foodPhotoFor(meal)}
@@ -182,31 +176,23 @@ export default function MealDetail() {
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
           )}
-          <span style={{
-            position: 'absolute', bottom: '12px', left: '14px',
-            fontSize: '1.6rem', lineHeight: 1,
-            background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(4px)',
-            borderRadius: '50%', width: '46px', height: '46px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: shadows.sm,
-          }}>{meal.emoji}</span>
         </div>
 
-        <div style={{ padding: '20px 24px 24px', textAlign: 'center' }}>
+        <div style={{ padding: '22px 2px 20px', textAlign: 'center' }}>
+          <p className="eyebrow" style={{ color: colors.accent, margin: '0 0 10px' }}>
+            {meal.category}
+          </p>
           <h1 style={{
             fontFamily: fonts.display,
-            fontSize: '2rem',
-            fontWeight: 700,
+            fontSize: '2.2rem',
+            fontWeight: 600,
             color: colors.text,
-            margin: '0 0 6px',
-            letterSpacing: '0.01em',
+            margin: '0 0 14px',
+            letterSpacing: '-0.02em',
             lineHeight: 1.1,
           }}>
             {meal.name}
           </h1>
-          <p style={{ color: colors.textTertiary, fontSize: '0.85rem', margin: '0 0 16px' }}>
-            {meal.category}
-          </p>
 
           {meal.description && (
             <p style={{ color: colors.textSecond, fontSize: '0.92rem', lineHeight: 1.55, margin: '0 0 16px' }}>
@@ -214,29 +200,30 @@ export default function MealDetail() {
             </p>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px', marginTop: '8px' }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '28px',
+            marginTop: '18px', paddingTop: '18px',
+            borderTop: `1px solid ${colors.hairline}`,
+          }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>⏱</div>
-              <div style={{ color: colors.text, fontWeight: 700 }}>{meal.time_minutes} min</div>
-              <div style={{ color: colors.textTertiary, fontSize: '0.7rem' }}>tilbereding</div>
+              <div className="eyebrow" style={{ color: colors.textTertiary, marginBottom: '5px' }}>Tilbereding</div>
+              <div style={{ color: colors.text, fontWeight: 600, fontSize: '0.95rem' }}>{meal.time_minutes} min</div>
             </div>
-            <div style={{ width: '1px', height: '40px', background: colors.border }} />
+            <div style={{ width: '1px', height: '32px', background: colors.hairline }} />
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>🛒</div>
-              <div style={{ color: colors.accent, fontWeight: 800 }}>
+              <div className="eyebrow" style={{ color: colors.textTertiary, marginBottom: '5px' }}>Handlekurv</div>
+              <div style={{ color: colors.accent, fontWeight: 600, fontSize: '0.95rem' }}>
                 ca. {meal.estimated_price || '–'} kr
               </div>
-              <div style={{ color: colors.textTertiary, fontSize: '0.7rem' }}>handlekurv</div>
             </div>
             {meal.last_eaten && (
               <>
-                <div style={{ width: '1px', height: '40px', background: colors.border }} />
+                <div style={{ width: '1px', height: '32px', background: colors.hairline }} />
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>📅</div>
-                  <div style={{ color: colors.text, fontWeight: 700, fontSize: '0.9rem' }}>
+                  <div className="eyebrow" style={{ color: colors.textTertiary, marginBottom: '5px' }}>Sist spist</div>
+                  <div style={{ color: colors.text, fontWeight: 600, fontSize: '0.95rem' }}>
                     {new Date(meal.last_eaten).toLocaleDateString('no-NO', { month: 'short', day: 'numeric' })}
                   </div>
-                  <div style={{ color: colors.textTertiary, fontSize: '0.7rem' }}>sist spist</div>
                 </div>
               </>
             )}
@@ -344,19 +331,19 @@ export default function MealDetail() {
             width: '100%',
             background: colors.accent,
             color: colors.white,
-            fontWeight: 700,
+            fontFamily: fonts.display,
+            fontWeight: 500,
             padding: '16px',
-            borderRadius: radius.md,
+            borderRadius: radius.sm,
             border: 'none',
             fontSize: '1.1rem',
             cursor: 'pointer',
             transition: 'all 0.2s',
-            boxShadow: shadows.accent,
           }}
           onMouseEnter={e => e.target.style.background = colors.accentDark}
           onMouseLeave={e => e.target.style.background = colors.accent}
         >
-          🛒 Gå til butikk
+          Gå til butikk
         </button>
         {meal.is_catalog ? (
           <button
@@ -375,7 +362,7 @@ export default function MealDetail() {
               transition: 'all 0.2s',
             }}
           >
-            {addedToMine ? '✓ Lagt til i Mine retter' : addingToMine ? 'Legger til…' : '➕ Legg til i Mine retter'}
+            {addedToMine ? 'Lagt til i Mine retter' : addingToMine ? 'Legger til…' : 'Legg til i Mine retter'}
           </button>
         ) : (
           <>
