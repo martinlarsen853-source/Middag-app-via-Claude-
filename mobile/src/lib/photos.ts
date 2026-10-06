@@ -5,11 +5,13 @@ const unsplash = (id: string) => `https://images.unsplash.com/${id}?auto=format&
 // Navnet på retten avgjør bildet, slik at nye retter får et passende bilde uten manuelt arbeid.
 const NAME_PHOTOS: [RegExp, string][] = [
   [/(pizza|pinsa|margherita)/, 'photo-1574071318508-1cdbab80d002'],
-  [/(taco|burrito|fajita|enchilada|quesadilla)/, 'photo-1565299624946-b28f40a0ae38'],
-  [/(wrap|falafel)/, 'photo-1626700051175-6818013e1d4f'],
+  [/(taco|burrito|fajita|enchilada|quesadilla)/, 'photo-1599974579688-8dbdd335c77f'],
+  [/(wrap|falafel|pita|kebab|gyros)/, 'photo-1626700051175-6818013e1d4f'],
+  [/(bakt potet|bakepotet)/, 'photo-1761712826074-5f1bab2b2f32'],
   [/(lasagne|lasagna)/, 'photo-1574894709920-11b28e7367e3'],
   [/(carbonara|spaghetti|bolognese|pasta|penne|tagliatelle|tortellini|sommerfuglpasta)/, 'photo-1621996346565-e3dbc646d9a9'],
-  [/(laks|salmon|ørret)/, 'photo-1467003909585-2f8a72700288'],
+  [/(laks|salmon|ørret)/, 'photo-1656389863625-59de2275fb7e'],
+  [/(fiskekake|fiskebolle|fiskeburger)/, 'photo-1652690772758-45df96e11c50'],
   [/(bacalao|klippfisk|torsk|sei|hyse|fiskepinner|fiskegrateng|fiskesuppe|fisk)/, 'photo-1535140728325-a4d3707eee61'],
   [/(reke|scampi|skalldyr)/, 'photo-1581867286869-fd02aaaef2f2'],
   [/(tikka|masala|butter chicken|curry|karri)/, 'photo-1512058564366-18510be2db19'],
