@@ -1,5 +1,5 @@
-// Auto-generert fra nettsidens oppskriftsbibliotek. Ikke rediger for hånd —
-// kjør generatoren på nytt hvis kildedataene endres.
+// Oppskriftene, opprinnelig generert fra nettsidens oppskriftsbibliotek.
+// Mengdene gjelder for fire personer (se BASE_PERSONS i lib/meals.ts).
 
 export type Ingredient = {
   name: string;
@@ -21,11 +21,6 @@ export type Meal = {
   steps: string[];
 };
 
-export type Store = {
-  id: number;
-  name: string;
-  sectionOrder: string[];
-};
 
 export const MEALS: Meal[] = [
   {
@@ -338,7 +333,7 @@ export const MEALS: Meal[] = [
         "section": "Frukt & grønt"
       },
       {
-        "name": "Suppenudelr",
+        "name": "Suppenudler",
         "quantity": 200,
         "unit": "g",
         "section": "Tørrmat"
@@ -2654,54 +2649,6 @@ export const MEALS: Meal[] = [
       "Kok pastaen etter anvisning på pakken i saltet vann.",
       "Varm kjøttbollene i tomatsaus forsiktig i en kjele til de er varme gjennom.",
       "Topp pastaen med kjøttboller, frisk basilikum og revet parmesan."
-    ]
-  }
-];
-
-export const STORES: Store[] = [
-  {
-    "id": 1,
-    "name": "Rema 1000",
-    "sectionOrder": [
-      "Frukt & grønt",
-      "Bakeri",
-      "Kjøtt & fisk",
-      "Meieri",
-      "Tørrmat",
-      "Krydder & sauser",
-      "Frys",
-      "Drikkevarer",
-      "Diverse"
-    ]
-  },
-  {
-    "id": 2,
-    "name": "Kiwi",
-    "sectionOrder": [
-      "Frukt & grønt",
-      "Kjøtt & fisk",
-      "Meieri",
-      "Bakeri",
-      "Tørrmat",
-      "Frys",
-      "Krydder & sauser",
-      "Drikkevarer",
-      "Diverse"
-    ]
-  },
-  {
-    "id": 3,
-    "name": "Coop Extra",
-    "sectionOrder": [
-      "Bakeri",
-      "Frukt & grønt",
-      "Kjøtt & fisk",
-      "Meieri",
-      "Frys",
-      "Tørrmat",
-      "Krydder & sauser",
-      "Drikkevarer",
-      "Diverse"
     ]
   }
 ];

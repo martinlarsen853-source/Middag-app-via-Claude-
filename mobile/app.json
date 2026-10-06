@@ -22,8 +22,10 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "output": "single",
+      "favicon": "./assets/images/favicon.png",
+      "name": "Handleklar",
+      "themeColor": "#FAF8F5"
     },
     "plugins": [
       "expo-router",

@@ -1,4 +1,5 @@
 import type { Ingredient, Meal } from '@/data/meals';
+import { STOPS, stopFor, type StopId } from '@/lib/stops';
 
 // Oppskriftene er lagret med mengder for fire personer.
 export const BASE_PERSONS = 4;
@@ -51,31 +52,40 @@ export function estimateMealPrice(meal: Meal, persons: number = BASE_PERSONS): n
   return Math.round(total);
 }
 
-// Slår sammen ingredienser fra en rett og sorterer dem etter butikkens hylleoppsett.
-export type ShoppingSection = {
-  section: string;
-  items: Ingredient[];
+export type ShoppingItem = {
+  // Plassen i oppskriften. Brukes som nøkkel for avhuking, så huking følger
+  // varen selv om butikkens rekkefølge endres underveis.
+  index: number;
+  ingredient: Ingredient;
 };
 
-export function buildShoppingList(meal: Meal, sectionOrder: string[]): ShoppingSection[] {
-  const bySection = new Map<string, Ingredient[]>();
-  for (const ing of meal.ingredients) {
-    const list = bySection.get(ing.section) ?? [];
-    list.push(ing);
-    bySection.set(ing.section, list);
-  }
+export type ShoppingStop = {
+  stop: StopId;
+  label: string;
+  items: ShoppingItem[];
+};
 
-  const ordered: ShoppingSection[] = [];
-  for (const section of sectionOrder) {
-    const items = bySection.get(section);
+// Grupperer rettens varer per stopp og legger stoppene i butikkens rekkefølge.
+export function buildShoppingList(meal: Meal, storeStops: StopId[]): ShoppingStop[] {
+  const byStop = new Map<StopId, ShoppingItem[]>();
+  meal.ingredients.forEach((ingredient, index) => {
+    const stop = stopFor(ingredient);
+    const list = byStop.get(stop) ?? [];
+    list.push({ index, ingredient });
+    byStop.set(stop, list);
+  });
+
+  const ordered: ShoppingStop[] = [];
+  for (const stop of storeStops) {
+    const items = byStop.get(stop);
     if (items?.length) {
-      ordered.push({ section, items });
-      bySection.delete(section);
+      ordered.push({ stop, label: STOPS[stop], items });
+      byStop.delete(stop);
     }
   }
-  // Seksjoner butikken ikke har definert rekkefølge for havner nederst.
-  for (const [section, items] of bySection) {
-    ordered.push({ section, items });
+  // Stopp butikken mangler i rekkefølgen sin havner sist, så ingen vare forsvinner.
+  for (const [stop, items] of byStop) {
+    ordered.push({ stop, label: STOPS[stop], items });
   }
   return ordered;
 }

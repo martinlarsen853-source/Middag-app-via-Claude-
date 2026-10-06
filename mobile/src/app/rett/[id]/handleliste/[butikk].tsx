@@ -1,26 +1,30 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, radius, spacing } from '@/constants/theme';
-import { MEALS, STORES } from '@/data/meals';
+import { MEALS } from '@/data/meals';
 import { buildShoppingList, formatQuantity, scaleQuantity } from '@/lib/meals';
+import type { StopId } from '@/lib/stops';
 import { useApp } from '@/lib/store';
 
 export default function ShoppingListScreen() {
   const { id, butikk } = useLocalSearchParams<{ id: string; butikk: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { persons, checked, toggleChecked, clearChecked } = useApp();
+  const { persons, checked, toggleChecked, clearChecked, stores, ready } = useApp();
+  const [expanded, setExpanded] = useState<Set<StopId>>(new Set());
 
   const meal = MEALS.find(m => String(m.id) === String(id));
-  const store = STORES.find(s => String(s.id) === String(butikk));
+  const store = stores.find(s => s.id === String(butikk));
 
-  const sections = useMemo(
-    () => (meal && store ? buildShoppingList(meal, store.sectionOrder) : []),
+  const stops = useMemo(
+    () => (meal && store ? buildShoppingList(meal, store.stops) : []),
     [meal, store],
   );
+
+  if (!ready) return null;
 
   if (!meal || !store) {
     return (
@@ -33,11 +37,18 @@ export default function ShoppingListScreen() {
     );
   }
 
-  const prefix = `${meal.id}:${store.id}:`;
+  // Avhuking følger retten, ikke butikken — bytter du butikk underveis beholdes det du har.
+  const prefix = `${meal.id}:`;
+  const isChecked = (index: number) => Boolean(checked[`${prefix}${index}`]);
   const total = meal.ingredients.length;
-  const done = meal.ingredients.filter((ing, index) => checked[`${prefix}${index}`]).length;
+  const done = meal.ingredients.filter((_, index) => isChecked(index)).length;
+  const allDone = total > 0 && done === total;
+  const currentStop = stops.find(stop => stop.items.some(item => !isChecked(item.index)))?.stop;
 
-  let itemIndex = -1;
+  function finish() {
+    clearChecked(prefix);
+    router.dismissTo('/');
+  }
 
   return (
     <>
@@ -48,36 +59,73 @@ export default function ShoppingListScreen() {
           <Text style={styles.summaryMeta}>
             {persons} {persons === 1 ? 'person' : 'personer'} · {done} av {total} i kurven
           </Text>
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${total ? (done / total) * 100 : 0}%` }]} />
+          </View>
         </View>
 
-        {sections.map(section => (
-          <View key={section.section} style={styles.section}>
-            <Text style={styles.sectionTitle}>{section.section}</Text>
-            <View style={styles.card}>
-              {section.items.map((item, indexInSection) => {
-                itemIndex += 1;
-                const key = `${prefix}${itemIndex}`;
-                const isChecked = Boolean(checked[key]);
+        {allDone && (
+          <View style={styles.donePanel}>
+            <Text style={styles.doneTitle}>Alt er i kurven</Text>
+            <Text style={styles.doneText}>God middag!</Text>
+            <Pressable onPress={finish} style={styles.primaryButton}>
+              <Text style={styles.primaryButtonText}>Ferdig handlet</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {stops.map(stop => {
+          const stopDone = stop.items.every(item => isChecked(item.index));
+          const isCurrent = stop.stop === currentStop;
+          const collapsed = stopDone && !expanded.has(stop.stop);
+
+          if (collapsed) {
+            return (
+              <Pressable
+                key={stop.stop}
+                onPress={() => setExpanded(current => new Set(current).add(stop.stop))}
+                style={styles.collapsedStop}>
+                <Text style={styles.collapsedCheck}>✓</Text>
+                <Text style={styles.collapsedLabel}>{stop.label}</Text>
+                <Text style={styles.collapsedCount}>{stop.items.length}</Text>
+              </Pressable>
+            );
+          }
+
+          return (
+            <View key={stop.stop} style={[styles.stop, isCurrent && styles.stopCurrent]}>
+              <View style={styles.stopHeader}>
+                <Text style={[styles.stopLabel, isCurrent && styles.stopLabelCurrent]}>{stop.label}</Text>
+                {isCurrent && <Text style={styles.nextBadge}>Neste</Text>}
+              </View>
+              {stop.items.map((item, position) => {
+                const itemChecked = isChecked(item.index);
                 return (
                   <Pressable
-                    key={key}
-                    onPress={() => toggleChecked(key)}
-                    style={[styles.itemRow, indexInSection > 0 && styles.rowDivider]}>
-                    <View style={[styles.checkbox, isChecked && styles.checkboxChecked]}>
-                      {isChecked && <Text style={styles.checkmark}>✓</Text>}
+                    key={item.index}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: itemChecked }}
+                    onPress={() => toggleChecked(`${prefix}${item.index}`)}
+                    style={[styles.itemRow, position > 0 && styles.rowDivider]}>
+                    <View style={[styles.checkbox, itemChecked && styles.checkboxChecked]}>
+                      {itemChecked && <Text style={styles.checkmark}>✓</Text>}
                     </View>
-                    <Text style={[styles.itemName, isChecked && styles.itemNameChecked]}>{item.name}</Text>
-                    <Text style={[styles.itemAmount, isChecked && styles.itemNameChecked]}>
-                      {formatQuantity(scaleQuantity(item.quantity, persons), item.unit)}
+                    <Text style={[styles.itemName, itemChecked && styles.itemChecked]}>{item.ingredient.name}</Text>
+                    <Text style={[styles.itemAmount, itemChecked && styles.itemChecked]}>
+                      {formatQuantity(scaleQuantity(item.ingredient.quantity, persons), item.ingredient.unit)}
                     </Text>
                   </Pressable>
                 );
               })}
             </View>
-          </View>
-        ))}
+          );
+        })}
 
-        {done > 0 && (
+        <Pressable onPress={() => router.push(`/butikker/${store.id}`)} style={styles.editLink}>
+          <Text style={styles.editLinkText}>Stemmer ikke rekkefølgen? Endre den for {store.name}</Text>
+        </Pressable>
+
+        {done > 0 && !allDone && (
           <Pressable onPress={() => clearChecked(prefix)} style={styles.secondaryButton}>
             <Text style={styles.secondaryButtonText}>Nullstill huking</Text>
           </Pressable>
@@ -90,36 +138,109 @@ export default function ShoppingListScreen() {
 const styles = StyleSheet.create({
   content: {
     padding: spacing.lg,
-    gap: spacing.lg,
+    gap: spacing.md,
   },
   summary: {
     gap: spacing.xs,
+    marginBottom: spacing.sm,
   },
   summaryTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '700',
     color: colors.text,
   },
   summaryMeta: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.textSecond,
   },
-  section: {
+  progressTrack: {
+    height: 6,
+    borderRadius: radius.round,
+    backgroundColor: colors.surfaceMuted,
+    overflow: 'hidden',
+    marginTop: spacing.sm,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: colors.accent,
+  },
+  donePanel: {
+    backgroundColor: colors.accentTint,
+    borderRadius: radius.md,
+    padding: spacing.xl,
+    alignItems: 'center',
     gap: spacing.sm,
   },
-  sectionTitle: {
+  doneTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  doneText: {
+    fontSize: 15,
+    color: colors.textSecond,
+    marginBottom: spacing.sm,
+  },
+  collapsedStop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceMuted,
+  },
+  collapsedCheck: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.success,
+  },
+  collapsedLabel: {
+    flex: 1,
+    fontSize: 15,
+    color: colors.textTertiary,
+  },
+  collapsedCount: {
+    fontSize: 13,
+    color: colors.textTertiary,
+  },
+  stop: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+  },
+  stopCurrent: {
+    borderColor: colors.accent,
+    borderWidth: 2,
+  },
+  stopHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: spacing.xs,
+  },
+  stopLabel: {
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     color: colors.textTertiary,
   },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.lg,
+  stopLabelCurrent: {
+    color: colors.accent,
+  },
+  nextBadge: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.surface,
+    backgroundColor: colors.accent,
+    borderRadius: radius.round,
+    paddingVertical: 2,
+    paddingHorizontal: spacing.sm,
+    overflow: 'hidden',
   },
   rowDivider: {
     borderTopWidth: 1,
@@ -129,13 +250,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.lg,
+    minHeight: 56,
   },
   checkbox: {
-    width: 24,
-    height: 24,
+    width: 28,
+    height: 28,
     borderRadius: radius.sm,
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
@@ -146,23 +268,33 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     color: colors.surface,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
-    lineHeight: 18,
+    lineHeight: 20,
   },
   itemName: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 17,
     color: colors.text,
   },
-  itemNameChecked: {
+  itemChecked: {
     color: colors.textTertiary,
     textDecorationLine: 'line-through',
   },
   itemAmount: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
     color: colors.text,
+  },
+  editLink: {
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  editLinkText: {
+    fontSize: 14,
+    color: colors.accentDark,
+    textDecorationLine: 'underline',
+    textAlign: 'center',
   },
   secondaryButton: {
     borderRadius: radius.md,
@@ -183,6 +315,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.xl,
     alignItems: 'center',
+    alignSelf: 'stretch',
   },
   primaryButtonText: {
     color: colors.surface,
