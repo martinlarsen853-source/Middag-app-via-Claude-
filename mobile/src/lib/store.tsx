@@ -33,6 +33,7 @@ type AppState = {
   // Bare eieren kan endre butikkene. Rekkefølgen er felles for alle.
   isOwner: boolean;
   unlockOwner: (key: string) => Promise<boolean>;
+  claimOwner: () => Promise<void>;
   lockOwner: () => void;
   storeSyncError: string | null;
   ready: boolean;
@@ -133,26 +134,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
-  const unlockOwner = useCallback(
+  const becomeOwner = useCallback(
     async (key: string) => {
-      const trimmed = key.trim();
-      if (!(await cloud.checkOwner(trimmed))) return false;
-      ownerKeyRef.current = trimmed;
-      setOwnerKey(trimmed);
-      await AsyncStorage.setItem(OWNER_KEY, trimmed);
+      ownerKeyRef.current = key;
+      setOwnerKey(key);
+      await AsyncStorage.setItem(OWNER_KEY, key);
       // Har eieren rettet rekkefølgen lokalt før den ble felles, tas det med opp.
       const legacy = await AsyncStorage.getItem(LEGACY_STORES_KEY);
       if (legacy) {
         const local = normalizeStores(JSON.parse(legacy));
-        for (const store of local) await cloud.saveStore(trimmed, { id: store.id, name: store.name, stops: store.stops });
+        for (const store of local) await cloud.saveStore(key, { id: store.id, name: store.name, stops: store.stops });
         await AsyncStorage.removeItem(LEGACY_STORES_KEY);
-        const shared = await cloud.listStores();
-        applyStores(normalizeStores(shared));
+        applyStores(normalizeStores(await cloud.listStores()));
       }
-      return true;
     },
     [applyStores],
   );
+
+  const unlockOwner = useCallback(
+    async (key: string) => {
+      const trimmed = key.trim();
+      if (!(await cloud.checkOwner(trimmed))) return false;
+      await becomeOwner(trimmed);
+      return true;
+    },
+    [becomeOwner],
+  );
+
+  const claimOwner = useCallback(async () => {
+    await becomeOwner(await cloud.claimOwner());
+  }, [becomeOwner]);
 
   const lockOwner = useCallback(() => {
     ownerKeyRef.current = null;
@@ -275,6 +286,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       resetStore,
       isOwner: Boolean(ownerKey),
       unlockOwner,
+      claimOwner,
       lockOwner,
       storeSyncError,
       ready,
@@ -295,6 +307,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       resetStore,
       ownerKey,
       unlockOwner,
+      claimOwner,
       lockOwner,
       storeSyncError,
       ready,

@@ -67,3 +67,12 @@ export function saveStore(key: string, store: SharedStore): Promise<SharedStore>
 export function hideStore(key: string, id: string): Promise<boolean> {
   return rpc<boolean>('hk_hide_store', { p_key: key, p_id: id });
 }
+
+export function ownerClaimOpen(): Promise<boolean> {
+  return rpc<boolean>('hk_owner_claim_open', {});
+}
+
+// Gjør denne telefonen til eier. Virker bare én gang; databasen lager nøkkelen.
+export function claimOwner(): Promise<string> {
+  return rpc<string>('hk_claim_owner', {});
+}

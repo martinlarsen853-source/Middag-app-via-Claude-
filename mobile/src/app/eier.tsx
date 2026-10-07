@@ -5,17 +5,36 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Body, Button, Eyebrow, Page, Title } from '@/components/ui';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
+import * as cloud from '@/lib/cloud';
 import { useApp } from '@/lib/store';
 
-// Låser opp eiermodus på denne telefonen. Eieren åpner en lenke med nøkkelen
-// én gang; etter det kan bare denne telefonen endre butikkenes rekkefølge.
+// Gjør denne telefonen til eier. Første gang trykker eieren «Gjør denne telefonen
+// til eier» mens muligheten er åpen; databasen lager da en nøkkel som bare lagres
+// her. Etter det kan bare denne telefonen endre butikkenes rekkefølge.
 export default function OwnerScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ nokkel?: string }>();
-  const { isOwner, unlockOwner, lockOwner, ready } = useApp();
+  const { isOwner, unlockOwner, claimOwner, lockOwner, ready } = useApp();
   const [key, setKey] = useState('');
-  const [status, setStatus] = useState<'idle' | 'checking' | 'wrong' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'checking' | 'wrong' | 'error' | 'taken'>('idle');
+  const [claimOpen, setClaimOpen] = useState(false);
   const tried = useRef(false);
+
+  useEffect(() => {
+    if (isOwner) return;
+    cloud.ownerClaimOpen().then(setClaimOpen).catch(() => setClaimOpen(false));
+  }, [isOwner]);
+
+  async function claim() {
+    setStatus('checking');
+    try {
+      await claimOwner();
+      setStatus('idle');
+    } catch (error) {
+      setClaimOpen(false);
+      setStatus(error instanceof cloud.CloudError && error.status === 403 ? 'taken' : 'error');
+    }
+  }
 
   async function unlock(value: string) {
     if (!value.trim()) return;
@@ -61,6 +80,20 @@ export default function OwnerScreen() {
           <>
             <Title size="md">Bare eieren kan endre butikkene</Title>
             <Body>Butikkenes rekkefølge er felles for alle og settes opp av eieren.</Body>
+            {claimOpen && (
+              <View style={styles.claim}>
+                <Body>Er dette telefonen din? Trykk under, så blir den eier. Det kan bare gjøres én gang.</Body>
+                <Button
+                  label="Gjør denne telefonen til eier"
+                  icon="phone-portrait-outline"
+                  variant="lime"
+                  onPress={claim}
+                  disabled={status === 'checking'}
+                  style={styles.button}
+                />
+              </View>
+            )}
+            {status === 'taken' && <Text style={styles.error}>Eierskapet er allerede tatt.</Text>}
             <TextInput
               value={key}
               onChangeText={setKey}
@@ -117,6 +150,10 @@ const styles = StyleSheet.create({
   },
   button: {
     alignSelf: 'flex-start',
+  },
+  claim: {
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
   },
   actions: {
     flexDirection: 'row',
