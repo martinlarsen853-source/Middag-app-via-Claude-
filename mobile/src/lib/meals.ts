@@ -12,11 +12,22 @@ export function scaleQuantity(quantity: number, persons: number, base: number = 
   return (quantity * persons) / base;
 }
 
+// Enheter man bare kan kjøpe hele av. I butikken blir «0,5 boks» til «1 boks».
+const WHOLE_UNITS = ['pk', 'pakke', 'boks', 'pose', 'glass', 'flaske', 'beger', 'hode', 'bunt', 'stk', 'terning'];
+
 // Mengden slik den vises i oppskriften og handlelista. Varer valgt som pakker
-// rundes opp til hele pakker, alt annet vises som oppskriftsmengde.
-export function displayAmount(ingredient: Ingredient, persons: number, base: number = BASE_PERSONS): string {
+// rundes alltid opp; på handlelista rundes også bokser, poser og stykk opp.
+export function displayAmount(
+  ingredient: Ingredient,
+  persons: number,
+  base: number = BASE_PERSONS,
+  { shopping = false }: { shopping?: boolean } = {},
+): string {
   const quantity = scaleQuantity(ingredient.quantity, persons, base);
-  if (ingredient.unit === 'pk') return `${Math.max(1, Math.ceil(quantity - 0.05))} pk`;
+  const unit = ingredient.unit.toLowerCase();
+  if (unit === 'pk' || (shopping && WHOLE_UNITS.includes(unit))) {
+    return `${Math.max(1, Math.ceil(quantity - 0.05))} ${ingredient.unit}`;
+  }
   return formatQuantity(quantity, ingredient.unit);
 }
 

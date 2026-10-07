@@ -3,19 +3,22 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Body, Button, Chip, Eyebrow, Meta, Page, Title } from '@/components/ui';
+import { Body, Button, Chip, Eyebrow, Page, Title } from '@/components/ui';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
+import type { Ingredient } from '@/data/meals';
 import { buildShoppingList, displayAmount, mealBase } from '@/lib/meals';
 import { useMeals } from '@/lib/meals-store';
 import { chainFor, formatPrice, isPantry, mealEans, mealPrice, usePrices } from '@/lib/prices';
-import type { StopId } from '@/lib/stops';
 import { useApp } from '@/lib/store';
 
+// Lista er snudd opp ned i forhold til en vanlig liste: det du skal hente neste
+// står alltid øverst, og det du har tatt samles nederst i «I kurven», der du
+// kan legge det tilbake med ett trykk. Slik slipper du å scrolle i butikken.
 export default function ShoppingListScreen() {
   const router = useRouter();
   const { activeList, setActiveList, persons, checked, toggleChecked, clearChecked, stores, ready } = useApp();
-  const [expanded, setExpanded] = useState<Set<StopId>>(new Set());
   const { findMeal, loading } = useMeals();
+  const [lastChecked, setLastChecked] = useState<number | null>(null);
 
   const meal = findMeal(activeList?.mealId);
   // Er butikken slettet siden lista ble laget, bruker vi den første butikken.
@@ -47,9 +50,27 @@ export default function ShoppingListScreen() {
   const total = meal.ingredients.length;
   const done = meal.ingredients.filter((_, index) => isChecked(index)).length;
   const allDone = total > 0 && done === total;
-  const currentStop = stops.find(stop => stop.items.some(item => !isChecked(item.index)))?.stop;
   const base = mealBase(meal);
   const price = mealPrice(meal, persons, chainFor(store), book);
+  const amount = (ingredient: Ingredient) => displayAmount(ingredient, persons, base, { shopping: true });
+
+  // Stoppene med noe igjen, i gå-rekkefølge. Det første er «Neste».
+  const remaining = stops
+    .map(stop => ({ ...stop, items: stop.items.filter(item => !isChecked(item.index)) }))
+    .filter(stop => stop.items.length > 0);
+  // Det som er i kurven, i samme rekkefølge som du plukket det i butikken.
+  const inBasket = stops.flatMap(stop => stop.items.filter(item => isChecked(item.index)));
+  const undoItem = lastChecked !== null && isChecked(lastChecked) ? meal.ingredients[lastChecked] : undefined;
+
+  function check(index: number) {
+    toggleChecked(`${prefix}${index}`);
+    setLastChecked(index);
+  }
+
+  function putBack(index: number) {
+    toggleChecked(`${prefix}${index}`);
+    setLastChecked(null);
+  }
 
   function finish() {
     clearChecked(prefix);
@@ -60,32 +81,43 @@ export default function ShoppingListScreen() {
   return (
     <Page maxWidth={760}>
       <View style={styles.header}>
-        <Eyebrow>Handleliste</Eyebrow>
-        <Title size="lg">{meal.name}</Title>
-        <View style={styles.metaRow}>
-          <Meta icon="storefront-outline">{store.name}</Meta>
-          <Meta icon="people-outline">
-            {persons} {persons === 1 ? 'person' : 'personer'}
-          </Meta>
-          <Meta icon="basket-outline">
+        <Text style={styles.eyebrowLine} numberOfLines={1}>
+          Handleliste · {store.name} · {persons} {persons === 1 ? 'person' : 'personer'}
+        </Text>
+        <View style={styles.titleRow}>
+          <Title size="sm" style={styles.title}>
+            {meal.name}
+          </Title>
+          <Text style={styles.price}>{formatPrice(price)}</Text>
+        </View>
+        <View style={styles.progressRow}>
+          <View
+            style={styles.progressTrack}
+            accessibilityRole="progressbar"
+            accessibilityValue={{ min: 0, max: total, now: done }}>
+            <View style={[styles.progressFill, { width: `${total ? (done / total) * 100 : 0}%` }]} />
+          </View>
+          <Text style={styles.progressText}>
             {done} av {total} i kurven
-          </Meta>
-          <Meta icon="wallet-outline">{formatPrice(price)}</Meta>
-        </View>
-        <View style={styles.progressTrack} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: done }}>
-          <View style={[styles.progressFill, { width: `${total ? (done / total) * 100 : 0}%` }]} />
-        </View>
-        <View style={styles.storeChips}>
-          {stores.map(s => (
-            <Chip
-              key={s.id}
-              label={s.name}
-              selected={s.id === store.id}
-              onPress={() => setActiveList({ mealId: meal.id, storeId: s.id })}
-            />
-          ))}
+          </Text>
         </View>
       </View>
+
+      {undoItem && (
+        <View style={styles.undoBar}>
+          <Ionicons name="checkmark-circle" size={18} color={colors.green} />
+          <Text style={styles.undoText} numberOfLines={1}>
+            {undoItem.name} er i kurven
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Angre ${undoItem.name}`}
+            onPress={() => lastChecked !== null && putBack(lastChecked)}
+            hitSlop={8}>
+            <Text style={styles.undoAction}>Angre</Text>
+          </Pressable>
+        </View>
+      )}
 
       {allDone && (
         <View style={styles.doneCard}>
@@ -96,71 +128,77 @@ export default function ShoppingListScreen() {
       )}
 
       <View style={styles.stops}>
-        {stops.map(stop => {
-          const stopDone = stop.items.every(item => isChecked(item.index));
-          const isCurrent = stop.stop === currentStop;
-          const collapsed = stopDone && !expanded.has(stop.stop);
-
-          if (collapsed) {
-            return (
-              <Pressable
-                key={stop.stop}
-                accessibilityRole="button"
-                accessibilityLabel={`${stop.label}, ferdig. Trykk for å vise`}
-                onPress={() => setExpanded(current => new Set(current).add(stop.stop))}
-                style={styles.collapsed}>
-                <Ionicons name="checkmark-circle" size={20} color={colors.green} />
-                <Text style={styles.collapsedLabel}>{stop.label}</Text>
-                <Text style={styles.collapsedCount}>{stop.items.length}</Text>
-              </Pressable>
-            );
-          }
-
+        {remaining.map((stop, position) => {
+          const isNext = position === 0;
           return (
-            <View key={stop.stop} style={[styles.stop, isCurrent && styles.stopCurrent]}>
+            <View key={stop.stop} style={[styles.stop, isNext && styles.stopNext]}>
               <View style={styles.stopHeader}>
-                <Text style={styles.stopLabel}>{stop.label}</Text>
-                {isCurrent ? (
+                <Text style={[styles.stopLabel, !isNext && styles.stopLabelLater]}>{stop.label}</Text>
+                {isNext ? (
                   <View style={styles.nextPill}>
                     <Text style={styles.nextPillText}>Neste</Text>
                   </View>
                 ) : (
-                  <Text style={styles.stopCount}>
-                    {stop.items.filter(item => isChecked(item.index)).length}/{stop.items.length}
-                  </Text>
+                  <Text style={styles.stopCount}>{stop.items.length} igjen</Text>
                 )}
               </View>
-              {stop.items.map(item => {
-                const itemChecked = isChecked(item.index);
-                return (
-                  <Pressable
-                    key={item.index}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: itemChecked }}
-                    accessibilityLabel={item.ingredient.name}
-                    onPress={() => toggleChecked(`${prefix}${item.index}`)}
-                    style={styles.item}>
-                    <View style={[styles.checkbox, itemChecked && styles.checkboxChecked]}>
-                      {itemChecked && <Ionicons name="checkmark" size={18} color={colors.limeStrong} />}
-                    </View>
-                    <View style={styles.itemText}>
-                      <Text style={[styles.itemName, itemChecked && styles.itemDone]}>{item.ingredient.name}</Text>
-                      {isPantry(item.ingredient) && !itemChecked && (
-                        <Text style={styles.itemHint}>Sjekk om du har hjemme</Text>
-                      )}
-                    </View>
-                    <Text style={[styles.itemAmount, itemChecked && styles.itemDone]}>
-                      {displayAmount(item.ingredient, persons, base)}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+              {stop.items.map(item => (
+                <Pressable
+                  key={item.index}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: false }}
+                  accessibilityLabel={item.ingredient.name}
+                  onPress={() => check(item.index)}
+                  style={[styles.item, !isNext && styles.itemLater]}>
+                  <View style={[styles.checkbox, !isNext && styles.checkboxLater]} />
+                  <View style={styles.itemText}>
+                    <Text style={[styles.itemName, !isNext && styles.itemNameLater]}>{item.ingredient.name}</Text>
+                    {isPantry(item.ingredient) && <Text style={styles.itemHint}>Sjekk om du har hjemme</Text>}
+                  </View>
+                  <Text style={[styles.itemAmount, !isNext && styles.itemAmountLater]}>{amount(item.ingredient)}</Text>
+                </Pressable>
+              ))}
             </View>
           );
         })}
       </View>
 
+      {inBasket.length > 0 && (
+        <View style={styles.basket}>
+          <View style={styles.basketHeader}>
+            <Text style={styles.basketTitle}>I kurven ({inBasket.length})</Text>
+            <Text style={styles.basketHint}>Trykk for å legge tilbake</Text>
+          </View>
+          {inBasket.map(item => (
+            <Pressable
+              key={item.index}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: true }}
+              accessibilityLabel={item.ingredient.name}
+              onPress={() => putBack(item.index)}
+              style={styles.basketItem}>
+              <View style={[styles.checkbox, styles.checkboxChecked]}>
+                <Ionicons name="checkmark" size={16} color={colors.limeStrong} />
+              </View>
+              <Text style={styles.basketName}>{item.ingredient.name}</Text>
+              <Text style={styles.basketAmount}>{amount(item.ingredient)}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+
       <View style={styles.footer}>
+        <Eyebrow>Butikk</Eyebrow>
+        <View style={styles.storeChips}>
+          {stores.map(s => (
+            <Chip
+              key={s.id}
+              label={s.name}
+              selected={s.id === store.id}
+              onPress={() => setActiveList({ mealId: meal.id, storeId: s.id })}
+            />
+          ))}
+        </View>
         <Pressable accessibilityRole="link" onPress={() => router.push(`/butikker/${store.id}`)} style={styles.footerLink}>
           <Ionicons name="swap-vertical" size={16} color={colors.green} />
           <Text style={styles.footerLinkText}>Stemmer ikke rekkefølgen? Endre den for {store.name}</Text>
@@ -188,39 +226,81 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   header: {
-    gap: spacing.sm,
-    marginBottom: spacing.xl,
+    gap: spacing.xs,
+    marginBottom: spacing.lg,
   },
-  metaRow: {
+  eyebrowLine: {
+    fontFamily: fonts.monoMedium,
+    fontSize: 12,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: colors.inkSoft,
+  },
+  titleRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.lg,
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  title: {
+    flexShrink: 1,
+  },
+  price: {
+    fontFamily: fonts.monoMedium,
+    fontSize: 15,
+    color: colors.ink,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
     marginTop: spacing.xs,
   },
   progressTrack: {
+    flex: 1,
     height: 8,
     borderRadius: radius.round,
     backgroundColor: colors.beige,
     overflow: 'hidden',
-    marginTop: spacing.md,
   },
   progressFill: {
     height: '100%',
     borderRadius: radius.round,
     backgroundColor: colors.ink,
   },
-  storeChips: {
+  progressText: {
+    fontFamily: fonts.mono,
+    fontSize: 13,
+    color: colors.inkSoft,
+  },
+  undoBar: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
     gap: spacing.sm,
-    marginTop: spacing.md,
+    backgroundColor: colors.beige,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.lg,
+    minHeight: 44,
+    marginBottom: spacing.md,
+  },
+  undoText: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.inkSoft,
+  },
+  undoAction: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 15,
+    color: colors.green,
+    textDecorationLine: 'underline',
   },
   doneCard: {
     backgroundColor: colors.lime,
     borderRadius: radius.xl,
     padding: spacing.xl,
     gap: spacing.sm,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
   doneButton: {
     alignSelf: 'flex-start',
@@ -229,39 +309,19 @@ const styles = StyleSheet.create({
   stops: {
     gap: spacing.md,
   },
-  collapsed: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.beige,
-    borderRadius: radius.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    minHeight: 52,
-  },
-  collapsedLabel: {
-    flex: 1,
-    fontFamily: fonts.body,
-    fontSize: 16,
-    color: colors.inkSoft,
-  },
-  collapsedCount: {
-    fontFamily: fonts.mono,
-    fontSize: 13,
-    color: colors.muted,
-  },
   stop: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.line,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
+    paddingTop: spacing.md,
     paddingBottom: spacing.xs,
   },
-  stopCurrent: {
+  stopNext: {
     backgroundColor: colors.lime,
     borderColor: colors.limeStrong,
+    paddingTop: spacing.lg,
   },
   stopHeader: {
     flexDirection: 'row',
@@ -271,8 +331,11 @@ const styles = StyleSheet.create({
   },
   stopLabel: {
     fontFamily: fonts.display,
-    fontSize: 24,
+    fontSize: 26,
     color: colors.ink,
+  },
+  stopLabelLater: {
+    fontSize: 20,
   },
   stopCount: {
     fontFamily: fonts.mono,
@@ -296,21 +359,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    minHeight: 60,
+    minHeight: 64,
     borderTopWidth: 1,
+    borderTopColor: colors.limeStrong,
+  },
+  itemLater: {
+    minHeight: 52,
     borderTopColor: colors.line,
   },
   checkbox: {
-    width: 30,
-    height: 30,
+    width: 32,
+    height: 32,
     borderRadius: radius.round,
     borderWidth: 2,
-    borderColor: colors.inkSoft,
+    borderColor: colors.ink,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.surface,
   },
+  checkboxLater: {
+    width: 26,
+    height: 26,
+    borderColor: colors.inkSoft,
+  },
   checkboxChecked: {
+    width: 26,
+    height: 26,
     backgroundColor: colors.ink,
     borderColor: colors.ink,
   },
@@ -318,29 +392,83 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: spacing.sm,
   },
+  itemName: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 18,
+    color: colors.ink,
+  },
+  itemNameLater: {
+    fontSize: 16,
+  },
   itemHint: {
     fontFamily: fonts.mono,
     fontSize: 12,
     color: colors.muted,
     marginTop: 2,
   },
-  itemName: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 17,
-    color: colors.ink,
-  },
   itemAmount: {
     fontFamily: fonts.monoMedium,
-    fontSize: 15,
+    fontSize: 16,
     color: colors.ink,
   },
-  itemDone: {
+  itemAmountLater: {
+    fontSize: 14,
+  },
+  basket: {
+    marginTop: spacing.xl,
+    backgroundColor: colors.beige,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xs,
+  },
+  basketHeader: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  basketTitle: {
+    fontFamily: fonts.display,
+    fontSize: 20,
+    color: colors.ink,
+  },
+  basketHint: {
+    fontFamily: fonts.mono,
+    fontSize: 12,
+    color: colors.muted,
+  },
+  basketItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    minHeight: 48,
+    borderTopWidth: 1,
+    borderTopColor: colors.beigeDark,
+  },
+  basketName: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: 16,
+    color: colors.muted,
+    textDecorationLine: 'line-through',
+  },
+  basketAmount: {
+    fontFamily: fonts.mono,
+    fontSize: 14,
     color: colors.muted,
     textDecorationLine: 'line-through',
   },
   footer: {
     marginTop: spacing.xxl,
-    gap: spacing.lg,
+    gap: spacing.md,
+  },
+  storeChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
   },
   footerLink: {
     flexDirection: 'row',
