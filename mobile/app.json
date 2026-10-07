@@ -14,7 +14,7 @@
     "android": {
       "package": "no.handleklar.app",
       "adaptiveIcon": {
-        "backgroundColor": "#FAF8F5",
+        "backgroundColor": "#FEFEF7",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -25,14 +25,14 @@
       "output": "single",
       "favicon": "./assets/images/favicon.png",
       "name": "Handleklar",
-      "themeColor": "#FAF8F5"
+      "themeColor": "#FEFEF7"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FAF8F5",
+          "backgroundColor": "#FEFEF7",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }

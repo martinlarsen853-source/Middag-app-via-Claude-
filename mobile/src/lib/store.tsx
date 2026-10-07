@@ -7,8 +7,13 @@ import { ALL_STOP_IDS, type StopId } from '@/lib/stops';
 const PERSONS_KEY = 'handleklar.persons';
 const CHECKED_KEY = 'handleklar.checked';
 const STORES_KEY = 'handleklar.stores';
+const ACTIVE_KEY = 'handleklar.activeList';
+
+export type ActiveList = { mealId: number; storeId: string };
 
 type AppState = {
+  activeList: ActiveList | null;
+  setActiveList: (next: ActiveList | null) => void;
   persons: number;
   setPersons: (next: number) => void;
   checked: Record<string, boolean>;
@@ -44,27 +49,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [persons, setPersonsState] = useState(2);
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [stores, setStores] = useState<Store[]>(DEFAULT_STORES);
+  const [activeList, setActiveListState] = useState<ActiveList | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     // Leser lagrede valg én gang ved oppstart. Feiler dette bruker vi standardverdiene.
     (async () => {
       try {
-        const [storedPersons, storedChecked, storedStores] = await AsyncStorage.multiGet([
+        const [storedPersons, storedChecked, storedStores, storedActive] = await AsyncStorage.multiGet([
           PERSONS_KEY,
           CHECKED_KEY,
           STORES_KEY,
+          ACTIVE_KEY,
         ]);
         const parsedPersons = Number(storedPersons[1]);
         if (Number.isFinite(parsedPersons) && parsedPersons >= 1) setPersonsState(parsedPersons);
         if (storedChecked[1]) setChecked(JSON.parse(storedChecked[1]));
         if (storedStores[1]) setStores(mergeWithDefaults(JSON.parse(storedStores[1])));
+        if (storedActive[1]) setActiveListState(JSON.parse(storedActive[1]));
       } catch {
         // Ingen lagrede valg ennå — standardverdiene gjelder.
       } finally {
         setReady(true);
       }
     })();
+  }, []);
+
+  const setActiveList = useCallback((next: ActiveList | null) => {
+    setActiveListState(next);
+    if (next) AsyncStorage.setItem(ACTIVE_KEY, JSON.stringify(next)).catch(() => {});
+    else AsyncStorage.removeItem(ACTIVE_KEY).catch(() => {});
   }, []);
 
   const setPersons = useCallback((next: number) => {
@@ -152,6 +166,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
+      activeList,
+      setActiveList,
       persons,
       setPersons,
       checked,
@@ -165,7 +181,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       resetStore,
       ready,
     }),
-    [persons, setPersons, checked, toggleChecked, clearChecked, stores, moveStop, renameStore, addStore, removeStore, resetStore, ready],
+    [
+      activeList,
+      setActiveList,
+      persons,
+      setPersons,
+      checked,
+      toggleChecked,
+      clearChecked,
+      stores,
+      moveStop,
+      renameStore,
+      addStore,
+      removeStore,
+      resetStore,
+      ready,
+    ],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

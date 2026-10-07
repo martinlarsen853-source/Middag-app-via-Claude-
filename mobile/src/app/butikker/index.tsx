@@ -1,14 +1,15 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { colors, radius, spacing } from '@/constants/theme';
+import { Body, Button, Eyebrow, Page, Title } from '@/components/ui';
+import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { STOPS } from '@/lib/stops';
 import { useApp } from '@/lib/store';
 
 export default function StoresScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { stores, addStore, ready } = useApp();
   const [newName, setNewName] = useState('');
 
@@ -23,112 +24,121 @@ export default function StoresScreen() {
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + spacing.xl }]}
-      keyboardShouldPersistTaps="handled">
-      <Text style={styles.intro}>
-        Hver butikk har en rute fra inngangen til kassa. Trykk på en butikk for å rette rekkefølgen når du står der.
-      </Text>
+    <Page maxWidth={760}>
+      <View style={styles.header}>
+        <Eyebrow>Butikker</Eyebrow>
+        <Title size="lg">Rekkefølgen i butikkene</Title>
+        <Body>
+          Hver butikk har en rute fra inngangen til kassa. Stemmer den ikke, åpner du butikken og flytter stoppene
+          mens du står der.
+        </Body>
+      </View>
 
-      {stores.map(store => (
-        <Pressable
-          key={store.id}
-          onPress={() => router.push(`/butikker/${store.id}`)}
-          style={({ pressed }) => [styles.storeCard, pressed && styles.pressed]}>
-          <Text style={styles.storeName}>{store.name}</Text>
-          <Text style={styles.chevron}>›</Text>
-        </Pressable>
-      ))}
+      <View style={styles.list}>
+        {stores.map(store => (
+          <Pressable
+            key={store.id}
+            accessibilityRole="link"
+            accessibilityLabel={store.name}
+            onPress={() => router.push(`/butikker/${store.id}`)}
+            style={({ hovered, pressed }: { pressed: boolean; hovered?: boolean }) => [
+              styles.storeCard,
+              (hovered || pressed) && styles.storeCardHover,
+            ]}>
+            <View style={styles.storeIcon}>
+              <Ionicons name="storefront-outline" size={22} color={colors.ink} />
+            </View>
+            <View style={styles.storeText}>
+              <Text style={styles.storeName}>{store.name}</Text>
+              <Text style={styles.storeMeta} numberOfLines={1}>
+                Starter med {STOPS[store.stops[0]].toLowerCase()}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.ink} />
+          </Pressable>
+        ))}
+      </View>
 
       <View style={styles.addCard}>
-        <Text style={styles.addLabel}>Ny butikk</Text>
+        <Eyebrow>Ny butikk</Eyebrow>
         <TextInput
           value={newName}
           onChangeText={setNewName}
           placeholder="F.eks. Kiwi Spydeberg"
-          placeholderTextColor={colors.textTertiary}
+          placeholderTextColor={colors.muted}
           style={styles.input}
           returnKeyType="done"
           onSubmitEditing={handleAdd}
+          accessibilityLabel="Navn på ny butikk"
         />
-        <Pressable
-          onPress={handleAdd}
-          disabled={!newName.trim()}
-          style={[styles.addButton, !newName.trim() && styles.addButtonDisabled]}>
-          <Text style={styles.addButtonText}>Legg til</Text>
-        </Pressable>
+        <Button label="Legg til" icon="add" onPress={handleAdd} disabled={!newName.trim()} style={styles.addButton} />
       </View>
-    </ScrollView>
+    </Page>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    padding: spacing.lg,
-    gap: spacing.md,
+  header: {
+    gap: spacing.sm,
+    marginBottom: spacing.xl,
   },
-  intro: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: colors.textSecond,
-    marginBottom: spacing.xs,
+  list: {
+    gap: spacing.md,
   },
   storeCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: spacing.lg,
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: radius.lg,
+    borderWidth: 1.5,
+    borderColor: colors.line,
     padding: spacing.lg,
-    minHeight: 64,
+    minHeight: 76,
   },
-  pressed: {
-    opacity: 0.85,
+  storeCardHover: {
+    borderColor: colors.ink,
+  },
+  storeIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.round,
+    backgroundColor: colors.lime,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  storeText: {
+    flex: 1,
+    gap: 2,
   },
   storeName: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  chevron: {
+    fontFamily: fonts.display,
     fontSize: 26,
-    color: colors.textTertiary,
+    lineHeight: 28,
+    color: colors.ink,
+  },
+  storeMeta: {
+    fontFamily: fonts.mono,
+    fontSize: 13,
+    color: colors.inkSoft,
   },
   addCard: {
-    marginTop: spacing.lg,
-    gap: spacing.sm,
-  },
-  addLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    color: colors.textTertiary,
+    marginTop: spacing.xxl,
+    backgroundColor: colors.beige,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
+    gap: spacing.md,
   },
   input: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
+    minHeight: 52,
+    fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.text,
+    color: colors.ink,
   },
   addButton: {
-    backgroundColor: colors.accent,
-    borderRadius: radius.md,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  addButtonDisabled: {
-    opacity: 0.4,
-  },
-  addButtonText: {
-    color: colors.surface,
-    fontSize: 16,
-    fontWeight: '700',
+    alignSelf: 'flex-start',
   },
 });

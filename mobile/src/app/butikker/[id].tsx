@@ -1,16 +1,16 @@
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { colors, radius, spacing } from '@/constants/theme';
+import { BackLink, Body, Button, Eyebrow, Page, Title } from '@/components/ui';
+import { colors, fonts, radius, spacing } from '@/constants/theme';
 import { STOPS } from '@/lib/stops';
 import { useApp } from '@/lib/store';
 
 export default function StoreEditorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { stores, moveStop, renameStore, removeStore, resetStore, ready } = useApp();
   const store = stores.find(s => s.id === String(id));
 
@@ -26,12 +26,11 @@ export default function StoreEditorScreen() {
 
   if (!store) {
     return (
-      <View style={styles.missing}>
-        <Text style={styles.missingTitle}>Fant ikke butikken</Text>
-        <Pressable onPress={() => router.replace('/butikker')} style={styles.dangerButton}>
-          <Text style={styles.dangerButtonText}>Til butikkene</Text>
-        </Pressable>
-      </View>
+      <Page maxWidth={760}>
+        <BackLink label="Alle butikker" href="/butikker" />
+        <Title size="md" style={{ marginTop: spacing.lg }}>Fant ikke butikken</Title>
+        <Button label="Til butikkene" onPress={() => router.replace('/butikker')} style={{ alignSelf: 'flex-start', marginTop: spacing.xl }} />
+      </Page>
     );
   }
 
@@ -52,173 +51,166 @@ export default function StoreEditorScreen() {
     if (!store) return;
     if (confirming !== 'delete') return setConfirming('delete');
     removeStore(store.id);
-    router.back();
+    router.replace('/butikker');
   }
 
   return (
-    <>
-      <Stack.Screen options={{ title: store.name }} />
-      <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + spacing.xxl }]}
-        keyboardShouldPersistTaps="handled">
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          onEndEditing={commitName}
-          onBlur={commitName}
-          style={styles.nameInput}
-          accessibilityLabel="Navn på butikken"
-          returnKeyType="done"
-        />
-
-        <Text style={styles.intro}>
+    <Page maxWidth={760}>
+      <BackLink label="Alle butikker" href="/butikker" />
+      <View style={styles.header}>
+        <Eyebrow>Rekkefølge i butikken</Eyebrow>
+        <View style={styles.nameRow}>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            onEndEditing={commitName}
+            onBlur={commitName}
+            style={styles.nameInput}
+            accessibilityLabel="Navn på butikken"
+            returnKeyType="done"
+          />
+          <Ionicons name="pencil" size={18} color={colors.inkSoft} />
+        </View>
+        <Body>
           Gå gjennom butikken fra inngangen til kassa, og flytt stoppene så de kommer i den rekkefølgen du møter dem.
           Endringene lagres med en gang.
-        </Text>
+        </Body>
+      </View>
 
-        <View style={styles.list}>
-          {store.stops.map((stop, index) => (
-            <View key={stop} style={[styles.stopRow, index > 0 && styles.rowDivider]}>
-              <Text style={styles.stopNumber}>{index + 1}</Text>
-              <Text style={styles.stopLabel}>{STOPS[stop]}</Text>
+      <View style={styles.list}>
+        {store.stops.map((stop, index) => {
+          const first = index === 0;
+          const last = index === store.stops.length - 1;
+          return (
+            <View key={stop} style={[styles.row, index > 0 && styles.divider]}>
+              <View style={styles.number}>
+                <Text style={styles.numberText}>{index + 1}</Text>
+              </View>
+              <Text style={styles.label}>{STOPS[stop]}</Text>
               <Pressable
+                accessibilityRole="button"
                 accessibilityLabel={`Flytt ${STOPS[stop]} opp`}
-                disabled={index === 0}
+                disabled={first}
                 onPress={() => moveStop(store.id, index, index - 1)}
-                style={[styles.arrow, index === 0 && styles.arrowDisabled]}>
-                <Text style={styles.arrowText}>↑</Text>
+                style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
+                  styles.arrow,
+                  hovered && !first && styles.arrowHover,
+                  first && styles.arrowDisabled,
+                ]}>
+                <Ionicons name="arrow-up" size={20} color={colors.ink} />
               </Pressable>
               <Pressable
+                accessibilityRole="button"
                 accessibilityLabel={`Flytt ${STOPS[stop]} ned`}
-                disabled={index === store.stops.length - 1}
+                disabled={last}
                 onPress={() => moveStop(store.id, index, index + 1)}
-                style={[styles.arrow, index === store.stops.length - 1 && styles.arrowDisabled]}>
-                <Text style={styles.arrowText}>↓</Text>
+                style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
+                  styles.arrow,
+                  hovered && !last && styles.arrowHover,
+                  last && styles.arrowDisabled,
+                ]}>
+                <Ionicons name="arrow-down" size={20} color={colors.ink} />
               </Pressable>
             </View>
-          ))}
-        </View>
+          );
+        })}
+      </View>
 
+      <View style={styles.actions}>
         {store.custom ? (
-          <Pressable onPress={handleDelete} style={styles.dangerButton}>
-            <Text style={styles.dangerButtonText}>
-              {confirming === 'delete' ? 'Trykk igjen for å slette' : 'Slett butikken'}
-            </Text>
-          </Pressable>
+          <Button
+            label={confirming === 'delete' ? 'Trykk igjen for å slette' : 'Slett butikken'}
+            icon="trash-outline"
+            variant="outline"
+            onPress={handleDelete}
+          />
         ) : (
-          <Pressable onPress={handleReset} style={styles.secondaryButton}>
-            <Text style={styles.secondaryButtonText}>
-              {confirming === 'reset' ? 'Trykk igjen for å tilbakestille' : 'Tilbakestill rekkefølgen'}
-            </Text>
-          </Pressable>
+          <Button
+            label={confirming === 'reset' ? 'Trykk igjen for å tilbakestille' : 'Tilbakestill rekkefølgen'}
+            icon="refresh"
+            variant="secondary"
+            onPress={handleReset}
+          />
         )}
-      </ScrollView>
-    </>
+      </View>
+    </Page>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    padding: spacing.lg,
-    gap: spacing.lg,
+  header: {
+    gap: spacing.sm,
+    marginTop: spacing.md,
+    marginBottom: spacing.xl,
   },
-  nameInput: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    paddingVertical: spacing.sm,
-  },
-  intro: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: colors.textSecond,
-  },
-  list: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-  },
-  rowDivider: {
-    borderTopWidth: 1,
-    borderTopColor: colors.hairline,
-  },
-  stopRow: {
+  nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    paddingVertical: spacing.sm,
-    minHeight: 56,
+    borderBottomWidth: 1.5,
+    borderBottomColor: colors.line,
   },
-  stopNumber: {
-    width: 26,
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.textTertiary,
-    textAlign: 'center',
-  },
-  stopLabel: {
+  nameInput: {
     flex: 1,
-    fontSize: 16,
-    color: colors.text,
-  },
-  arrow: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.sm,
+    fontFamily: fonts.display,
+    fontSize: 40,
+    color: colors.ink,
+    paddingVertical: spacing.xs,
+    outlineStyle: 'none',
+  } as object,
+  list: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.line,
+    paddingHorizontal: spacing.lg,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    minHeight: 64,
+    paddingVertical: spacing.sm,
+  },
+  divider: {
+    borderTopWidth: 1,
+    borderTopColor: colors.line,
+  },
+  number: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.round,
+    backgroundColor: colors.lime,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.bg,
+  },
+  numberText: {
+    fontFamily: fonts.monoMedium,
+    fontSize: 13,
+    color: colors.ink,
+  },
+  label: {
+    flex: 1,
+    fontFamily: fonts.bodyMedium,
+    fontSize: 17,
+    color: colors.ink,
+  },
+  arrow: {
+    width: 46,
+    height: 46,
+    borderRadius: radius.md,
+    backgroundColor: colors.beige,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arrowHover: {
+    backgroundColor: colors.limeStrong,
   },
   arrowDisabled: {
     opacity: 0.3,
   },
-  arrowText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  secondaryButton: {
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.textSecond,
-  },
-  dangerButton: {
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.accent,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    alignItems: 'center',
-  },
-  dangerButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.accentDark,
-  },
-  missing: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.xl,
-    gap: spacing.lg,
-  },
-  missingTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
+  actions: {
+    marginTop: spacing.xl,
+    flexDirection: 'row',
   },
 });

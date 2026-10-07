@@ -1,41 +1,42 @@
-import { Link, Stack } from 'expo-router';
+import { BarlowCondensed_600SemiBold, BarlowCondensed_700Bold } from '@expo-google-fonts/barlow-condensed';
+import { DMMono_400Regular, DMMono_500Medium } from '@expo-google-fonts/dm-mono';
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
+import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { AppShell } from '@/components/AppShell';
 import { colors } from '@/constants/theme';
 import { AppProvider } from '@/lib/store';
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    BarlowCondensed_600SemiBold,
+    BarlowCondensed_700Bold,
+    DMMono_400Regular,
+    DMMono_500Medium,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+  });
+
+  // Vent på skriftene så siden ikke blinker med feil skrift. Feiler lastingen
+  // viser vi siden likevel med systemskrift.
+  if (!fontsLoaded && !fontError) return null;
+
   return (
     <SafeAreaProvider>
       <AppProvider>
         <StatusBar style="dark" />
-        <Stack
-          screenOptions={{
-            headerStyle: { backgroundColor: colors.bg },
-            headerTintColor: colors.accent,
-            headerTitleStyle: { color: colors.text, fontWeight: '700' },
-            headerShadowVisible: false,
-            contentStyle: { backgroundColor: colors.bg },
-          }}>
-          <Stack.Screen
-            name="index"
-            options={{
-              title: 'Handleklar',
-              headerRight: () => (
-                <Link href="/butikker" style={{ color: colors.accent, fontSize: 16, fontWeight: '600' }}>
-                  <Text>Butikker</Text>
-                </Link>
-              ),
+        <AppShell>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.bg },
             }}
           />
-          <Stack.Screen name="rett/[id]/index" options={{ title: 'Oppskrift' }} />
-          <Stack.Screen name="rett/[id]/butikk" options={{ title: 'Velg butikk' }} />
-          <Stack.Screen name="rett/[id]/handleliste/[butikk]" options={{ title: 'Handleliste' }} />
-          <Stack.Screen name="butikker/index" options={{ title: 'Butikker' }} />
-          <Stack.Screen name="butikker/[id]" options={{ title: 'Rekkefølge' }} />
-        </Stack>
+        </AppShell>
       </AppProvider>
     </SafeAreaProvider>
   );

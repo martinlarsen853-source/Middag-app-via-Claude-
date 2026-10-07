@@ -1,21 +1,30 @@
-// Handleklar-paletten, den samme som nettsiden bruker.
+// Inspirert av matprat.no: varm papirfarge, mørkegrønn tekst, lysegrønne og
+// beige flater, kondenserte overskrifter og monospace på småtekst.
 export const colors = {
-  bg: '#FAF8F5',
+  bg: '#FEFEF7',
   surface: '#FFFFFF',
-  surfaceMuted: '#F2F0EC',
-  accentTint: '#FEF0EB',
+  beige: '#F2F1E7',
+  beigeDark: '#E7E5D7',
+  lime: '#E4F8CB',
+  limeStrong: '#C6EE93',
+  lavender: '#BCB9FB',
+  ink: '#0D2B05',
+  inkSoft: '#3E5435',
+  muted: '#6E7B66',
+  line: '#E3E2D6',
+  green: '#3B7F0C',
+  white: '#FFFFFF',
+  danger: '#A8321F',
+};
 
-  text: '#1A1A1A',
-  textSecond: '#52504C',
-  textTertiary: '#9A9892',
-
-  accent: '#E2552B',
-  accentDark: '#C4431C',
-
-  border: '#E5E3DE',
-  hairline: '#F2F0EC',
-
-  success: '#1A7A4A',
+export const fonts = {
+  display: 'BarlowCondensed_700Bold',
+  displaySemi: 'BarlowCondensed_600SemiBold',
+  body: 'Inter_400Regular',
+  bodyMedium: 'Inter_500Medium',
+  bodySemi: 'Inter_600SemiBold',
+  mono: 'DMMono_400Regular',
+  monoMedium: 'DMMono_500Medium',
 };
 
 export const spacing = {
@@ -25,28 +34,27 @@ export const spacing = {
   lg: 16,
   xl: 24,
   xxl: 32,
+  xxxl: 48,
 };
 
 export const radius = {
   sm: 8,
   md: 12,
-  lg: 18,
+  lg: 16,
+  xl: 20,
   round: 999,
 };
 
-// Kategorifarger for kortene når et bilde ikke lastes.
+export const MAX_WIDTH = 1200;
+
+// Bakgrunn for kortet mens bildet laster, eller hvis det ikke finnes.
 export const categoryTints: Record<string, string> = {
-  Pasta: '#F7D9A8',
-  Fisk: '#AED4E8',
-  Kjøtt: '#F0BDA0',
-  Suppe: '#F5CFA0',
-  Salat: '#BFE0B2',
-  Meksikansk: '#F5E0A0',
-  Asiatisk: '#F0C4A0',
-  Pizza: '#F5DBA0',
-  Egg: '#F7E3B0',
-  Enkelt: '#E0DBD2',
-  Annet: '#E0DBD2',
+  Pasta: '#F6E7C8',
+  Fisk: '#D9ECF2',
+  Kjøtt: '#F3DCCF',
+  Meksikansk: '#F6EBC6',
+  Pizza: '#F6E2C6',
+  Enkelt: '#EDEBDD',
 };
 
-export const defaultTint = categoryTints.Annet;
+export const defaultTint = colors.beige;
