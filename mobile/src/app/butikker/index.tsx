@@ -10,7 +10,7 @@ import { useApp } from '@/lib/store';
 
 export default function StoresScreen() {
   const router = useRouter();
-  const { stores, addStore, ready } = useApp();
+  const { stores, addStore, isOwner, ready } = useApp();
   const [newName, setNewName] = useState('');
 
   if (!ready) return null;
@@ -29,8 +29,9 @@ export default function StoresScreen() {
         <Eyebrow>Butikker</Eyebrow>
         <Title size="lg">Rekkefølgen i butikkene</Title>
         <Body>
-          Hver butikk har en rute fra inngangen til kassa. Stemmer den ikke, åpner du butikken og flytter stoppene
-          mens du står der.
+          {isOwner
+            ? 'Hver butikk har en rute fra inngangen til kassa. Stemmer den ikke, åpner du butikken og flytter stoppene mens du står der. Endringene gjelder for alle.'
+            : 'Hver butikk har en fast rute fra inngangen til kassa, så handlelista følger veien gjennom butikken.'}
         </Body>
       </View>
 
@@ -59,20 +60,22 @@ export default function StoresScreen() {
         ))}
       </View>
 
-      <View style={styles.addCard}>
-        <Eyebrow>Ny butikk</Eyebrow>
-        <TextInput
-          value={newName}
-          onChangeText={setNewName}
-          placeholder="F.eks. Kiwi Spydeberg"
-          placeholderTextColor={colors.muted}
-          style={styles.input}
-          returnKeyType="done"
-          onSubmitEditing={handleAdd}
-          accessibilityLabel="Navn på ny butikk"
-        />
-        <Button label="Legg til" icon="add" onPress={handleAdd} disabled={!newName.trim()} style={styles.addButton} />
-      </View>
+      {isOwner && (
+        <View style={styles.addCard}>
+          <Eyebrow>Ny butikk</Eyebrow>
+          <TextInput
+            value={newName}
+            onChangeText={setNewName}
+            placeholder="F.eks. Kiwi Spydeberg"
+            placeholderTextColor={colors.muted}
+            style={styles.input}
+            returnKeyType="done"
+            onSubmitEditing={handleAdd}
+            accessibilityLabel="Navn på ny butikk"
+          />
+          <Button label="Legg til" icon="add" onPress={handleAdd} disabled={!newName.trim()} style={styles.addButton} />
+        </View>
+      )}
     </Page>
   );
 }

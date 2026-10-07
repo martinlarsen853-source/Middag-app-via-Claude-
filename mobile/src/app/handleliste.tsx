@@ -16,7 +16,7 @@ import { useApp } from '@/lib/store';
 // kan legge det tilbake med ett trykk. Slik slipper du å scrolle i butikken.
 export default function ShoppingListScreen() {
   const router = useRouter();
-  const { activeList, setActiveList, persons, checked, toggleChecked, clearChecked, stores, ready } = useApp();
+  const { activeList, setActiveList, persons, checked, toggleChecked, clearChecked, stores, isOwner, ready } = useApp();
   const { findMeal, loading } = useMeals();
   const [lastChecked, setLastChecked] = useState<number | null>(null);
 
@@ -199,10 +199,12 @@ export default function ShoppingListScreen() {
             />
           ))}
         </View>
-        <Pressable accessibilityRole="link" onPress={() => router.push(`/butikker/${store.id}`)} style={styles.footerLink}>
-          <Ionicons name="swap-vertical" size={16} color={colors.green} />
-          <Text style={styles.footerLinkText}>Stemmer ikke rekkefølgen? Endre den for {store.name}</Text>
-        </Pressable>
+        {isOwner && (
+          <Pressable accessibilityRole="link" onPress={() => router.push(`/butikker/${store.id}`)} style={styles.footerLink}>
+            <Ionicons name="swap-vertical" size={16} color={colors.green} />
+            <Text style={styles.footerLinkText}>Stemmer ikke rekkefølgen? Endre den for {store.name}</Text>
+          </Pressable>
+        )}
         <View style={styles.footerButtons}>
           {done > 0 && !allDone && (
             <Button label="Nullstill huking" variant="secondary" onPress={() => clearChecked(prefix)} />

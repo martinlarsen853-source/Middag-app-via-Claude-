@@ -11,7 +11,7 @@ import { useApp } from '@/lib/store';
 export default function StoreEditorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { stores, moveStop, renameStore, removeStore, resetStore, ready } = useApp();
+  const { stores, moveStop, renameStore, removeStore, resetStore, isOwner, storeSyncError, ready } = useApp();
   const store = stores.find(s => s.id === String(id));
 
   const [name, setName] = useState(store?.name ?? '');
@@ -54,27 +54,38 @@ export default function StoreEditorScreen() {
     router.replace('/butikker');
   }
 
+  // Rekkefølgen er felles for alle. Bare eieren ser knappene for å endre den.
   return (
     <Page maxWidth={760}>
       <BackLink label="Alle butikker" href="/butikker" />
       <View style={styles.header}>
         <Eyebrow>Rekkefølge i butikken</Eyebrow>
-        <View style={styles.nameRow}>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            onEndEditing={commitName}
-            onBlur={commitName}
-            style={styles.nameInput}
-            accessibilityLabel="Navn på butikken"
-            returnKeyType="done"
-          />
-          <Ionicons name="pencil" size={18} color={colors.inkSoft} />
-        </View>
-        <Body>
-          Gå gjennom butikken fra inngangen til kassa, og flytt stoppene så de kommer i den rekkefølgen du møter dem.
-          Endringene lagres med en gang.
-        </Body>
+        {isOwner ? (
+          <>
+            <View style={styles.nameRow}>
+              <TextInput
+                value={name}
+                onChangeText={setName}
+                onEndEditing={commitName}
+                onBlur={commitName}
+                style={styles.nameInput}
+                accessibilityLabel="Navn på butikken"
+                returnKeyType="done"
+              />
+              <Ionicons name="pencil" size={18} color={colors.inkSoft} />
+            </View>
+            <Body>
+              Gå gjennom butikken fra inngangen til kassa, og flytt stoppene så de kommer i den rekkefølgen du møter
+              dem. Endringene lagres med en gang og gjelder for alle.
+            </Body>
+            {storeSyncError && <Text style={styles.syncError}>{storeSyncError}</Text>}
+          </>
+        ) : (
+          <>
+            <Title size="lg">{store.name}</Title>
+            <Body>Slik går handlelista gjennom butikken, fra inngangen til kassa.</Body>
+          </>
+        )}
       </View>
 
       <View style={styles.list}>
@@ -87,57 +98,68 @@ export default function StoreEditorScreen() {
                 <Text style={styles.numberText}>{index + 1}</Text>
               </View>
               <Text style={styles.label}>{STOPS[stop]}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Flytt ${STOPS[stop]} opp`}
-                disabled={first}
-                onPress={() => moveStop(store.id, index, index - 1)}
-                style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
-                  styles.arrow,
-                  hovered && !first && styles.arrowHover,
-                  first && styles.arrowDisabled,
-                ]}>
-                <Ionicons name="arrow-up" size={20} color={colors.ink} />
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Flytt ${STOPS[stop]} ned`}
-                disabled={last}
-                onPress={() => moveStop(store.id, index, index + 1)}
-                style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
-                  styles.arrow,
-                  hovered && !last && styles.arrowHover,
-                  last && styles.arrowDisabled,
-                ]}>
-                <Ionicons name="arrow-down" size={20} color={colors.ink} />
-              </Pressable>
+              {isOwner && (
+                <>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Flytt ${STOPS[stop]} opp`}
+                    disabled={first}
+                    onPress={() => moveStop(store.id, index, index - 1)}
+                    style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
+                      styles.arrow,
+                      hovered && !first && styles.arrowHover,
+                      first && styles.arrowDisabled,
+                    ]}>
+                    <Ionicons name="arrow-up" size={20} color={colors.ink} />
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Flytt ${STOPS[stop]} ned`}
+                    disabled={last}
+                    onPress={() => moveStop(store.id, index, index + 1)}
+                    style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
+                      styles.arrow,
+                      hovered && !last && styles.arrowHover,
+                      last && styles.arrowDisabled,
+                    ]}>
+                    <Ionicons name="arrow-down" size={20} color={colors.ink} />
+                  </Pressable>
+                </>
+              )}
             </View>
           );
         })}
       </View>
 
-      <View style={styles.actions}>
-        {store.custom ? (
-          <Button
-            label={confirming === 'delete' ? 'Trykk igjen for å slette' : 'Slett butikken'}
-            icon="trash-outline"
-            variant="outline"
-            onPress={handleDelete}
-          />
-        ) : (
-          <Button
-            label={confirming === 'reset' ? 'Trykk igjen for å tilbakestille' : 'Tilbakestill rekkefølgen'}
-            icon="refresh"
-            variant="secondary"
-            onPress={handleReset}
-          />
-        )}
-      </View>
+      {isOwner && (
+        <View style={styles.actions}>
+          {store.custom ? (
+            <Button
+              label={confirming === 'delete' ? 'Trykk igjen for å slette' : 'Slett butikken'}
+              icon="trash-outline"
+              variant="outline"
+              onPress={handleDelete}
+            />
+          ) : (
+            <Button
+              label={confirming === 'reset' ? 'Trykk igjen for å tilbakestille' : 'Tilbakestill rekkefølgen'}
+              icon="refresh"
+              variant="secondary"
+              onPress={handleReset}
+            />
+          )}
+        </View>
+      )}
     </Page>
   );
 }
 
 const styles = StyleSheet.create({
+  syncError: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 14,
+    color: colors.danger,
+  },
   header: {
     gap: spacing.sm,
     marginTop: spacing.md,

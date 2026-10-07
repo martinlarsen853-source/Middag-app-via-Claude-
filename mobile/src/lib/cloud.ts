@@ -48,3 +48,22 @@ export function saveMeal(token: string, meal: StoredMeal): Promise<StoredMeal> {
 export function deleteMeal(token: string, id: string): Promise<boolean> {
   return rpc<boolean>('hk_delete_meal', { p_token: token, p_id: id });
 }
+
+// Butikkenes rekkefølge er felles. Alle kan lese, bare eieren kan endre.
+export type SharedStore = { id: string; name: string; stops: string[]; custom?: boolean };
+
+export function listStores(): Promise<SharedStore[]> {
+  return rpc<SharedStore[]>('hk_list_stores', {});
+}
+
+export function checkOwner(key: string): Promise<boolean> {
+  return rpc<boolean>('hk_check_owner', { p_key: key });
+}
+
+export function saveStore(key: string, store: SharedStore): Promise<SharedStore> {
+  return rpc<SharedStore>('hk_save_store', { p_key: key, p_store: store });
+}
+
+export function hideStore(key: string, id: string): Promise<boolean> {
+  return rpc<boolean>('hk_hide_store', { p_key: key, p_id: id });
+}
