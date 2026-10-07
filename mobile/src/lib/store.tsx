@@ -9,7 +9,7 @@ const CHECKED_KEY = 'handleklar.checked';
 const STORES_KEY = 'handleklar.stores';
 const ACTIVE_KEY = 'handleklar.activeList';
 
-export type ActiveList = { mealId: number; storeId: string };
+export type ActiveList = { mealId: number | string; storeId: string };
 
 type AppState = {
   activeList: ActiveList | null;

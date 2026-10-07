@@ -4,10 +4,20 @@ import { STOPS, stopFor, type StopId } from '@/lib/stops';
 // Oppskriftene er lagret med mengder for fire personer.
 export const BASE_PERSONS = 4;
 
-const COUNT_UNITS = ['stk', 'boks', 'pose', 'pakke', 'pk', 'glass', 'flaske', 'beger', 'porsjon', 'terning'];
+export function mealBase(meal: Pick<Meal, 'basePersons'>): number {
+  return meal.basePersons && meal.basePersons > 0 ? meal.basePersons : BASE_PERSONS;
+}
 
-export function scaleQuantity(quantity: number, persons: number): number {
-  return (quantity * persons) / BASE_PERSONS;
+export function scaleQuantity(quantity: number, persons: number, base: number = BASE_PERSONS): number {
+  return (quantity * persons) / base;
+}
+
+// Mengden slik den vises i oppskriften og handlelista. Varer valgt som pakker
+// rundes opp til hele pakker, alt annet vises som oppskriftsmengde.
+export function displayAmount(ingredient: Ingredient, persons: number, base: number = BASE_PERSONS): string {
+  const quantity = scaleQuantity(ingredient.quantity, persons, base);
+  if (ingredient.unit === 'pk') return `${Math.max(1, Math.ceil(quantity - 0.05))} pk`;
+  return formatQuantity(quantity, ingredient.unit);
 }
 
 export function formatQuantity(quantity: number, unit: string): string {
@@ -19,7 +29,7 @@ export function formatQuantity(quantity: number, unit: string): string {
   return `${text} ${unit}`;
 }
 
-// Anslått pakkepris i kroner, samme vurdering som nettsiden bruker.
+// Anslått pakkepris i kroner for varer uten koblet Kassalapp-vare.
 export function ingredientPrice(name: string): number {
   const n = (name || '').toLowerCase();
   if (/(entrecôte|entrecote|indrefilet|ytrefilet|biff|mørbrad|lam|ribbe)/.test(n)) return 180;
@@ -34,22 +44,6 @@ export function ingredientPrice(name: string): number {
   if (/(olje|eddik|balsamico|soya|ketjap|fiskesaus|ketchup|sennep|majones|pesto|salsa|tahini|tomatpuré|tomatpure|buljong|kraft|fond|honning|sirup|saus|karripasta|harissa)/.test(n)) return 35;
   if (/(hermetisk|knust tomat|passata|kokosmelk|bønner|kikerter|linser|erter|oliven)/.test(n)) return 22;
   return 18; // grønnsaker, frukt, urter og krydder
-}
-
-export function estimateMealPrice(meal: Meal, persons: number = BASE_PERSONS): number {
-  if (!meal.ingredients.length) return 0;
-  const factor = persons / BASE_PERSONS;
-  let total = 0;
-  for (const ing of meal.ingredients) {
-    const unitPrice = ingredientPrice(ing.name);
-    const unit = (ing.unit || '').toLowerCase();
-    // Antallsvarer ganges opp, vekt og volum regnes som én pakke.
-    const multiplier = COUNT_UNITS.includes(unit)
-      ? Math.max(1, Math.round((ing.quantity || 1) * factor))
-      : 1;
-    total += unitPrice * multiplier;
-  }
-  return Math.round(total);
 }
 
 export type ShoppingItem = {

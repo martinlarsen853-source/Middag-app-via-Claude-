@@ -5,8 +5,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, fonts, MAX_WIDTH, radius, spacing } from '@/constants/theme';
-import { MEALS } from '@/data/meals';
 import { useLayout } from '@/lib/layout';
+import { useMeals } from '@/lib/meals-store';
 import { useApp } from '@/lib/store';
 
 type Tab = {
@@ -32,8 +32,8 @@ function activeTab(pathname: string): Tab['key'] {
 // Hvor mange varer som gjenstår på den aktive lista, vist som et lite merke på fanen.
 function useRemaining(): number {
   const { activeList, checked } = useApp();
-  if (!activeList) return 0;
-  const meal = MEALS.find(m => m.id === activeList.mealId);
+  const { findMeal } = useMeals();
+  const meal = findMeal(activeList?.mealId);
   if (!meal) return 0;
   return meal.ingredients.filter((_, index) => !checked[`${meal.id}:${index}`]).length;
 }

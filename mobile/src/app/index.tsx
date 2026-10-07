@@ -4,31 +4,34 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { Body, Eyebrow, Meta, Page, PersonStepper, Title } from '@/components/ui';
+import { Body, Button, Eyebrow, Meta, Page, PersonStepper, Title } from '@/components/ui';
 import { categoryTints, colors, defaultTint, fonts, radius, spacing } from '@/constants/theme';
-import { MEALS, type Meal } from '@/data/meals';
+import type { Meal } from '@/data/meals';
 import { useLayout } from '@/lib/layout';
-import { estimateMealPrice } from '@/lib/meals';
+import { useMeals } from '@/lib/meals-store';
+import { formatPrice, mealEans, pricesByStore, usePrices, type PriceBook } from '@/lib/prices';
 import { photoFor } from '@/lib/photos';
 import { useApp } from '@/lib/store';
 
 export default function MealListScreen() {
   const router = useRouter();
-  const { persons, setPersons, activeList } = useApp();
+  const { persons, setPersons, activeList, stores } = useApp();
+  const { meals: allMeals } = useMeals();
   const { contentWidth, columns, wide } = useLayout();
   const [query, setQuery] = useState('');
+  const { book } = usePrices(mealEans(allMeals));
 
   const meals = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return MEALS;
-    return MEALS.filter(
+    if (!needle) return allMeals;
+    return allMeals.filter(
       meal =>
         meal.name.toLowerCase().includes(needle) ||
         meal.category.toLowerCase().includes(needle) ||
         meal.tags.some(tag => tag.toLowerCase().includes(needle)) ||
         meal.ingredients.some(ing => ing.name.toLowerCase().includes(needle)),
     );
-  }, [query]);
+  }, [query, allMeals]);
 
   const gap = wide ? spacing.xl : spacing.lg;
   const cardWidth = Math.floor((contentWidth - gap * (columns - 1)) / columns);
@@ -61,7 +64,10 @@ export default function MealListScreen() {
               </Pressable>
             )}
           </View>
-          <PersonStepper value={persons} onChange={setPersons} />
+          <View style={styles.controlRow}>
+            <PersonStepper value={persons} onChange={setPersons} />
+            <Button label="Ny middag" icon="add" variant="lime" onPress={() => router.push('/ny-middag')} />
+          </View>
         </View>
       </View>
 
@@ -78,7 +84,9 @@ export default function MealListScreen() {
               meal={meal}
               width={cardWidth}
               persons={persons}
-              onList={activeList?.mealId === meal.id}
+              stores={stores}
+              book={book}
+              onList={String(activeList?.mealId) === String(meal.id)}
               onPress={() => router.push(`/rett/${meal.id}`)}
             />
           ))}
@@ -92,16 +100,22 @@ function MealCard({
   meal,
   width,
   persons,
+  stores,
+  book,
   onList,
   onPress,
 }: {
   meal: Meal;
   width: number;
   persons: number;
+  stores: ReturnType<typeof useApp>['stores'];
+  book: PriceBook;
   onList: boolean;
   onPress: () => void;
 }) {
   const tint = categoryTints[meal.category] ?? defaultTint;
+  // Kortet viser prisen i den billigste av butikkene dine.
+  const best = pricesByStore(meal, persons, stores, book)[0];
   return (
     <Pressable
       accessibilityRole="link"
@@ -118,22 +132,37 @@ function MealCard({
               transition={200}
               accessibilityLabel={meal.name}
             />
-            {onList && (
-              <View style={styles.onListTag}>
-                <Ionicons name="basket" size={13} color={colors.ink} />
-                <Text style={styles.onListText}>På handlelista</Text>
-              </View>
-            )}
+            <View style={styles.tags}>
+              {onList && (
+                <View style={styles.onListTag}>
+                  <Ionicons name="basket" size={13} color={colors.ink} />
+                  <Text style={styles.onListText}>På handlelista</Text>
+                </View>
+              )}
+              {meal.custom && (
+                <View style={[styles.onListTag, styles.customTag]}>
+                  <Ionicons name="person" size={12} color={colors.ink} />
+                  <Text style={styles.onListText}>Egen</Text>
+                </View>
+              )}
+            </View>
           </View>
           <View style={styles.cardBody}>
             <View style={styles.metaRow}>
-              <Meta icon="time-outline">{meal.timeMinutes} min</Meta>
-              <Meta icon="wallet-outline">ca. {estimateMealPrice(meal, persons)} kr</Meta>
+              {meal.timeMinutes > 0 && <Meta icon="time-outline">{meal.timeMinutes} min</Meta>}
+              {best && (
+                <Meta icon="wallet-outline">
+                  {formatPrice(best.price)}
+                  {best.price.exact ? ` · ${best.store.name}` : ''}
+                </Meta>
+              )}
             </View>
             <Text style={[styles.cardTitle, hovered && styles.cardTitleHover]}>{meal.name}</Text>
-            <Body style={styles.cardDescription} numberOfLines={2}>
-              {meal.description}
-            </Body>
+            {meal.description ? (
+              <Body style={styles.cardDescription} numberOfLines={2}>
+                {meal.description}
+              </Body>
+            ) : null}
           </View>
         </View>
       )}
@@ -161,6 +190,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   controls: {
+    gap: spacing.md,
+  },
+  controlRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
     gap: spacing.md,
   },
   controlsWide: {
@@ -197,10 +232,17 @@ const styles = StyleSheet.create({
   cardImageHover: {
     transform: [{ scale: 1.03 }],
   },
-  onListTag: {
+  tags: {
     position: 'absolute',
     top: spacing.md,
     left: spacing.md,
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+  customTag: {
+    backgroundColor: colors.lavender,
+  },
+  onListTag: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,

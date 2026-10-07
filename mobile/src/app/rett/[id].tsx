@@ -1,13 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BackLink, Body, Button, Eyebrow, Meta, Page, PersonStepper, Title } from '@/components/ui';
 import { categoryTints, colors, defaultTint, fonts, radius, spacing } from '@/constants/theme';
-import { MEALS } from '@/data/meals';
 import { useLayout } from '@/lib/layout';
-import { estimateMealPrice, formatQuantity, scaleQuantity } from '@/lib/meals';
+import { displayAmount, mealBase } from '@/lib/meals';
+import { useMeals } from '@/lib/meals-store';
+import { formatPrice, isPantry, mealEans, pricesByStore, usePrices } from '@/lib/prices';
 import { photoFor } from '@/lib/photos';
 import { useApp } from '@/lib/store';
 
@@ -15,10 +17,14 @@ export default function MealDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { persons, setPersons, stores, setActiveList, ready } = useApp();
+  const { findMeal, deleteMeal } = useMeals();
   const { width } = useLayout();
   const twoColumns = width >= 900;
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const meal = MEALS.find(m => String(m.id) === String(id));
+  const meal = findMeal(id);
+  const { book } = usePrices(meal ? mealEans([meal]) : []);
 
   if (!meal) {
     return (
@@ -36,6 +42,27 @@ export default function MealDetailScreen() {
     setActiveList({ mealId: meal.id, storeId });
     router.navigate('/handleliste');
   }
+
+  async function remove() {
+    if (!meal) return;
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    try {
+      await deleteMeal(String(meal.id));
+      router.replace('/');
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : 'Kunne ikke slette');
+    }
+  }
+
+  const base = mealBase(meal);
+  const storePrices = pricesByStore(meal, persons, stores, book);
+  const best = storePrices[0];
+  const showCheapest = storePrices.length > 1 && storePrices[storePrices.length - 1].price.total - best.price.total >= 5;
+  const toBuy = best?.price.toBuy ?? 0;
+  const priced = Math.max(0, ...storePrices.map(entry => entry.price.priced));
 
   const image = (
     <View
@@ -56,14 +83,18 @@ export default function MealDetailScreen() {
       </View>
       <Title size="lg">{meal.name}</Title>
       <View style={styles.metaRow}>
-        <View style={styles.metaChip}>
-          <Meta icon="time-outline">{meal.timeMinutes} min</Meta>
-        </View>
-        <View style={styles.metaChip}>
-          <Meta icon="wallet-outline">ca. {estimateMealPrice(meal, persons)} kr</Meta>
-        </View>
+        {meal.timeMinutes > 0 && (
+          <View style={styles.metaChip}>
+            <Meta icon="time-outline">{meal.timeMinutes} min</Meta>
+          </View>
+        )}
+        {best && (
+          <View style={styles.metaChip}>
+            <Meta icon="wallet-outline">{formatPrice(best.price)}</Meta>
+          </View>
+        )}
       </View>
-      <Body>{meal.description}</Body>
+      {meal.description ? <Body>{meal.description}</Body> : null}
       <View style={styles.personRow}>
         <PersonStepper value={persons} onChange={setPersons} />
       </View>
@@ -72,23 +103,66 @@ export default function MealDetailScreen() {
         <Eyebrow>Lag handleliste i</Eyebrow>
         <View style={styles.storeTiles}>
           {ready &&
-            stores.map(store => (
-              <Pressable
-                key={store.id}
-                accessibilityRole="button"
-                accessibilityLabel={`Lag handleliste i ${store.name}`}
-                onPress={() => startShopping(store.id)}
-                style={({ hovered, pressed }: { pressed: boolean; hovered?: boolean }) => [
-                  styles.storeTile,
-                  (hovered || pressed) && styles.storeTileActive,
-                ]}>
-                <Ionicons name="storefront-outline" size={20} color={colors.ink} />
-                <Text style={styles.storeTileText}>{store.name}</Text>
-                <Ionicons name="arrow-forward" size={16} color={colors.ink} />
-              </Pressable>
-            ))}
+            stores.map(store => {
+              const entry = storePrices.find(item => item.store.id === store.id);
+              const cheapest = showCheapest && entry === best;
+              return (
+                <Pressable
+                  key={store.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Lag handleliste i ${store.name}`}
+                  onPress={() => startShopping(store.id)}
+                  style={({ hovered, pressed }: { pressed: boolean; hovered?: boolean }) => [
+                    styles.storeTile,
+                    (hovered || pressed) && styles.storeTileActive,
+                  ]}>
+                  <Ionicons name="storefront-outline" size={20} color={colors.ink} />
+                  <View style={styles.storeTileName}>
+                    <Text style={styles.storeTileText}>{store.name}</Text>
+                    {cheapest && <Text style={styles.cheapest}>Billigst</Text>}
+                  </View>
+                  {entry && <Text style={styles.storeTilePrice}>{formatPrice(entry.price)}</Text>}
+                  <Ionicons name="arrow-forward" size={16} color={colors.ink} />
+                </Pressable>
+              );
+            })}
         </View>
+        <Text style={styles.priceNote}>
+          {priced === 0
+            ? 'Prisene er anslag. De blir ekte når varene er koblet til butikkenes priser.'
+            : priced === toBuy
+              ? 'Dagens priser fra butikkene, regnet i hele pakker.'
+              : `${priced} av ${toBuy} varer har dagens pris, resten er anslått.`}
+          {meal.ingredients.some(isPantry) ? ' Det du har hjemme er ikke med.' : ''}
+        </Text>
       </View>
+
+      <View style={styles.ownActions}>
+        {meal.custom ? (
+          <>
+            <Button
+              label="Endre"
+              icon="create-outline"
+              variant="outline"
+              onPress={() => router.push({ pathname: '/ny-middag', params: { id: String(meal.id) } })}
+            />
+            <Button
+              label={confirmDelete ? 'Trykk igjen for å slette' : 'Slett'}
+              icon="trash-outline"
+              variant="secondary"
+              onPress={remove}
+            />
+          </>
+        ) : (
+          <Button
+            label="Lag din versjon"
+            icon="create-outline"
+            variant="outline"
+            onPress={() => router.push({ pathname: '/ny-middag', params: { fra: String(meal.id) } })}
+          />
+        )}
+      </View>
+      {deleteError && <Text style={styles.error}>{deleteError}</Text>}
     </View>
   );
 
@@ -101,17 +175,23 @@ export default function MealDetailScreen() {
       <View style={styles.ingredientList}>
         {meal.ingredients.map((ingredient, index) => (
           <View key={`${ingredient.name}-${index}`} style={[styles.ingredientRow, index > 0 && styles.divider]}>
-            <Text style={styles.ingredientAmount}>
-              {formatQuantity(scaleQuantity(ingredient.quantity, persons), ingredient.unit)}
-            </Text>
-            <Text style={styles.ingredientName}>{ingredient.name}</Text>
+            <Text style={styles.ingredientAmount}>{displayAmount(ingredient, persons, base)}</Text>
+            <View style={styles.ingredientText}>
+              <Text style={styles.ingredientName}>{ingredient.name}</Text>
+              {ingredient.product && ingredient.product.name !== ingredient.name && (
+                <Text style={styles.ingredientProduct}>{ingredient.product.name}</Text>
+              )}
+              {isPantry(ingredient) && <Text style={styles.ingredientProduct}>Har du hjemme?</Text>}
+            </View>
           </View>
         ))}
       </View>
     </View>
   );
 
-  const steps = (
+  const steps = meal.steps.length === 0 ? (
+    <View style={styles.steps} />
+  ) : (
     <View style={styles.steps}>
       <Title size="md">Slik gjør du</Title>
       {meal.steps.map((step, index) => (
@@ -238,11 +318,50 @@ const styles = StyleSheet.create({
   storeTileActive: {
     borderColor: colors.ink,
   },
-  storeTileText: {
+  storeTileName: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  storeTileText: {
     fontFamily: fonts.bodySemi,
     fontSize: 16,
     color: colors.ink,
+  },
+  cheapest: {
+    fontFamily: fonts.monoMedium,
+    fontSize: 11,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: colors.ink,
+    backgroundColor: colors.limeStrong,
+    borderRadius: radius.sm,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    overflow: 'hidden',
+  },
+  storeTilePrice: {
+    fontFamily: fonts.monoMedium,
+    fontSize: 15,
+    color: colors.ink,
+  },
+  priceNote: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors.inkSoft,
+  },
+  ownActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  error: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 14,
+    color: colors.danger,
   },
   ingredientsCard: {
     backgroundColor: colors.beige,
@@ -280,8 +399,16 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: colors.ink,
   },
-  ingredientName: {
+  ingredientText: {
     flex: 1,
+  },
+  ingredientProduct: {
+    fontFamily: fonts.mono,
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.muted,
+  },
+  ingredientName: {
     fontFamily: fonts.body,
     fontSize: 16,
     lineHeight: 22,

@@ -5,8 +5,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Body, Button, Chip, Eyebrow, Meta, Page, Title } from '@/components/ui';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
-import { MEALS } from '@/data/meals';
-import { buildShoppingList, formatQuantity, scaleQuantity } from '@/lib/meals';
+import { buildShoppingList, displayAmount, mealBase } from '@/lib/meals';
+import { useMeals } from '@/lib/meals-store';
+import { chainFor, formatPrice, isPantry, mealEans, mealPrice, usePrices } from '@/lib/prices';
 import type { StopId } from '@/lib/stops';
 import { useApp } from '@/lib/store';
 
@@ -14,14 +15,17 @@ export default function ShoppingListScreen() {
   const router = useRouter();
   const { activeList, setActiveList, persons, checked, toggleChecked, clearChecked, stores, ready } = useApp();
   const [expanded, setExpanded] = useState<Set<StopId>>(new Set());
+  const { findMeal, loading } = useMeals();
 
-  const meal = activeList ? MEALS.find(m => m.id === activeList.mealId) : undefined;
+  const meal = findMeal(activeList?.mealId);
   // Er butikken slettet siden lista ble laget, bruker vi den første butikken.
   const store = stores.find(s => s.id === activeList?.storeId) ?? stores[0];
 
   const stops = useMemo(() => (meal && store ? buildShoppingList(meal, store.stops) : []), [meal, store]);
+  const { book } = usePrices(meal ? mealEans([meal]) : []);
 
-  if (!ready) return null;
+  // En egen middag kan fortsatt være på vei fra databasen.
+  if (!ready || (!meal && activeList && loading)) return null;
 
   if (!meal || !store) {
     return (
@@ -44,6 +48,8 @@ export default function ShoppingListScreen() {
   const done = meal.ingredients.filter((_, index) => isChecked(index)).length;
   const allDone = total > 0 && done === total;
   const currentStop = stops.find(stop => stop.items.some(item => !isChecked(item.index)))?.stop;
+  const base = mealBase(meal);
+  const price = mealPrice(meal, persons, chainFor(store), book);
 
   function finish() {
     clearChecked(prefix);
@@ -64,6 +70,7 @@ export default function ShoppingListScreen() {
           <Meta icon="basket-outline">
             {done} av {total} i kurven
           </Meta>
+          <Meta icon="wallet-outline">{formatPrice(price)}</Meta>
         </View>
         <View style={styles.progressTrack} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: done }}>
           <View style={[styles.progressFill, { width: `${total ? (done / total) * 100 : 0}%` }]} />
@@ -136,9 +143,14 @@ export default function ShoppingListScreen() {
                     <View style={[styles.checkbox, itemChecked && styles.checkboxChecked]}>
                       {itemChecked && <Ionicons name="checkmark" size={18} color={colors.limeStrong} />}
                     </View>
-                    <Text style={[styles.itemName, itemChecked && styles.itemDone]}>{item.ingredient.name}</Text>
+                    <View style={styles.itemText}>
+                      <Text style={[styles.itemName, itemChecked && styles.itemDone]}>{item.ingredient.name}</Text>
+                      {isPantry(item.ingredient) && !itemChecked && (
+                        <Text style={styles.itemHint}>Sjekk om du har hjemme</Text>
+                      )}
+                    </View>
                     <Text style={[styles.itemAmount, itemChecked && styles.itemDone]}>
-                      {formatQuantity(scaleQuantity(item.ingredient.quantity, persons), item.ingredient.unit)}
+                      {displayAmount(item.ingredient, persons, base)}
                     </Text>
                   </Pressable>
                 );
@@ -302,8 +314,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.ink,
     borderColor: colors.ink,
   },
-  itemName: {
+  itemText: {
     flex: 1,
+    paddingVertical: spacing.sm,
+  },
+  itemHint: {
+    fontFamily: fonts.mono,
+    fontSize: 12,
+    color: colors.muted,
+    marginTop: 2,
+  },
+  itemName: {
     fontFamily: fonts.bodyMedium,
     fontSize: 17,
     color: colors.ink,

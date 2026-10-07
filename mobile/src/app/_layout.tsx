@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AppShell } from '@/components/AppShell';
 import { colors } from '@/constants/theme';
+import { MealsProvider } from '@/lib/meals-store';
 import { AppProvider } from '@/lib/store';
 
 export default function RootLayout() {
@@ -28,15 +29,17 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AppProvider>
-        <StatusBar style="dark" />
-        <AppShell>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: colors.bg },
-            }}
-          />
-        </AppShell>
+        <MealsProvider>
+          <StatusBar style="dark" />
+          <AppShell>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: colors.bg },
+              }}
+            />
+          </AppShell>
+        </MealsProvider>
       </AppProvider>
     </SafeAreaProvider>
   );

@@ -1,15 +1,30 @@
 // Oppskriftene, opprinnelig generert fra nettsidens oppskriftsbibliotek.
 // Mengdene gjelder for fire personer (se BASE_PERSONS i lib/meals.ts).
 
+// En ekte vare fra Kassalapp. Pakkestørrelsen brukes til å regne ut hvor
+// mange pakker som må kjøpes, og strekkoden til å hente dagens pris per kjede.
+export type Product = {
+  ean: string;
+  name: string;
+  image?: string | null;
+  packSize?: number | null;
+  packUnit?: string | null;
+};
+
 export type Ingredient = {
   name: string;
   quantity: number;
   unit: string;
   section: string;
+  product?: Product;
+  // Basisvarer man som regel har hjemme (salt, olje, en skje mel). De står på
+  // lista, men telles ikke med i prisen.
+  pantry?: boolean;
 };
 
 export type Meal = {
-  id: number;
+  // Tall for de faste rettene, tekst (uuid) for egne middager fra databasen.
+  id: number | string;
   name: string;
   emoji: string;
   description: string;
@@ -19,6 +34,11 @@ export type Meal = {
   tags: string[];
   ingredients: Ingredient[];
   steps: string[];
+  // Antall personer mengdene gjelder for. Mangler den, gjelder BASE_PERSONS.
+  basePersons?: number;
+  // Satt på egne middager. basedOn peker på en fast rett den erstatter.
+  custom?: boolean;
+  basedOn?: number;
 };
 
 
