@@ -20,6 +20,7 @@ const CHAIN_NAMES: Record<string, string> = {
   REMA_1000: 'Rema',
   KIWI: 'Kiwi',
   COOP_EXTRA: 'Extra',
+  COOP_NO: 'Coop',
   MENY_NO: 'Meny',
   SPAR_NO: 'Spar',
   COOP_PRIX: 'Prix',

@@ -26,6 +26,20 @@ const CHAIN_RULES: [RegExp, string][] = [
   [/extra|coop/i, 'COOP_EXTRA'],
 ];
 
+// Kassalapp har ofte bare én felles kode for Coop-butikkene.
+const CHAIN_FALLBACK: Record<string, string> = {
+  COOP_EXTRA: 'COOP_NO',
+  COOP_PRIX: 'COOP_NO',
+  COOP_MEGA: 'COOP_NO',
+  COOP_OBS: 'COOP_NO',
+  COOP_MARKED: 'COOP_NO',
+};
+
+export function chainPrice(prices: ChainPrices | undefined, chain: string | null): number | undefined {
+  if (!prices || !chain) return undefined;
+  return prices[chain] ?? (CHAIN_FALLBACK[chain] ? prices[CHAIN_FALLBACK[chain]] : undefined);
+}
+
 export function chainFor(store: Pick<Store, 'id' | 'name'>): string | null {
   const text = `${store.id} ${store.name}`;
   return CHAIN_RULES.find(([pattern]) => pattern.test(text))?.[1] ?? null;
@@ -97,7 +111,7 @@ export function ingredientCost(
   if (isPantry(ingredient)) return { amount: 0, packs, source: 'pantry', unitPrice: null };
 
   const prices = ingredient.product ? book[ingredient.product.ean] : undefined;
-  const exact = chain && prices ? prices[chain] : undefined;
+  const exact = chainPrice(prices, chain);
   if (exact) return { amount: exact * packs, packs, source: 'exact', unitPrice: exact };
 
   // Kjeden mangler pris (vanlig for Coop): snittet fra de andre kjedene er et godt anslag.

@@ -17,7 +17,7 @@ export async function GET(request: Request): Promise<Response> {
       try {
         const bulk = await kassalapp<{ data?: unknown[] }>('/products/prices-bulk', {
           method: 'POST',
-          body: JSON.stringify({ eans: candidates.map(hit => hit.ean), days: 1 }),
+          body: JSON.stringify({ eans: candidates.map(hit => hit.ean), days: 14 }),
         });
         const prices = bulkToPrices((bulk.data ?? []) as never[]);
         for (const hit of candidates) if (prices[hit.ean]) hit.prices = { ...hit.prices, ...prices[hit.ean] };
