@@ -8,6 +8,7 @@ import { AddItemSheet } from '@/components/AddItemSheet';
 import { SwapSheet } from '@/components/SwapSheet';
 import { Body, Button, Chip, Eyebrow, Page, Title } from '@/components/ui';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { useHistory } from '@/lib/history';
 import { useMeals } from '@/lib/meals-store';
 import { formatPrice, usePrices } from '@/lib/prices';
 import { sizeText } from '@/lib/search';
@@ -20,9 +21,21 @@ import { useApp } from '@/lib/store';
 export default function ShoppingListScreen() {
   const router = useRouter();
   const { stores, isOwner, ready: appReady } = useApp();
-  const { findMeal, loading } = useMeals();
-  const { state, ready, activeEntries, entries, setChecked, setStore, putAllBack, skipLine, finishShopping, removeExtras } =
-    useShopping();
+  const { findMeal, loading, memberName, deviceId } = useMeals();
+  const { recordTrip } = useHistory();
+  const {
+    state,
+    ready,
+    activeEntries,
+    entries,
+    setChecked,
+    setStore,
+    putAllBack,
+    skipLine,
+    finishShopping,
+    removeExtras,
+    commit,
+  } = useShopping();
   const { lines, stops, store } = useShoppingList();
   const [lastChecked, setLastChecked] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -82,6 +95,11 @@ export default function ShoppingListScreen() {
   function check(key: string) {
     setChecked(key, true);
     setLastChecked(key);
+    // Første avhuking betyr at du er i butikken. Samboer får se det og kan legge til varer.
+    const shopper = state.meta.shopper;
+    if (!shopper || shopper.deviceId !== deviceId || Date.now() - shopper.since > 3 * 3600000) {
+      commit({ meta: { shopper: { name: memberName.trim() || 'Noen', since: Date.now(), deviceId } } });
+    }
   }
 
   function putBack(line: ListLine) {
@@ -91,6 +109,20 @@ export default function ShoppingListScreen() {
   }
 
   function finish() {
+    recordTrip({
+      storeId: store?.id ?? '',
+      storeName: store?.name ?? '',
+      total: price.total,
+      exact: price.exact,
+      meals: meals.map(({ entry, meal }) => ({ mealId: meal.id, name: meal.name, persons: entry.persons })),
+      items: lines.map(line => ({
+        name: line.name,
+        amount: line.amount,
+        ean: line.product?.ean ?? null,
+        skipped: Boolean(state.skipped[line.key]),
+      })),
+      by: memberName.trim() || null,
+    });
     finishShopping();
     router.navigate('/uka');
   }

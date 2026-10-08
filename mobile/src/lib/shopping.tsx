@@ -42,7 +42,8 @@ export type Swap = { name: string; product?: Product | null };
 
 export type ShoppingMeta = {
   storeId?: string | null;
-  shopper?: { name: string; since: number } | null;
+  // Hvem som står i butikken nå. Vises som en melding hos samboer.
+  shopper?: { name: string; since: number; deviceId?: string } | null;
 };
 
 export type ShoppingState = {
@@ -200,8 +201,9 @@ export function buildLines(state: ShoppingState, findMeal: (id: string | number)
       const family = toBase(extra.quantity, extra.unit)?.unit ?? extra.unit.toLowerCase();
       const match = [...drafts.values()].find(draft => draft.key.startsWith(prefix) && !draft.key.endsWith(`|${family}`));
       if (match) {
+        const label = extra.addedBy ? `Lagt til av ${extra.addedBy}` : 'Lagt til';
         match.extraIds.push(extra.id);
-        if (!match.sources.includes('Lagt til')) match.sources.push('Lagt til');
+        if (!match.sources.includes(label)) match.sources.push(label);
         extraNotes.set(match.key, [...(extraNotes.get(match.key) ?? []), formatAmount(extra.quantity, extra.unit)]);
         continue;
       }
@@ -210,7 +212,7 @@ export function buildLines(state: ShoppingState, findMeal: (id: string | number)
       drafts,
       { name: extra.name, quantity: extra.quantity, unit: extra.unit, section: '', product: extra.product ?? undefined, pantry: false },
       extra.quantity,
-      'Lagt til',
+      extra.addedBy ? `Lagt til av ${extra.addedBy}` : 'Lagt til',
       { extraId: extra.id, fromMeal: false },
     );
   }

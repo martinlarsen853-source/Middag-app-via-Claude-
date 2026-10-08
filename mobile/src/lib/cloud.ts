@@ -76,3 +76,25 @@ export function ownerClaimOpen(): Promise<boolean> {
 export function claimOwner(): Promise<string> {
   return rpc<string>('hk_claim_owner', {});
 }
+
+// ---- Felles ukeplan og handleliste ----
+
+export type RemoteList = { state: Record<string, unknown>; version: number };
+
+export function getList(token: string): Promise<RemoteList> {
+  return rpc<RemoteList>('hk_get_list', { p_token: token });
+}
+
+export function patchList(token: string, patch: Record<string, unknown>): Promise<RemoteList> {
+  return rpc<RemoteList>('hk_patch_list', { p_token: token, p_patch: patch });
+}
+
+// ---- Handlehistorikk ----
+
+export function addTrip(token: string, trip: Record<string, unknown>): Promise<string> {
+  return rpc<string>('hk_add_trip', { p_token: token, p_trip: trip });
+}
+
+export function listTrips<T>(token: string): Promise<T[]> {
+  return rpc<T[]>('hk_list_trips', { p_token: token, p_limit: 200 });
+}

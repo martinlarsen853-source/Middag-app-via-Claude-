@@ -6,6 +6,8 @@ import * as cloud from '@/lib/cloud';
 
 const TOKEN_KEY = 'handleklar.household';
 const CACHE_KEY = 'handleklar.customMeals';
+const NAME_KEY = 'handleklar.memberName';
+const DEVICE_KEY = 'handleklar.deviceId';
 
 export type MealDraft = Omit<Meal, 'id' | 'custom'> & { id?: string };
 
@@ -17,6 +19,17 @@ type MealsState = {
   deleteMeal: (id: string) => Promise<void>;
   loading: boolean;
   syncError: string | null;
+  // Husstanden: en hemmelig nøkkel som deles med samboer. Den som har nøkkelen
+  // ser de samme egne middagene, den samme ukeplanen og den samme handlelista.
+  householdToken: string | null;
+  ensureHousehold: () => Promise<string>;
+  joinHousehold: (token: string) => Promise<void>;
+  leaveHousehold: () => Promise<void>;
+  refreshMeals: () => Promise<void>;
+  // Navnet som vises når du handler eller legger til varer, og en id for denne telefonen.
+  memberName: string;
+  setMemberName: (name: string) => void;
+  deviceId: string;
 };
 
 const MealsContext = createContext<MealsState | null>(null);
@@ -44,6 +57,8 @@ export function MealsProvider({ children }: { children: ReactNode }) {
   const [customMeals, setCustomMeals] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [memberName, setMemberNameState] = useState('');
+  const [deviceId, setDeviceId] = useState('');
 
   const remember = useCallback((next: Meal[]) => {
     AsyncStorage.setItem(CACHE_KEY, JSON.stringify(next)).catch(() => {});
@@ -53,8 +68,17 @@ export function MealsProvider({ children }: { children: ReactNode }) {
     // Viser lagrede middager med en gang, og henter ferske fra databasen i bakgrunnen.
     (async () => {
       try {
-        const [[, savedToken], [, cached]] = await AsyncStorage.multiGet([TOKEN_KEY, CACHE_KEY]);
+        const [[, savedToken], [, cached], [, savedName], [, savedDevice]] = await AsyncStorage.multiGet([
+          TOKEN_KEY,
+          CACHE_KEY,
+          NAME_KEY,
+          DEVICE_KEY,
+        ]);
         if (cached) setCustomMeals(JSON.parse(cached));
+        if (savedName) setMemberNameState(savedName);
+        const device = savedDevice || `d-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+        setDeviceId(device);
+        if (!savedDevice) AsyncStorage.setItem(DEVICE_KEY, device).catch(() => {});
         if (savedToken) {
           setToken(savedToken);
           const fresh = (await cloud.listMeals(savedToken)).map(toMeal);
@@ -77,6 +101,53 @@ export function MealsProvider({ children }: { children: ReactNode }) {
     setToken(created);
     return created;
   }, [token]);
+
+  const refreshMeals = useCallback(async () => {
+    if (!token) return;
+    try {
+      const fresh = (await cloud.listMeals(token)).map(toMeal);
+      setCustomMeals(fresh);
+      remember(fresh);
+      setSyncError(null);
+    } catch (error) {
+      setSyncError(error instanceof Error ? error.message : 'Kunne ikke hente egne middager');
+    }
+  }, [token, remember]);
+
+  // Samboer kan ha lagt inn en ny middag. Henter på nytt jevnlig mens appen er åpen.
+  useEffect(() => {
+    if (!token) return;
+    const timer = setInterval(() => {
+      if (typeof document === 'undefined' || document.visibilityState === 'visible') refreshMeals();
+    }, 60000);
+    return () => clearInterval(timer);
+  }, [token, refreshMeals]);
+
+  const joinHousehold = useCallback(
+    async (next: string) => {
+      const trimmed = next.trim();
+      // Sjekker nøkkelen før vi bytter; en ukjent nøkkel gir en feil her.
+      const meals = (await cloud.listMeals(trimmed)).map(toMeal);
+      await AsyncStorage.setItem(TOKEN_KEY, trimmed);
+      setToken(trimmed);
+      setCustomMeals(meals);
+      remember(meals);
+    },
+    [remember],
+  );
+
+  const leaveHousehold = useCallback(async () => {
+    await AsyncStorage.removeItem(TOKEN_KEY);
+    setToken(null);
+    setCustomMeals([]);
+    remember([]);
+  }, [remember]);
+
+  const setMemberName = useCallback((name: string) => {
+    const trimmed = name.slice(0, 40);
+    setMemberNameState(trimmed);
+    AsyncStorage.setItem(NAME_KEY, trimmed).catch(() => {});
+  }, []);
 
   const saveMeal = useCallback(
     async (draft: MealDraft) => {
@@ -121,8 +192,40 @@ export function MealsProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ meals, customMeals, findMeal, saveMeal, deleteMeal, loading, syncError }),
-    [meals, customMeals, findMeal, saveMeal, deleteMeal, loading, syncError],
+    () => ({
+      meals,
+      customMeals,
+      findMeal,
+      saveMeal,
+      deleteMeal,
+      loading,
+      syncError,
+      householdToken: token,
+      ensureHousehold: ensureToken,
+      joinHousehold,
+      leaveHousehold,
+      refreshMeals,
+      memberName,
+      setMemberName,
+      deviceId,
+    }),
+    [
+      meals,
+      customMeals,
+      findMeal,
+      saveMeal,
+      deleteMeal,
+      loading,
+      syncError,
+      token,
+      ensureToken,
+      joinHousehold,
+      leaveHousehold,
+      refreshMeals,
+      memberName,
+      setMemberName,
+      deviceId,
+    ],
   );
 
   return <MealsContext.Provider value={value}>{children}</MealsContext.Provider>;

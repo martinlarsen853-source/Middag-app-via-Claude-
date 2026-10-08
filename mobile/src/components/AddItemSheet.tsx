@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 
 
 import { Sheet } from '@/components/Sheet';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { useMeals } from '@/lib/meals-store';
 import { hitMeta, hitToProduct, useProductSearch, type SearchHit } from '@/lib/search';
 import { useShopping, type ExtraItem } from '@/lib/shopping';
 
@@ -12,6 +13,8 @@ import { useShopping, type ExtraItem } from '@/lib/shopping';
 // antall med − og +. Søket står åpent, så du kan legge inn flere på rad.
 export function AddItemSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { state, addExtra, updateExtra } = useShopping();
+  const { memberName } = useMeals();
+  const addedBy = memberName.trim() || null;
   const [query, setQuery] = useState('');
   const [count, setCount] = useState(1);
   const { hits, state: searchState } = useProductSearch(query);
@@ -22,7 +25,7 @@ export function AddItemSheet({ visible, onClose }: { visible: boolean; onClose: 
   function addFreeText() {
     const name = query.trim();
     if (!name) return;
-    addExtra({ name: name[0].toUpperCase() + name.slice(1), quantity: count, unit: 'stk', product: null });
+    addExtra({ name: name[0].toUpperCase() + name.slice(1), quantity: count, unit: 'stk', product: null, addedBy });
     setQuery('');
     setCount(1);
   }
@@ -81,7 +84,7 @@ export function AddItemSheet({ visible, onClose }: { visible: boolean; onClose: 
       {searchState === 'error' && <Text style={styles.note}>Fikk ikke søkt akkurat nå. Du kan legge til som tekst.</Text>}
 
       {hits.slice(0, 10).map(hit => (
-        <HitRow key={hit.ean} hit={hit} extra={extraFor(hit.ean)} onAdd={() => addExtra({ name: hit.name, quantity: 1, unit: 'pk', product: hitToProduct(hit) })} onChange={updateExtra} />
+        <HitRow key={hit.ean} hit={hit} extra={extraFor(hit.ean)} onAdd={() => addExtra({ name: hit.name, quantity: 1, unit: 'pk', product: hitToProduct(hit), addedBy })} onChange={updateExtra} />
       ))}
 
       {extras.length > 0 && (

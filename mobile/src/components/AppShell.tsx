@@ -6,10 +6,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, fonts, MAX_WIDTH, radius, spacing } from '@/constants/theme';
 import { useLayout } from '@/lib/layout';
-import { useShoppingList } from '@/lib/shopping';
+import { useMeals } from '@/lib/meals-store';
+import { useShopping, useShoppingList } from '@/lib/shopping';
 
 type Tab = {
-  key: 'middager' | 'uka' | 'handleliste' | 'butikker';
+  key: 'middager' | 'uka' | 'handleliste' | 'mer';
   label: string;
   href: Href;
   icon: keyof typeof Ionicons.glyphMap;
@@ -20,13 +21,13 @@ const TABS: Tab[] = [
   { key: 'middager', label: 'Middager', href: '/', icon: 'restaurant-outline', iconActive: 'restaurant' },
   { key: 'uka', label: 'Uka', href: '/uka', icon: 'calendar-outline', iconActive: 'calendar' },
   { key: 'handleliste', label: 'Handleliste', href: '/handleliste', icon: 'basket-outline', iconActive: 'basket' },
-  { key: 'butikker', label: 'Butikker', href: '/butikker', icon: 'storefront-outline', iconActive: 'storefront' },
+  { key: 'mer', label: 'Mer', href: '/mer', icon: 'ellipsis-horizontal-circle-outline', iconActive: 'ellipsis-horizontal-circle' },
 ];
 
 function activeTab(pathname: string): Tab['key'] {
   if (pathname.startsWith('/handleliste')) return 'handleliste';
   if (pathname.startsWith('/uka')) return 'uka';
-  if (pathname.startsWith('/butikker')) return 'butikker';
+  if (/^\/(mer|butikker|samboer|historikk|eier|bli-med)/.test(pathname)) return 'mer';
   return 'middager';
 }
 
@@ -40,9 +41,35 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <View style={styles.shell}>
       <TopBar />
+      <ShopperBanner />
       <View style={styles.content}>{children}</View>
       {!wide && <BottomBar />}
     </View>
+  );
+}
+
+// Står samboer i butikken, får du beskjed her og kan legge til varer med en gang.
+function ShopperBanner() {
+  const { state } = useShopping();
+  const { deviceId } = useMeals();
+  const { store } = useShoppingList();
+  const router = useRouter();
+  const pathname = usePathname();
+  const shopper = state.meta.shopper;
+  if (!shopper || !shopper.deviceId || shopper.deviceId === deviceId) return null;
+  if (Date.now() - shopper.since > 3 * 3600000) return null;
+  return (
+    <Pressable
+      accessibilityRole="link"
+      onPress={() => router.navigate('/handleliste')}
+      style={styles.banner}>
+      <Ionicons name="cart" size={18} color={colors.ink} />
+      <Text style={styles.bannerText} numberOfLines={2}>
+        {shopper.name} handler nå{store ? ` på ${store.name}` : ''}.{' '}
+        {pathname.startsWith('/handleliste') ? 'Trykk + for å legge til varer.' : 'Legg til varer i lista.'}
+      </Text>
+      <Ionicons name="chevron-forward" size={18} color={colors.ink} />
+    </Pressable>
   );
 }
 
@@ -144,6 +171,21 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.limeStrong,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    minHeight: 44,
+  },
+  bannerText: {
+    flex: 1,
+    fontFamily: fonts.bodySemi,
+    fontSize: 14,
+    color: colors.ink,
   },
   topBar: {
     backgroundColor: colors.bg,
