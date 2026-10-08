@@ -5,7 +5,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Counter } from '@/components/AddItemSheet';
 import { Body, Button, Chip, Eyebrow, Page, Title } from '@/components/ui';
+import { WeekBalance } from '@/components/WeekBalance';
 import { categoryTints, colors, defaultTint, fonts, radius, spacing } from '@/constants/theme';
+import { INSPO } from '@/data/inspo';
 import type { Meal } from '@/data/meals';
 import { useMeals } from '@/lib/meals-store';
 import { photoFor } from '@/lib/photos';
@@ -26,9 +28,9 @@ import { useApp } from '@/lib/store';
 // spiser. I butikken blir alt til én samlet handleliste.
 export default function WeekScreen() {
   const router = useRouter();
-  const { stores, ready: appReady } = useApp();
-  const { findMeal } = useMeals();
-  const { ready, entries, activeEntries, removeEntry, updateEntry, setStore, clearBought } = useShopping();
+  const { stores, persons, ready: appReady } = useApp();
+  const { findMeal, meals: myMeals } = useMeals();
+  const { ready, entries, addMeal, removeEntry, updateEntry, setStore, clearBought } = useShopping();
   const { lines, store, remaining } = useShoppingList();
 
   const planned = entries.map(entry => ({ entry, meal: findMeal(entry.mealId) })).filter(item => item.meal) as {
@@ -120,6 +122,13 @@ export default function WeekScreen() {
           <View style={styles.actions}>
             <Button label="Legg til middag" icon="add" variant="outline" onPress={() => router.navigate('/')} />
           </View>
+
+          <WeekBalance
+            meals={active.map(item => item.meal)}
+            candidates={[...myMeals, ...INSPO]}
+            onAdd={meal => addMeal(meal.id, persons)}
+            onOpen={meal => router.push(`/rett/${meal.id}`)}
+          />
 
           {bought.length > 0 && (
             <View style={styles.bought}>

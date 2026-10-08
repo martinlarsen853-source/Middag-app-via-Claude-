@@ -2,6 +2,7 @@
 // beige flater, kondenserte overskrifter og monospace på småtekst.
 export const colors = {
   bg: '#FEFEF7',
+  bgCool: '#F1F6F4', // litt kjøligere bakgrunn for Inspo, så du ser hvor du er
   surface: '#FFFFFF',
   beige: '#F2F1E7',
   beigeDark: '#E7E5D7',

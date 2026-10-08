@@ -7,21 +7,25 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Slider } from '@/components/Slider';
 import { Body, Button, Chip, Eyebrow, Meta, Page, PersonStepper, Title } from '@/components/ui';
 import { categoryTints, colors, defaultTint, fonts, radius, spacing } from '@/constants/theme';
+import { INSPO } from '@/data/inspo';
 import type { Meal } from '@/data/meals';
 import { daysAgo, useHistory } from '@/lib/history';
 import { useLayout } from '@/lib/layout';
 import { useMeals } from '@/lib/meals-store';
+import { mealNutrition } from '@/lib/nutrition';
 import { formatPrice, mealEans, pricesByStore, usePrices, type StorePrice } from '@/lib/prices';
 import { expiryText, saveMeals, useShopping } from '@/lib/shopping';
 import { photoFor } from '@/lib/photos';
 import { useApp } from '@/lib/store';
 
-type SortKey = 'forslag' | 'raskest' | 'billigst' | 'lengst';
+type SortKey = 'forslag' | 'raskest' | 'billigst' | 'protein' | 'lengst';
+type Library = 'mine' | 'inspo';
 
 const SORTS: { key: SortKey; label: string }[] = [
   { key: 'forslag', label: 'Forslag' },
   { key: 'raskest', label: 'Raskest' },
   { key: 'billigst', label: 'Billigst' },
+  { key: 'protein', label: 'Mest protein' },
   { key: 'lengst', label: 'Lengst siden' },
 ];
 
@@ -33,7 +37,12 @@ export default function MealListScreen() {
   const router = useRouter();
   const { persons, setPersons, stores } = useApp();
   const { entryFor, addMeal, removeEntry, state } = useShopping();
-  const { meals: allMeals } = useMeals();
+  const { meals: myMeals } = useMeals();
+  const [library, setLibrary] = useState<Library>('mine');
+  const inspo = library === 'inspo';
+  const allMeals = inspo ? INSPO : myMeals;
+  // Inspo-retter du har lagret som dine egne, merkes «I mine».
+  const saved = useMemo(() => new Set(myMeals.map(meal => meal.basedOn).filter(id => id !== undefined)), [myMeals]);
   const { contentWidth, columns, wide } = useLayout();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('forslag');
@@ -53,6 +62,7 @@ export default function MealListScreen() {
           order,
           best,
           perPerson: best ? Math.round(best.price.total / persons) : 0,
+          protein: mealNutrition(meal).protein,
           eatenAt: lastEaten(meal.id),
         };
       }),
@@ -79,6 +89,8 @@ export default function MealListScreen() {
           return (a.meal.timeMinutes || 999) - (b.meal.timeMinutes || 999);
         case 'billigst':
           return a.perPerson - b.perPerson;
+        case 'protein':
+          return b.protein - a.protein || a.order - b.order;
         case 'lengst':
           return (a.eatenAt ?? 0) - (b.eatenAt ?? 0) || a.order - b.order;
         default:
@@ -90,20 +102,39 @@ export default function MealListScreen() {
 
   const activeFilters = (maxTime < TIME_MAX ? 1 : 0) + (maxPrice < PRICE_MAX ? 1 : 0);
   // Går noe i kjøleskapet ut snart, foreslår vi en middag som bruker det opp.
-  const saver = saveMeals(allMeals, Object.values(state.fridge)).find(item => item.soonest !== null && item.soonest <= 3);
+  const saver = saveMeals(myMeals, Object.values(state.fridge)).find(item => item.soonest !== null && item.soonest <= 3);
   const saverItem = saver?.uses.reduce((a, b) => ((a.expires ?? '9') <= (b.expires ?? '9') ? a : b));
 
   const gap = wide ? spacing.xl : spacing.lg;
   const cardWidth = Math.floor((contentWidth - gap * (columns - 1)) / columns);
 
   return (
-    <Page>
+    <Page background={inspo ? colors.bgCool : colors.bg}>
+      <View style={styles.library}>
+        {(
+          [
+            { key: 'mine', label: 'Mine middager' },
+            { key: 'inspo', label: 'Inspo' },
+          ] as const
+        ).map(option => (
+          <Pressable
+            key={option.key}
+            accessibilityRole="button"
+            aria-selected={library === option.key}
+            onPress={() => setLibrary(option.key)}
+            style={[styles.libraryOption, library === option.key && styles.libraryOptionOn]}>
+            <Text style={[styles.libraryText, library === option.key && styles.libraryTextOn]}>{option.label}</Text>
+          </Pressable>
+        ))}
+      </View>
       <View style={[styles.hero, wide && styles.heroWide]}>
         <View style={styles.heroText}>
-          <Eyebrow>Deres faste middager</Eyebrow>
-          <Title size="xl">Hva blir det til middag?</Title>
+          <Eyebrow>{inspo ? `Inspo · ${INSPO.length} nye retter` : 'Deres faste middager'}</Eyebrow>
+          <Title size="xl">{inspo ? 'Noe nytt å prøve?' : 'Hva blir det til middag?'}</Title>
           <Body style={styles.heroBody}>
-            Trykk + for å legge middager i uka, eller velg én og handle med en gang. Lista følger alltid butikkens rute.
+            {inspo
+              ? 'Norske hverdagsmiddager og Oda-retter. Trykk + for å prøve én i uka, eller åpne den og legg den til i dine middager.'
+              : 'Trykk + for å legge middager i uka, eller velg én og handle med en gang. Lista følger alltid butikkens rute.'}
           </Body>
         </View>
         <View style={[styles.controls, wide && styles.controlsWide]}>
@@ -112,7 +143,7 @@ export default function MealListScreen() {
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="Søk i middagene"
+              placeholder={inspo ? 'Søk i Inspo' : 'Søk i middagene'}
               placeholderTextColor={colors.muted}
               style={styles.searchInput}
               autoCorrect={false}
@@ -145,7 +176,7 @@ export default function MealListScreen() {
         </Pressable>
       </View>
 
-      {saver && saverItem && (
+      {!inspo && saver && saverItem && (
         <Pressable
           accessibilityRole="link"
           accessibilityLabel={`Sparemiddag: ${saver.meal.name}`}
@@ -206,13 +237,15 @@ export default function MealListScreen() {
         </View>
       ) : (
         <View style={[styles.grid, { gap }]}>
-          {meals.map(({ meal, best, perPerson, eatenAt }) => (
+          {meals.map(({ meal, best, perPerson, protein, eatenAt }) => (
             <MealCard
               key={meal.id}
               meal={meal}
               width={cardWidth}
               best={best}
               perPerson={perPerson}
+              protein={sort === 'protein' ? protein : null}
+              saved={inspo && saved.has(meal.id as number)}
               eatenAt={eatenAt}
               inWeek={Boolean(entryFor(meal.id))}
               onToggleWeek={() => {
@@ -234,6 +267,8 @@ function MealCard({
   width,
   best,
   perPerson,
+  protein,
+  saved,
   eatenAt,
   inWeek,
   onToggleWeek,
@@ -243,6 +278,8 @@ function MealCard({
   width: number;
   best: StorePrice | undefined;
   perPerson: number;
+  protein: number | null;
+  saved: boolean;
   eatenAt: number | null;
   inWeek: boolean;
   onToggleWeek: () => void;
@@ -278,6 +315,12 @@ function MealCard({
                   <Text style={styles.onListText}>Egen</Text>
                 </View>
               )}
+              {saved && (
+                <View style={[styles.onListTag, styles.customTag]}>
+                  <Ionicons name="bookmark" size={12} color={colors.ink} />
+                  <Text style={styles.onListText}>I mine</Text>
+                </View>
+              )}
             </View>
             <Pressable
               accessibilityRole="button"
@@ -296,6 +339,7 @@ function MealCard({
                   {formatPrice(best.price)} · {perPerson} kr/pers
                 </Meta>
               )}
+              {protein !== null && <Meta icon="barbell-outline">{protein} g protein</Meta>}
               {eatenAt && <Meta icon="checkmark-done-outline">Handlet {daysAgo(eatenAt)}</Meta>}
             </View>
             <Text style={[styles.cardTitle, hovered && styles.cardTitleHover]}>{meal.name}</Text>
@@ -312,6 +356,31 @@ function MealCard({
 }
 
 const styles = StyleSheet.create({
+  library: {
+    flexDirection: 'row',
+    alignSelf: 'flex-start',
+    backgroundColor: colors.beige,
+    borderRadius: radius.round,
+    padding: 4,
+    marginBottom: spacing.xl,
+  },
+  libraryOption: {
+    paddingHorizontal: spacing.lg,
+    minHeight: 40,
+    justifyContent: 'center',
+    borderRadius: radius.round,
+  },
+  libraryOptionOn: {
+    backgroundColor: colors.ink,
+  },
+  libraryText: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 15,
+    color: colors.ink,
+  },
+  libraryTextOn: {
+    color: colors.bg,
+  },
   hero: {
     gap: spacing.xl,
     marginBottom: spacing.xxl,

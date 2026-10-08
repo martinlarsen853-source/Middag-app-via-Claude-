@@ -77,6 +77,8 @@ export function toBase(value: number, unit: string | null | undefined): { value:
   }
 }
 
+const ESTIMATE_PACK = 500;
+
 // Enheter der én i oppskriften er én pakke i butikken, uansett hva pakken veier.
 const CONTAINER_UNITS = ['boks', 'glass', 'flaske', 'pose', 'pakke', 'beger', 'hode', 'bunt'];
 
@@ -104,7 +106,12 @@ export function packsNeeded(ingredient: Ingredient, persons: number, base = BASE
     // Ukjent forhold mellom oppskrift og pakke (f.eks. «2 stk løk» mot en kilopose): én pakke.
     return 1;
   }
-  return COUNT_UNITS.includes(unit) ? Math.max(1, Math.round(quantity)) : 1;
+  if (COUNT_UNITS.includes(unit)) return Math.max(1, Math.round(quantity));
+  // Uten koblet vare gjetter vi pakker på rundt en halv kilo eller liter, så
+  // prisanslaget vokser med antall personer.
+  const need = toBase(quantity, unit);
+  if (need && need.unit !== 'stk') return Math.max(1, Math.ceil(need.value / ESTIMATE_PACK - 0.05));
+  return 1;
 }
 
 export type PriceSource = 'exact' | 'old' | 'other-chain' | 'estimate' | 'pantry';

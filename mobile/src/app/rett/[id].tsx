@@ -4,8 +4,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { NutritionCard } from '@/components/NutritionCard';
 import { BackLink, Body, Button, Eyebrow, Meta, Page, PersonStepper, Title } from '@/components/ui';
 import { categoryTints, colors, defaultTint, fonts, radius, spacing } from '@/constants/theme';
+import { INSPO } from '@/data/inspo';
 import { useLayout } from '@/lib/layout';
 import { displayAmount, mealBase } from '@/lib/meals';
 import { useMeals } from '@/lib/meals-store';
@@ -18,7 +20,7 @@ export default function MealDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { persons: defaultPersons, setPersons: setDefaultPersons, stores, ready } = useApp();
-  const { findMeal, deleteMeal } = useMeals();
+  const { findMeal, deleteMeal, meals: myMeals } = useMeals();
   const { entryFor, addMeal, removeEntry, updateEntry, setStore } = useShopping();
   const { width } = useLayout();
   const twoColumns = width >= 900;
@@ -67,6 +69,9 @@ export default function MealDetailScreen() {
   }
 
   const base = mealBase(meal);
+  const isInspo = INSPO.some(item => item.id === meal.id);
+  const myVersion = isInspo ? myMeals.find(item => item.custom && item.basedOn === meal.id) : undefined;
+  const cook = () => router.push(`/lag/${meal.id}`);
   const storePrices = pricesByStore(meal, persons, stores, book);
   const best = storePrices[0];
   const showCheapest = storePrices.length > 1 && storePrices[storePrices.length - 1].price.total - best.price.total >= 5;
@@ -75,7 +80,8 @@ export default function MealDetailScreen() {
 
   // Pakkene kommer hele, så noen ganger blir det billigere per porsjon å lage mer.
   let portionTip: string | null = null;
-  if (best && best.price.total > 0) {
+  // Bare når minst én vare har ekte pris, ellers bygger tipset på gjetninger.
+  if (best && best.price.total > 0 && best.price.priced > 0) {
     const chain = chainFor(best.store);
     let cheapest = { persons, perPortion: best.price.total / persons };
     for (let count = 1; count <= 8; count++) {
@@ -184,7 +190,19 @@ export default function MealDetailScreen() {
       </View>
 
       <View style={styles.ownActions}>
-        {meal.custom ? (
+        {meal.steps.length > 0 && <Button label="Lag mat" icon="flame-outline" variant="outline" onPress={cook} />}
+        {isInspo ? (
+          myVersion ? (
+            <Button label="Åpne din versjon" icon="bookmark" variant="secondary" onPress={() => router.push(`/rett/${myVersion.id}`)} />
+          ) : (
+            <Button
+              label="Legg til i mine middager"
+              icon="bookmark-outline"
+              variant="outline"
+              onPress={() => router.push({ pathname: '/ny-middag', params: { fra: String(meal.id) } })}
+            />
+          )
+        ) : meal.custom ? (
           <>
             <Button
               label="Endre"
@@ -239,7 +257,10 @@ export default function MealDetailScreen() {
     <View style={styles.steps} />
   ) : (
     <View style={styles.steps}>
-      <Title size="md">Slik gjør du</Title>
+      <View style={styles.stepsHeader}>
+        <Title size="md">Slik gjør du</Title>
+        <Button label="Lag mat" icon="flame-outline" variant="lime" onPress={cook} accessibilityLabel="Start kokemodus" />
+      </View>
       {meal.steps.map((step, index) => (
         <View key={index} style={styles.stepRow}>
           <View style={styles.stepNumber}>
@@ -251,6 +272,8 @@ export default function MealDetailScreen() {
     </View>
   );
 
+  const nutrition = <NutritionCard meal={meal} />;
+
   return (
     <Page>
       <BackLink label="Alle middager" href="/" />
@@ -261,7 +284,10 @@ export default function MealDetailScreen() {
             {image}
           </View>
           <View style={[styles.row, styles.rowTop]}>
-            {ingredients}
+            <View style={styles.sideColumn}>
+              {ingredients}
+              {nutrition}
+            </View>
             {steps}
           </View>
         </>
@@ -271,6 +297,7 @@ export default function MealDetailScreen() {
           {info}
           {ingredients}
           {steps}
+          {nutrition}
         </View>
       )}
     </Page>
@@ -434,8 +461,18 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
   },
   ingredientsWide: {
-    width: 380,
     padding: spacing.xxl,
+  },
+  sideColumn: {
+    width: 380,
+    gap: spacing.xl,
+  },
+  stepsHeader: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
   },
   forPersons: {
     fontFamily: fonts.mono,

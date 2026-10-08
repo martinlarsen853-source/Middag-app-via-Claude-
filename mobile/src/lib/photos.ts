@@ -8,9 +8,10 @@ const NAME_PHOTOS: [RegExp, string][] = [
   [/(taco|burrito|fajita|enchilada|quesadilla)/, 'photo-1599974579688-8dbdd335c77f'],
   [/(wrap|falafel|pita|kebab|gyros)/, 'photo-1626700051175-6818013e1d4f'],
   [/(bakt potet|bakepotet)/, 'photo-1761712826074-5f1bab2b2f32'],
+  // Fisk før pasta, så «Laksepasta» får laks og ikke kjøttsaus.
+  [/(laks|salmon|ørret)/, 'photo-1656389863625-59de2275fb7e'],
   [/(lasagne|lasagna)/, 'photo-1574894709920-11b28e7367e3'],
   [/(carbonara|spaghetti|bolognese|pasta|penne|tagliatelle|tortellini|sommerfuglpasta)/, 'photo-1621996346565-e3dbc646d9a9'],
-  [/(laks|salmon|ørret)/, 'photo-1656389863625-59de2275fb7e'],
   [/(fiskekake|fiskebolle|fiskeburger)/, 'photo-1652690772758-45df96e11c50'],
   [/(bacalao|klippfisk|torsk|sei|hyse|fiskepinner|fiskegrateng|fiskesuppe|fisk)/, 'photo-1535140728325-a4d3707eee61'],
   [/(reke|scampi|skalldyr)/, 'photo-1581867286869-fd02aaaef2f2'],

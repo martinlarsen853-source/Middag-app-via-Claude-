@@ -25,21 +25,50 @@ export function Slider({
   const trackRef = useRef<View>(null);
   const [trackLeft, setTrackLeft] = useState(0);
   const [trackWidth, setTrackWidth] = useState(1);
+  // Under draget vises verdien med en gang, men den sendes videre først når du
+  // slipper. Ellers krymper lista mens du drar, siden ruller og draget avbrytes.
+  const [dragValue, setDragValue] = useState<number | null>(null);
+  const latest = useRef<number | null>(null);
 
   const clamp = (next: number) => Math.min(max, Math.max(min, Math.round(next / step) * step));
-  const fraction = (value - min) / (max - min);
+  const shown = dragValue ?? value;
+  const fraction = (shown - min) / (max - min);
 
-  function fromEvent(event: GestureResponderEvent, left = trackLeft) {
-    const x = event.nativeEvent.pageX - left;
-    onChange(clamp(min + (x / trackWidth) * (max - min)));
+  function preview(next: number) {
+    latest.current = next;
+    setDragValue(next);
+  }
+
+  function commit() {
+    if (latest.current !== null) onChange(latest.current);
+    latest.current = null;
+    setDragValue(null);
+  }
+
+  // I nettleseren kan vi måle skalaen med en gang. Da treffer også raske drag riktig.
+  function domBox(): { left: number; width: number } | null {
+    const node = trackRef.current as unknown as { getBoundingClientRect?: () => { left: number; width: number } } | null;
+    if (!node?.getBoundingClientRect) return null;
+    const rect = node.getBoundingClientRect();
+    return rect.width > 0 ? { left: rect.left, width: rect.width } : null;
+  }
+
+  function fromEvent(event: GestureResponderEvent) {
+    const box = domBox() ?? { left: trackLeft, width: trackWidth };
+    const x = event.nativeEvent.pageX - box.left;
+    preview(clamp(min + (x / box.width) * (max - min)));
   }
 
   function measure(event: GestureResponderEvent) {
     const pageX = event.nativeEvent.pageX;
+    if (domBox()) {
+      fromEvent(event);
+      return;
+    }
     trackRef.current?.measureInWindow((x, _y, width) => {
       setTrackLeft(x);
       setTrackWidth(Math.max(1, width));
-      onChange(clamp(min + ((pageX - x) / Math.max(1, width)) * (max - min)));
+      preview(clamp(min + ((pageX - x) / Math.max(1, width)) * (max - min)));
     });
   }
 
@@ -47,7 +76,7 @@ export function Slider({
     <View style={styles.wrap}>
       <View style={styles.header}>
         <Text style={styles.label}>{label}</Text>
-        <Text style={styles.value}>{format(value)}</Text>
+        <Text style={styles.value}>{format(shown)}</Text>
       </View>
       <View style={styles.row}>
         <Pressable
@@ -66,9 +95,12 @@ export function Slider({
           onMoveShouldSetResponder={() => true}
           onResponderGrant={measure}
           onResponderMove={event => fromEvent(event)}
+          onResponderRelease={commit}
+          onResponderTerminate={commit}
+          onResponderTerminationRequest={() => false}
           accessibilityRole="adjustable"
           accessibilityLabel={label}
-          accessibilityValue={{ min, max, now: value, text: format(value) }}
+          accessibilityValue={{ min, max, now: shown, text: format(shown) }}
           accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
           onAccessibilityAction={event =>
             onChange(clamp(value + (event.nativeEvent.actionName === 'increment' ? step : -step)))

@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
+import { INSPO } from '@/data/inspo';
 import { MEALS, type Meal } from '@/data/meals';
 import * as cloud from '@/lib/cloud';
 
@@ -186,7 +187,12 @@ export function MealsProvider({ children }: { children: ReactNode }) {
   const findMeal = useCallback(
     (id: string | number | undefined) => {
       if (id === undefined) return undefined;
-      return customMeals.find(meal => String(meal.id) === String(id)) ?? MEALS.find(meal => String(meal.id) === String(id));
+      const key = String(id);
+      return (
+        customMeals.find(meal => String(meal.id) === key) ??
+        MEALS.find(meal => String(meal.id) === key) ??
+        INSPO.find(meal => String(meal.id) === key)
+      );
     },
     [customMeals],
   );

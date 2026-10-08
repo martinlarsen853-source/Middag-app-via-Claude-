@@ -13,17 +13,19 @@ export function Page({
   children,
   maxWidth,
   contentStyle,
+  background,
 }: {
   children: ReactNode;
   maxWidth?: number;
   contentStyle?: StyleProp<ViewStyle>;
+  background?: string;
 }) {
   const { gutter, contentWidth, wide } = useLayout();
   const insets = useSafeAreaInsets();
   const width = maxWidth ? Math.min(maxWidth, contentWidth) : contentWidth;
   return (
     <ScrollView
-      style={styles.page}
+      style={[styles.page, background ? { backgroundColor: background } : null]}
       contentContainerStyle={{
         paddingHorizontal: gutter,
         paddingTop: wide ? spacing.xxl : spacing.lg,
