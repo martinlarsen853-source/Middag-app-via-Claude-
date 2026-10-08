@@ -419,7 +419,7 @@ type ShoppingContext = {
   entryFor: (mealId: string | number) => PlanEntry | undefined;
   addMeal: (mealId: string | number, persons: number, day?: number | null) => string;
   removeEntry: (id: string) => void;
-  updateEntry: (id: string, change: Partial<Pick<PlanEntry, 'persons' | 'day'>>) => void;
+  updateEntry: (id: string, change: Partial<Pick<PlanEntry, 'persons' | 'day' | 'mealId'>>) => void;
   setStore: (storeId: string) => void;
   addExtra: (item: Omit<ExtraItem, 'id' | 'addedAt'>) => void;
   updateExtra: (id: string, change: Partial<Pick<ExtraItem, 'quantity'>>) => void;
@@ -522,7 +522,7 @@ export function ShoppingProvider({ children }: { children: ReactNode }) {
   const removeEntry = useCallback((id: string) => commit({ entries: { [id]: null } }), [commit]);
 
   const updateEntry = useCallback(
-    (id: string, change: Partial<Pick<PlanEntry, 'persons' | 'day'>>) => {
+    (id: string, change: Partial<Pick<PlanEntry, 'persons' | 'day' | 'mealId'>>) => {
       const entry = stateRef.current.entries[id];
       if (!entry) return;
       const persons = change.persons === undefined ? entry.persons : Math.min(12, Math.max(1, change.persons));

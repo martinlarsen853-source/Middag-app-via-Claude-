@@ -4,7 +4,7 @@ Les denne før du gjør endringer i appen. Den samler prosjektdokumentet
 (`docs/middag-app-konsept.pdf`), alt eieren har sagt underveis, og eierens egne
 notater. «Du» betyr eieren av appen.
 
-Sist oppdatert: 8. oktober 2026.
+Sist oppdatert: 8. oktober 2026 (etter etappe 1–6).
 
 ## Kjerneidé
 
@@ -21,93 +21,69 @@ butikken uten å snu en eneste gang. Du trykker deg gjennom lista og er ferdig.
 
 ## Slik fungerer appen i dag
 
-- **Middager:** kort med bilde, tid og pris. Søk og antall personer øverst.
-- **Oppskrift:** ingredienser, fremgangsmåte og pris i hver butikk. «Billigst»
-  er merket. Velg butikk for å lage handlelista.
-- **Handleliste:** «Neste» stopp alltid øverst. Det du tar havner i «I kurven»
-  nederst, der ett trykk legger det tilbake. «Angre» på siste vare.
+- **Middager:** kort med bilde, tid, pris og pris per person. Søk, antall
+  personer, sortering (Forslag, Raskest, Billigst, Mest protein, Lengst siden)
+  og filter med dra-skalaer for tid og pris per person. + legger middagen i uka.
+- **Mine middager / Inspo:** bryteren øverst bytter mellom husstandens middager
+  og 36 Inspo-retter (norske hverdagsmiddager og Oda-retter). Inspo har litt
+  kjøligere bakgrunn. En Inspo-rett kan legges rett i uka eller lagres som egen.
+- **Oppskrift:** ingredienser, fremgangsmåte, pris i hver butikk («Billigst»),
+  pris per porsjon, tips om antall porsjoner, og «Næring per porsjon» (protein,
+  glykemisk belastning, grønt, ultraprosessert, diabetes). Næringen er grove
+  anslag og ikke medisinske råd.
+- **Kokemodus** (`/lag/[id]`): ett stort steg om gangen, ingredienser ved behov,
+  nedtelling på steg med minutter, og skjermen holdes på.
+- **Uka:** planlegg hjemme. Dag og personer per middag, samlet pris, billigste
+  butikk, «Ukas balanse» etter Helsedirektoratets kostråd (med forslag til
+  fiskemiddag), og «Forbedre uka»: velg Spar penger, Mer protein eller Sunnere
+  og bytt middager med ett trykk. Forslagene kommer fra Claude når
+  `ANTHROPIC_API_KEY` er lagt inn i Vercel, ellers fra enkle regler i appen.
+- **Handleliste:** alle middagene i uka samlet til én liste i butikkens rute.
+  «Neste» stopp øverst, «I kurven» nederst, angre, bytt vare, hopp over, legg
+  til egne varer. Når alt er tatt, viser lista hva som blir til overs.
+- **Samboer:** delt liste og ukeplan via lenke (Mer → Del med samboer). Ser
+  hvem som handler nå, og kan legge til varer underveis.
+- **Kjøleskap og rester:** hva dere har hjemme med utløpsdato, rester etter
+  handling, og «Sparemiddag» som bruker opp det som går ut snart.
+- **Historikk:** hva som er handlet og når. Middager handlet siste uka havner
+  nederst i Forslag.
 - **Egne middager:** «Ny middag» med varesøk fra Kassalapp, eller fritekst.
   «Lag din versjon» på en fast middag erstatter originalen.
 - **Butikker:** rekkefølgen er felles for alle og kan bare endres av eieren.
   Eiertelefonen settes opp på `/eier`.
-- **Priser:** dagens pris per kjede fra Kassalapp, regnet i hele pakker.
-  Ting du har hjemme (skjeer, salt, olje) telles ikke med. «ca.» betyr at minst
-  én vare mangler ekte pris.
+- **Priser:** fra Kassalapp per kjede, regnet i hele pakker. Gammel pris fra
+  samme kjede brukes før ny pris fra en annen kjede, men merkes «ca.» med dato.
+  Varer uten kobling anslås. Ting du har hjemme (skjeer, salt, olje) telles ikke.
 
 ## Status
 
-### Ferdig
+### Ferdig (oktober 2026)
 
-- Store middagskort med bilde og pris, rask scrolling
-- Personvelger som skalerer mengdene
-- Handleliste sortert etter butikkens rute, med «Neste» øverst og «I kurven»
-- Rekkefølge per butikk, felles og låst til eieren
-- Egne middager med varesøk, lagret i Supabase
-- Priser per butikk i hele pakker (ekte når Kassalapp-nøkkelen er lagt inn)
-- Bunnmeny på mobil som i ukepenger-appen, toppmeny på PC
-- Publisert som nettside som kan legges på hjemskjermen
+- Kjernen: middagskort, oppskrift, personvelger, handleliste i butikkens rute,
+  låst rekkefølge per butikk, egne middager, priser fra Kassalapp
+- Etappe 1: ukeplan, samlet handleliste, egne varer i lista, bytt vare
+- Etappe 2: samboer (delt liste, «handler nå») og handlehistorikk
+- Etappe 3: sortering, filter med dra-skalaer, pris per porsjon, raskere søk
+- Etappe 4: kjøleskap, rester og sparemiddag
+- Etappe 5: næring per porsjon, ukesbalanse, kokemodus, Inspo-bibliotek
+- Etappe 6: «Forbedre uka» med AI-forslag (spar, protein, sunnere)
 
-### Neste – kjernen
+### Gjenstår
 
-1. **Flere middager på én liste.** «Legg på lista» på hver middag. Like varer
-   slås sammen (kjøttdeig til taco og lasagne blir én linje med riktig antall
-   pakker). Henger sammen med «skille mellom planlegging og shopping» under.
-2. **Legg til egne varer i handlelista**, som Rema sin «Trykk for å legge til
-   ny…». Varen havner automatisk på riktig stopp i ruta.
-3. **Varebilde og størrelse på hver vare i handlelista**, så det er lett å
-   kjenne igjen i hylla.
-4. **Raskere søk i «Ny middag»** som hos Rema: søket står åpent, − 1 + rett på
-   treffet, og fritekst som et tydelig valg.
-5. **«Legg alt tilbake i listen»** i «I kurven».
-6. **Kassalapp-nøkkelen** må legges inn i Vercel (`KASSALAPP_API_KEY`). Deretter
-   kobles ekte varer til de faste middagene.
-7. **Resten av de ~20 faste middagene.** Mangler bl.a. Madelén pasta og
-   linseretten fra Ida Gran (eieren kan legge dem inn selv med «Ny middag»).
-8. **Gå gjennom butikkene i Spydeberg** og rette rekkefølgen. Eierens jobb.
-
-### Senere – fra prosjektdokumentet
-
-- **Delt husholdning:** samboer ser hva du handler live, får beskjed om at
-  «nå handles det» og kan legge til varer mens du er i butikken.
-- **Lagre det som er handlet** i databasen, til bruk senere.
-- **Sortering** etter tid, pris og «ikke spist på lenge».
-- **Filter med dra-skalaer** for tid, pris per person og porsjoner.
-- **Kjøleskapsoversikt:** se hva du har hjemme før du drar.
-- **Rester og sparemiddag:** registrer det som er igjen («0,5 boks tomater, går
-  ut om X dager») og få forslag til retter som bruker det opp.
-- **Inspo-bibliotek:** 15 norske hverdagsmiddager og 15 Oda-retter. Ligger på
-  den gamle nettsiden (`frontend/`), bevisst holdt utenfor appen inntil videre.
-- **Innlogging og kontoer.** I dag brukes en skjult husstandsnøkkel i stedet.
-- **Expo Go via EAS Update** (trenger `EXPO_TOKEN`). Nettsiden dekker dette nå.
-
-### Senere – fra eierens notater («Matapp»)
-
-Helse og næring:
-
-- Glykemisk belastning og glykemisk indeks
-- Protein per person
-- Ultraprosessert mat
-- Diabetesvennlig mat
-
-Funksjoner:
-
-- **AI som går gjennom handlelista eller middagslista** og foreslår endringer
-  for å spare penger, med mulighet til å gjøre endringen. Det samme for protein.
-- **AI som anbefaler retter** ut fra smak, næringsbehov og Helsedirektoratets
-  anbefalinger.
-- **Skille mellom oppskrifter og handleliste**, så appen også kan brukes som
-  ren oppskriftsapp.
-- **Skille mellom planlegging og shopping:** planlegg middagene hjemme, handle
-  dem i butikken.
-- **Bytte raskt når butikken ikke har varen.**
-- **Erstatning for en ingrediens** («har ikke chili, hva gjør jeg?»): foreslå
-  noe likt som passer i retten.
-- **Pris per porsjon**, og hvor mange porsjoner det lønner seg å lage for
-  billigst mulig pris. Mulig å regne ut fra dagens data, siden prisen allerede
-  regnes i hele pakker.
-- **Samboer kan sende middager til lista.**
-- **HelloFresh-opplegg.** Tolkning, ikke bekreftet: en ferdig ukemeny med
-  oppskriftskort og nøyaktige mengder.
+1. **Eieren legger inn `ANTHROPIC_API_KEY` i Vercel** for ekte AI-forslag.
+   Uten nøkkel brukes enkle forslag regnet ut i appen.
+2. **Bytt Kassalapp-nøkkelen** (den ble limt inn i chatten) og legg den nye inn
+   i Vercel som `KASSALAPP_API_KEY`.
+3. **Resten av de ~20 faste middagene.** Mangler bl.a. Madelén pasta og
+   linseretten fra Ida Gran.
+4. **Gå gjennom butikkene i Spydeberg** og rette rekkefølgen. Eierens jobb.
+5. **Kiwi-, Rema- og Coop-prisene i Kassalapp er gamle** (2022–2023). Appen
+   merker dem «ca.» med dato. Ferskere priser krever en annen kilde.
+6. **Varsel på låst telefon** når samboer handler finnes ikke ennå (bare banner
+   i appen). Krever push-varsler.
+7. **Innlogging og kontoer.** I dag brukes en skjult husstandsnøkkel.
+8. **AI som anbefaler retter ut fra smak** og bytter enkeltvarer i lista (i dag
+   bytter AI-en hele middager).
 
 ## Åpne spørsmål til eieren
 
@@ -136,6 +112,11 @@ Funksjoner:
 - **API:** `mobile/api/search.ts` og `mobile/api/prices.ts` henter fra
   Kassalapp med nøkkelen på serveren. Uten nøkkel svarer de
   `unavailable: 'no_key'`, og appen viser anslag.
+- **AI-forslag:** `mobile/api/forslag.ts` kaller Claude (`claude-opus-5-5`,
+  effort low, strukturert svar, `fallbacks: "default"`). Appen sender ferdig
+  utregnet pris og næring, og svaret sjekkes mot id-ene som ble sendt. Bare
+  samme adresse får kalle den, og det er en grense per IP. Uten
+  `ANTHROPIC_API_KEY` svarer den `no_key`, og appen bruker `src/lib/forslag.ts`.
 - **Database:** Supabase-prosjektet «Mat app» (`ocryrmuvwthsceovybqx`), eget
   skjema `handleklar` som ikke er eksponert. Appen bruker bare `hk_*`-funksjoner:
   - egne middager: `hk_create_household`, `hk_list_meals`, `hk_save_meal`,
@@ -147,3 +128,7 @@ Funksjoner:
 - **Rute-systemet:** `src/lib/stops.ts` plasserer hver vare på et av 18 stopp.
   En butikk er en rekkefølge av stoppene.
 - **Priser:** `src/lib/prices.ts` (hele pakker, kjede per butikk, «har hjemme»).
+- **Delt tilstand:** `src/lib/shopping.tsx` (ukeplan, liste, kjøleskap) synkes
+  som små endringer via `hk_get_list`/`hk_patch_list` i `src/lib/sync.tsx`.
+- **Næring:** `src/lib/nutrition.ts` (grove anslag per råvare, ukesbalanse).
+- **Inspo:** `src/data/inspo.ts` (id fra 1000 og oppover).

@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Counter } from '@/components/AddItemSheet';
 import { Body, Button, Chip, Eyebrow, Page, Title } from '@/components/ui';
 import { WeekBalance } from '@/components/WeekBalance';
+import { WeekSuggestions } from '@/components/WeekSuggestions';
 import { categoryTints, colors, defaultTint, fonts, radius, spacing } from '@/constants/theme';
 import { INSPO } from '@/data/inspo';
 import type { Meal } from '@/data/meals';
@@ -128,6 +129,18 @@ export default function WeekScreen() {
             candidates={[...myMeals, ...INSPO]}
             onAdd={meal => addMeal(meal.id, persons)}
             onOpen={meal => router.push(`/rett/${meal.id}`)}
+          />
+
+          <WeekSuggestions
+            planned={active}
+            candidates={[...myMeals, ...INSPO]}
+            mine={new Set(myMeals.map(meal => String(meal.id)))}
+            chain={storeChain(store)}
+            storeName={store?.name ?? null}
+            book={book}
+            findMeal={findMeal}
+            onSwap={(entryId, mealId) => updateEntry(entryId, { mealId })}
+            onOpen={mealId => router.push(`/rett/${mealId}`)}
           />
 
           {bought.length > 0 && (
