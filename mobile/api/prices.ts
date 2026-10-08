@@ -15,6 +15,8 @@ export async function GET(request: Request): Promise<Response> {
       method: 'POST',
       body: JSON.stringify({ eans, days: 14 }),
     });
+    // Midlertidig feilsøking: viser formen på svaret (ikke verdiene) i Vercel-loggen.
+    console.log('prices-bulk shape', JSON.stringify(result).slice(0, 600));
     return json(
       { prices: bulkToPrices((result.data ?? []) as never[]), checkedAt: new Date().toISOString() },
       { cacheSeconds: 21600 },
