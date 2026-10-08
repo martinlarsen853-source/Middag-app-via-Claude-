@@ -4,6 +4,7 @@ import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-goog
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AppShell } from '@/components/AppShell';
@@ -25,9 +26,15 @@ export default function RootLayout() {
     Inter_600SemiBold,
   });
 
-  // Vent på skriftene så siden ikke blinker med feil skrift. Feiler lastingen
-  // viser vi siden likevel med systemskrift.
-  if (!fontsLoaded && !fontError) return null;
+  // Vent kort på skriftene så siden ikke blinker med feil skrift. På dårlig nett
+  // (i butikken) viser vi appen likevel etter litt, med systemskrift til de er lastet.
+  const [gaveUp, setGaveUp] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setGaveUp(true), 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!fontsLoaded && !fontError && !gaveUp) return null;
 
   return (
     <SafeAreaProvider>
