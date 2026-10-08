@@ -9,7 +9,7 @@ import { categoryTints, colors, defaultTint, fonts, radius, spacing } from '@/co
 import { useLayout } from '@/lib/layout';
 import { displayAmount, mealBase } from '@/lib/meals';
 import { useMeals } from '@/lib/meals-store';
-import { formatPrice, isPantry, mealEans, pricesByStore, stalePriceNote, usePrices } from '@/lib/prices';
+import { chainFor, formatPrice, isPantry, mealEans, mealPrice, pricesByStore, stalePriceNote, usePrices } from '@/lib/prices';
 import { photoFor } from '@/lib/photos';
 import { useShopping } from '@/lib/shopping';
 import { useApp } from '@/lib/store';
@@ -71,6 +71,24 @@ export default function MealDetailScreen() {
   const best = storePrices[0];
   const showCheapest = storePrices.length > 1 && storePrices[storePrices.length - 1].price.total - best.price.total >= 5;
   const toBuy = best?.price.toBuy ?? 0;
+  const perPortion = best ? Math.round(best.price.total / persons) : 0;
+
+  // Pakkene kommer hele, så noen ganger blir det billigere per porsjon å lage mer.
+  let portionTip: string | null = null;
+  if (best && best.price.total > 0) {
+    const chain = chainFor(best.store);
+    let cheapest = { persons, perPortion: best.price.total / persons };
+    for (let count = 1; count <= 8; count++) {
+      const total = mealPrice(meal, count, chain, book).total;
+      if (total / count < cheapest.perPortion - 0.5) cheapest = { persons: count, perPortion: total / count };
+    }
+    const saving = perPortion - Math.round(cheapest.perPortion);
+    if (cheapest.persons !== persons && saving >= 3) {
+      portionTip = `Lager du for ${cheapest.persons}, blir det ${Math.round(cheapest.perPortion)} kr per porsjon i stedet for ${perPortion} kr${
+        cheapest.persons > persons ? ' – resten kan bli lunsj.' : '.'
+      }`;
+    }
+  }
   const priced = Math.max(0, ...storePrices.map(entry => entry.price.priced));
 
   const image = (
@@ -102,7 +120,18 @@ export default function MealDetailScreen() {
             <Meta icon="wallet-outline">{formatPrice(best.price)}</Meta>
           </View>
         )}
+        {best && (
+          <View style={styles.metaChip}>
+            <Meta icon="person-outline">{perPortion} kr per porsjon</Meta>
+          </View>
+        )}
       </View>
+      {portionTip && (
+        <View style={styles.tip}>
+          <Ionicons name="bulb-outline" size={16} color={colors.ink} />
+          <Text style={styles.tipText}>{portionTip}</Text>
+        </View>
+      )}
       {meal.description ? <Body>{meal.description}</Body> : null}
       <View style={styles.personRow}>
         <PersonStepper value={persons} onChange={setPersons} />
@@ -142,11 +171,13 @@ export default function MealDetailScreen() {
             })}
         </View>
         <Text style={styles.priceNote}>
-          {priced === 0
-            ? 'Prisene er anslag. De blir ekte når varene er koblet til butikkenes priser.'
-            : priced === toBuy
-              ? 'Dagens priser fra butikkene, regnet i hele pakker.'
-              : `${priced} av ${toBuy} varer har dagens pris, resten er anslått.`}
+          {priced > 0 && priced === toBuy
+            ? 'Dagens priser fra butikkene, regnet i hele pakker.'
+            : priced > 0
+              ? `${priced} av ${toBuy} varer har dagens pris, resten er anslått.`
+              : meal.ingredients.some(ingredient => ingredient.product)
+              ? 'Regnet i hele pakker ut fra siste kjente priser, så det er et anslag.'
+              : 'Prisene er anslag. De blir ekte når varene er koblet til butikkenes priser.'}
           {meal.ingredients.some(isPantry) ? ' Det du har hjemme er ikke med.' : ''}
           {stalePriceNote([meal], stores) ? ` ${stalePriceNote([meal], stores)}` : ''}
         </Text>
@@ -305,6 +336,21 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     paddingVertical: 6,
     paddingHorizontal: spacing.md,
+  },
+  tip: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    backgroundColor: colors.limeStrong,
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
+  tipText: {
+    flex: 1,
+    fontFamily: fonts.bodyMedium,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.ink,
   },
   personRow: {
     marginTop: spacing.xs,

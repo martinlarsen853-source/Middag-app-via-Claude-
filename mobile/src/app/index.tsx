@@ -4,15 +4,30 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { Body, Button, Eyebrow, Meta, Page, PersonStepper, Title } from '@/components/ui';
+import { Slider } from '@/components/Slider';
+import { Body, Button, Chip, Eyebrow, Meta, Page, PersonStepper, Title } from '@/components/ui';
 import { categoryTints, colors, defaultTint, fonts, radius, spacing } from '@/constants/theme';
 import type { Meal } from '@/data/meals';
+import { daysAgo, useHistory } from '@/lib/history';
 import { useLayout } from '@/lib/layout';
 import { useMeals } from '@/lib/meals-store';
-import { formatPrice, mealEans, pricesByStore, usePrices, type PriceBook } from '@/lib/prices';
+import { formatPrice, mealEans, pricesByStore, usePrices, type StorePrice } from '@/lib/prices';
 import { useShopping } from '@/lib/shopping';
 import { photoFor } from '@/lib/photos';
 import { useApp } from '@/lib/store';
+
+type SortKey = 'forslag' | 'raskest' | 'billigst' | 'lengst';
+
+const SORTS: { key: SortKey; label: string }[] = [
+  { key: 'forslag', label: 'Forslag' },
+  { key: 'raskest', label: 'Raskest' },
+  { key: 'billigst', label: 'Billigst' },
+  { key: 'lengst', label: 'Lengst siden' },
+];
+
+// Øverst på skalaen betyr «alle».
+const TIME_MAX = 90;
+const PRICE_MAX = 150;
 
 export default function MealListScreen() {
   const router = useRouter();
@@ -21,19 +36,59 @@ export default function MealListScreen() {
   const { meals: allMeals } = useMeals();
   const { contentWidth, columns, wide } = useLayout();
   const [query, setQuery] = useState('');
+  const [sort, setSort] = useState<SortKey>('forslag');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [maxTime, setMaxTime] = useState(TIME_MAX);
+  const [maxPrice, setMaxPrice] = useState(PRICE_MAX);
   const { book } = usePrices(mealEans(allMeals));
+  const { lastEaten } = useHistory();
+
+  // Pris i den billigste butikken, pris per porsjon og når middagen sist ble handlet.
+  const enriched = useMemo(
+    () =>
+      allMeals.map((meal, order) => {
+        const best = pricesByStore(meal, persons, stores, book)[0];
+        return {
+          meal,
+          order,
+          best,
+          perPerson: best ? Math.round(best.price.total / persons) : 0,
+          eatenAt: lastEaten(meal.id),
+        };
+      }),
+    [allMeals, persons, stores, book, lastEaten],
+  );
 
   const meals = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return allMeals;
-    return allMeals.filter(
-      meal =>
+    const filtered = enriched.filter(({ meal, perPerson }) => {
+      if (maxTime < TIME_MAX && meal.timeMinutes > maxTime) return false;
+      if (maxPrice < PRICE_MAX && perPerson > maxPrice) return false;
+      if (!needle) return true;
+      return (
         meal.name.toLowerCase().includes(needle) ||
         meal.category.toLowerCase().includes(needle) ||
         meal.tags.some(tag => tag.toLowerCase().includes(needle)) ||
-        meal.ingredients.some(ing => ing.name.toLowerCase().includes(needle)),
-    );
-  }, [query, allMeals]);
+        meal.ingredients.some(ing => ing.name.toLowerCase().includes(needle))
+      );
+    });
+    const recent = (eatenAt: number | null) => (eatenAt && Date.now() - eatenAt < 6 * 86400000 ? 1 : 0);
+    return [...filtered].sort((a, b) => {
+      switch (sort) {
+        case 'raskest':
+          return (a.meal.timeMinutes || 999) - (b.meal.timeMinutes || 999);
+        case 'billigst':
+          return a.perPerson - b.perPerson;
+        case 'lengst':
+          return (a.eatenAt ?? 0) - (b.eatenAt ?? 0) || a.order - b.order;
+        default:
+          // Forslag: det dere har spist den siste uka havner nederst.
+          return recent(a.eatenAt) - recent(b.eatenAt) || a.order - b.order;
+      }
+    });
+  }, [query, enriched, sort, maxTime, maxPrice]);
+
+  const activeFilters = (maxTime < TIME_MAX ? 1 : 0) + (maxPrice < PRICE_MAX ? 1 : 0);
 
   const gap = wide ? spacing.xl : spacing.lg;
   const cardWidth = Math.floor((contentWidth - gap * (columns - 1)) / columns);
@@ -73,21 +128,72 @@ export default function MealListScreen() {
         </View>
       </View>
 
+      <View style={styles.sortRow}>
+        {SORTS.map(option => (
+          <Chip key={option.key} label={option.label} selected={sort === option.key} onPress={() => setSort(option.key)} />
+        ))}
+        <Pressable
+          accessibilityRole="button"
+          aria-expanded={filterOpen}
+          onPress={() => setFilterOpen(open => !open)}
+          style={[styles.filterButton, (filterOpen || activeFilters > 0) && styles.filterButtonOn]}>
+          <Ionicons name="options-outline" size={16} color={colors.ink} />
+          <Text style={styles.filterButtonText}>Filter{activeFilters ? ` (${activeFilters})` : ''}</Text>
+        </Pressable>
+      </View>
+
+      {filterOpen && (
+        <View style={[styles.filterPanel, wide && styles.filterPanelWide]}>
+          <View style={styles.filterSlider}>
+            <Slider
+              label="Maks tid"
+              value={maxTime}
+              min={15}
+              max={TIME_MAX}
+              step={5}
+              format={value => (value >= TIME_MAX ? 'Alle' : `${value} min`)}
+              onChange={setMaxTime}
+            />
+          </View>
+          <View style={styles.filterSlider}>
+            <Slider
+              label="Maks pris per person"
+              value={maxPrice}
+              min={20}
+              max={PRICE_MAX}
+              step={5}
+              format={value => (value >= PRICE_MAX ? 'Alle' : `${value} kr`)}
+              onChange={setMaxPrice}
+            />
+          </View>
+          {activeFilters > 0 && (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                setMaxTime(TIME_MAX);
+                setMaxPrice(PRICE_MAX);
+              }}>
+              <Text style={styles.resetFilter}>Nullstill filter</Text>
+            </Pressable>
+          )}
+        </View>
+      )}
+
       {meals.length === 0 ? (
         <View style={styles.empty}>
-          <Title size="sm">Ingen treff på «{query}»</Title>
-          <Body>Prøv et annet ord, eller tøm søket for å se alle middagene.</Body>
+          <Title size="sm">{query ? `Ingen treff på «${query}»` : 'Ingen middager passer filteret'}</Title>
+          <Body>{query ? 'Prøv et annet ord, eller tøm søket for å se alle middagene.' : 'Dra skalaene litt opp, eller nullstill filteret.'}</Body>
         </View>
       ) : (
         <View style={[styles.grid, { gap }]}>
-          {meals.map(meal => (
+          {meals.map(({ meal, best, perPerson, eatenAt }) => (
             <MealCard
               key={meal.id}
               meal={meal}
               width={cardWidth}
-              persons={persons}
-              stores={stores}
-              book={book}
+              best={best}
+              perPerson={perPerson}
+              eatenAt={eatenAt}
               inWeek={Boolean(entryFor(meal.id))}
               onToggleWeek={() => {
                 const entry = entryFor(meal.id);
@@ -106,25 +212,23 @@ export default function MealListScreen() {
 function MealCard({
   meal,
   width,
-  persons,
-  stores,
-  book,
+  best,
+  perPerson,
+  eatenAt,
   inWeek,
   onToggleWeek,
   onPress,
 }: {
   meal: Meal;
   width: number;
-  persons: number;
-  stores: ReturnType<typeof useApp>['stores'];
-  book: PriceBook;
+  best: StorePrice | undefined;
+  perPerson: number;
+  eatenAt: number | null;
   inWeek: boolean;
   onToggleWeek: () => void;
   onPress: () => void;
 }) {
   const tint = categoryTints[meal.category] ?? defaultTint;
-  // Kortet viser prisen i den billigste av butikkene dine.
-  const best = pricesByStore(meal, persons, stores, book)[0];
   return (
     <Pressable
       accessibilityRole="link"
@@ -169,10 +273,10 @@ function MealCard({
               {meal.timeMinutes > 0 && <Meta icon="time-outline">{meal.timeMinutes} min</Meta>}
               {best && (
                 <Meta icon="wallet-outline">
-                  {formatPrice(best.price)}
-                  {best.price.exact ? ` · ${best.store.name}` : ''}
+                  {formatPrice(best.price)} · {perPerson} kr/pers
                 </Meta>
               )}
+              {eatenAt && <Meta icon="checkmark-done-outline">Handlet {daysAgo(eatenAt)}</Meta>}
             </View>
             <Text style={[styles.cardTitle, hovered && styles.cardTitleHover]}>{meal.name}</Text>
             {meal.description ? (
@@ -237,6 +341,56 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     outlineStyle: 'none',
   } as object,
+  sortRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: -spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: spacing.md,
+    minHeight: 40,
+    borderRadius: radius.round,
+    borderWidth: 1.5,
+    borderColor: colors.line,
+  },
+  filterButtonOn: {
+    borderColor: colors.ink,
+    backgroundColor: colors.lime,
+  },
+  filterButtonText: {
+    fontFamily: fonts.monoMedium,
+    fontSize: 13,
+    color: colors.ink,
+  },
+  filterPanel: {
+    backgroundColor: colors.beige,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    gap: spacing.lg,
+    marginTop: -spacing.md,
+    marginBottom: spacing.xl,
+  },
+  filterPanelWide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xxl,
+  },
+  filterSlider: {
+    flex: 1,
+    minWidth: 240,
+  },
+  resetFilter: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 14,
+    color: colors.green,
+    textDecorationLine: 'underline',
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

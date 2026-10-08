@@ -5,69 +5,21 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BackLink, Body, Button, Chip, Eyebrow, Page, PersonStepper, Title } from '@/components/ui';
-import { API_ORIGIN } from '@/constants/config';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
-import type { Ingredient, Meal, Product } from '@/data/meals';
+import type { Ingredient, Meal } from '@/data/meals';
 import { BASE_PERSONS } from '@/lib/meals';
 import { useMeals } from '@/lib/meals-store';
-import {
-  formatKroner,
-  formatPrice,
-  isPantry,
-  pricesByStore,
-  rememberPrices,
-  usePrices,
-  type ChainPrices,
-} from '@/lib/prices';
+import { Counter } from '@/components/AddItemSheet';
+import { cheapestText, hitMeta, hitToProduct, useProductSearch, type SearchHit } from '@/lib/search';
+import { formatPrice, isPantry, pricesByStore, usePrices, type ChainPrices } from '@/lib/prices';
 import { useApp } from '@/lib/store';
 
 const CATEGORIES = ['Kjøtt', 'Kylling', 'Fisk', 'Pasta', 'Meksikansk', 'Pizza', 'Suppe', 'Vegetar', 'Enkelt'];
-
-const CHAIN_NAMES: Record<string, string> = {
-  REMA_1000: 'Rema',
-  KIWI: 'Kiwi',
-  COOP_EXTRA: 'Extra',
-  MENY_NO: 'Meny',
-  SPAR_NO: 'Spar',
-  COOP_PRIX: 'Prix',
-  COOP_MEGA: 'Mega',
-  COOP_OBS: 'Obs',
-  JOKER_NO: 'Joker',
-  BUNNPRIS: 'Bunnpris',
-};
-
-type SearchHit = {
-  ean: string;
-  name: string;
-  brand: string | null;
-  image: string | null;
-  weight: number | null;
-  weightUnit: string | null;
-  prices: ChainPrices;
-};
-
-type SearchState = 'idle' | 'loading' | 'done' | 'no_key' | 'error';
 
 type DraftItem = Ingredient & { key: string };
 
 let nextKey = 0;
 const newKey = () => `vare-${Date.now()}-${nextKey++}`;
-
-function sizeText(weight: number | null | undefined, unit: string | null | undefined): string | null {
-  if (!weight || !unit) return null;
-  return `${String(weight).replace('.', ',')} ${unit}`;
-}
-
-function cheapestText(prices: ChainPrices | undefined): string | null {
-  const entries = Object.entries(prices ?? {}).sort((a, b) => a[1] - b[1]);
-  if (!entries.length) return null;
-  const [chain, price] = entries[0];
-  return `${formatKroner(price)} hos ${CHAIN_NAMES[chain] ?? chain}`;
-}
-
-function toProduct(hit: SearchHit): Product {
-  return { ean: hit.ean, name: hit.name, image: hit.image, packSize: hit.weight, packUnit: hit.weightUnit };
-}
 
 export default function NewMealScreen() {
   const router = useRouter();
@@ -87,8 +39,7 @@ export default function NewMealScreen() {
   const [initialized, setInitialized] = useState(false);
 
   const [query, setQuery] = useState('');
-  const [hits, setHits] = useState<SearchHit[]>([]);
-  const [searchState, setSearchState] = useState<SearchState>('idle');
+  const { hits, state: searchState } = useProductSearch(query);
   const [linking, setLinking] = useState<string | null>(null);
   const searchRef = useRef<TextInput>(null);
 
@@ -109,41 +60,7 @@ export default function NewMealScreen() {
     setInitialized(true);
   }, [initialized, loading, params.id, params.fra, template]);
 
-  // Søker hos Kassalapp mens du skriver, med en liten pause så vi ikke spør for hvert tastetrykk.
-  useEffect(() => {
-    const needle = query.trim();
-    if (needle.length < 2) {
-      setHits([]);
-      setSearchState('idle');
-      return;
-    }
-    setSearchState('loading');
-    const controller = new AbortController();
-    const timer = setTimeout(async () => {
-      try {
-        const response = await fetch(`${API_ORIGIN}/api/search?q=${encodeURIComponent(needle)}`, {
-          signal: controller.signal,
-        });
-        const body = (await response.json()) as { products?: SearchHit[]; unavailable?: string };
-        if (body.unavailable === 'no_key') {
-          setHits([]);
-          setSearchState('no_key');
-        } else if (!response.ok || body.unavailable) {
-          setHits([]);
-          setSearchState('error');
-        } else {
-          setHits(body.products ?? []);
-          setSearchState('done');
-        }
-      } catch (err) {
-        if ((err as Error).name !== 'AbortError') setSearchState('error');
-      }
-    }, 350);
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [query]);
+  const addedFor = (ean: string) => items.find(item => item.product?.ean === ean);
 
   const eans = useMemo(() => items.map(item => item.product?.ean).filter((ean): ean is string => Boolean(ean)), [items]);
   const { book } = usePrices(eans);
@@ -167,18 +84,29 @@ export default function NewMealScreen() {
     setItems(current => current.map(item => (item.key === key ? { ...item, ...change } : item)));
   }
 
+  // Som i Rema-appen: søket står åpent, og trykker du på samme vare igjen, øker antallet.
   function pick(hit: SearchHit) {
-    rememberPrices(hit.ean, hit.prices);
     if (linking) {
-      updateItem(linking, { product: toProduct(hit) });
+      updateItem(linking, { product: hitToProduct(hit) });
       setLinking(null);
-    } else {
-      setItems(current => [
-        ...current,
-        { key: newKey(), name: hit.name, quantity: 1, unit: 'pk', section: '', product: toProduct(hit) },
-      ]);
+      setQuery('');
+      return;
     }
-    setQuery('');
+    const existing = items.find(item => item.product?.ean === hit.ean);
+    if (existing) {
+      updateItem(existing.key, { quantity: Math.floor(existing.quantity) + 1 });
+      return;
+    }
+    setItems(current => [
+      ...current,
+      { key: newKey(), name: hit.name, quantity: 1, unit: 'pk', section: '', product: hitToProduct(hit) },
+    ]);
+  }
+
+  function changeCount(item: DraftItem, delta: number) {
+    const next = Math.floor(item.quantity) + delta;
+    if (next <= 0) setItems(current => current.filter(other => other.key !== item.key));
+    else updateItem(item.key, { quantity: next });
   }
 
   function addFreeText() {
@@ -374,14 +302,22 @@ export default function NewMealScreen() {
                   {hit.name}
                 </Text>
                 <Text style={styles.hitMeta} numberOfLines={1}>
-                  {[hit.brand, sizeText(hit.weight, hit.weightUnit), cheapestText(hit.prices) ?? 'ingen pris']
-                    .filter(Boolean)
-                    .join(' · ')}
+                  {hitMeta(hit)}
                 </Text>
               </View>
-              <View style={styles.hitAdd}>
-                <Ionicons name={linking ? 'link' : 'add'} size={20} color={colors.ink} />
-              </View>
+              {!linking && addedFor(hit.ean) ? (
+                <Counter
+                  value={addedFor(hit.ean)!.quantity}
+                  unit="pk"
+                  label={hit.name}
+                  onMinus={() => changeCount(addedFor(hit.ean)!, -1)}
+                  onPlus={() => changeCount(addedFor(hit.ean)!, 1)}
+                />
+              ) : (
+                <View style={styles.hitAdd}>
+                  <Ionicons name={linking ? 'link' : 'add'} size={20} color={colors.ink} />
+                </View>
+              )}
             </Pressable>
           ))}
 
