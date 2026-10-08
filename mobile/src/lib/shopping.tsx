@@ -197,9 +197,12 @@ export function buildLines(state: ShoppingState, findMeal: (id: string | number)
     // Skriver du «Melk» selv mens lasagnen trenger 500 ml, blir det én linje:
     // «500 ml + 1 stk» i stedet for to linjer som begge heter Melk.
     if (!extra.product) {
-      const prefix = `n:${normalizeName(extra.name)}|`;
+      const name = normalizeName(extra.name);
       const family = toBase(extra.quantity, extra.unit)?.unit ?? extra.unit.toLowerCase();
-      const match = [...drafts.values()].find(draft => draft.key.startsWith(prefix) && !draft.key.endsWith(`|${family}`));
+      // Treffer også varer som er koblet til et produkt, så lenge ingrediensen heter det samme.
+      const match = [...drafts.values()].find(
+        draft => normalizeName(draft.name) === name && !draft.key.endsWith(`|${family}`),
+      );
       if (match) {
         const label = extra.addedBy ? `Lagt til av ${extra.addedBy}` : 'Lagt til';
         match.extraIds.push(extra.id);

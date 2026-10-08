@@ -77,18 +77,29 @@ export function toBase(value: number, unit: string | null | undefined): { value:
   }
 }
 
+// Enheter der én i oppskriften er én pakke i butikken, uansett hva pakken veier.
+const CONTAINER_UNITS = ['boks', 'glass', 'flaske', 'pose', 'pakke', 'beger', 'hode', 'bunt'];
+
 // Hvor mange hele pakker som må kjøpes. Litt slingringsmonn, så 410 g ikke blir to pakker à 400 g.
 export function packsNeeded(ingredient: Ingredient, persons: number, base = BASE_PERSONS): number {
   const quantity = (ingredient.quantity * persons) / base;
   const unit = ingredient.unit.toLowerCase();
-  if (unit === 'pk' || unit === 'pakke') return Math.max(1, Math.ceil(quantity - 0.05));
+  const whole = Math.max(1, Math.ceil(quantity - 0.05));
+  if (unit === 'pk' || unit === 'pakke') return whole;
 
   const product = ingredient.product;
-  if (product?.packSize) {
-    const need = toBase(quantity, unit);
-    const pack = toBase(product.packSize, product.packUnit);
-    if (need && pack && need.unit === pack.unit && pack.value > 0) {
-      return Math.max(1, Math.ceil(need.value / pack.value - 0.05));
+  if (product) {
+    // «2 boks hakkede tomater» er to bokser, selv om boksen er oppgitt i gram.
+    if (CONTAINER_UNITS.includes(unit)) return whole;
+    if (product.packSize) {
+      const need = toBase(quantity, unit);
+      const pack = toBase(product.packSize, product.packUnit);
+      // Gram og milliliter regnes likt for rømme, melk og lignende.
+      const sameFamily =
+        need && pack && (need.unit === pack.unit || (need.unit !== 'stk' && pack.unit !== 'stk'));
+      if (need && pack && sameFamily && pack.value > 0) {
+        return Math.max(1, Math.ceil(need.value / pack.value - 0.05));
+      }
     }
     // Ukjent forhold mellom oppskrift og pakke (f.eks. «2 stk løk» mot en kilopose): én pakke.
     return 1;

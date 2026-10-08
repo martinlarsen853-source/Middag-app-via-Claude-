@@ -21,7 +21,7 @@ type SearchRow = {
   vendor?: string | null;
   ean?: string | null;
   image?: string | null;
-  current_price?: number | null;
+  current_price?: number | string | null;
   weight?: number | null;
   weight_unit?: string | null;
   store?: { code?: string | null } | null;
@@ -29,10 +29,16 @@ type SearchRow = {
 
 type BulkRow = {
   ean?: string;
-  stores?: { store?: string; current_price?: number | null }[];
+  stores?: { store?: string; current_price?: number | string | null }[];
 };
 
 export class MissingKeyError extends Error {}
+
+// Kassalapp sender prisen noen ganger som tall og noen ganger som tekst («34.90»).
+export function toPrice(value: unknown): number | null {
+  const price = typeof value === 'string' ? Number(value.replace(',', '.')) : typeof value === 'number' ? value : NaN;
+  return Number.isFinite(price) && price > 0 ? price : null;
+}
 
 export async function kassalapp<T>(path: string, init: RequestInit = {}): Promise<T> {
   const key = process.env.KASSALAPP_API_KEY;
@@ -105,6 +111,15 @@ export function relevance(hit: Pick<ProductHit, 'ean' | 'name' | 'weight' | 'wei
   return score + name.length * 0.05;
 }
 
+// Mange varer mangler vekt i dataene, men har den i navnet («Kjøttdeig 14% 400g»).
+export function sizeFromName(name: string): { weight: number; unit: string } | null {
+  const match = name.match(/(\d+(?:[.,]\d+)?)\s?(kg|gr|g|ml|cl|dl|l)\b/i);
+  if (!match) return null;
+  const weight = Number(match[1].replace(',', '.'));
+  const unit = match[2].toLowerCase() === 'gr' ? 'g' : match[2].toLowerCase();
+  return weight > 0 ? { weight, unit } : null;
+}
+
 // Kassalapp gir én rad per vare per butikk. Vi slår dem sammen per strekkode og
 // samler pris per kjede. Rekkefølgen settes av relevance() etter at prisene er hentet.
 export function groupSearchRows(rows: SearchRow[]): ProductHit[] {
@@ -114,7 +129,7 @@ export function groupSearchRows(rows: SearchRow[]): ProductHit[] {
     if (!row?.ean || !row.name) continue;
     const existing = byEan.get(row.ean);
     const chain = row.store?.code ?? null;
-    const price = typeof row.current_price === 'number' && row.current_price > 0 ? row.current_price : null;
+    const price = toPrice(row.current_price);
 
     if (existing) {
       if (chain && price !== null && existing.prices[chain] === undefined) existing.prices[chain] = price;
@@ -122,13 +137,15 @@ export function groupSearchRows(rows: SearchRow[]): ProductHit[] {
       continue;
     }
 
+    const fromName = sizeFromName(row.name);
+    const hasWeight = typeof row.weight === 'number' && row.weight > 0 && Boolean(row.weight_unit);
     byEan.set(row.ean, {
       ean: row.ean,
       name: row.name.trim(),
       brand: row.brand || row.vendor || null,
       image: row.image || null,
-      weight: typeof row.weight === 'number' ? row.weight : null,
-      weightUnit: row.weight_unit || null,
+      weight: hasWeight ? (row.weight as number) : (fromName?.weight ?? null),
+      weightUnit: hasWeight ? (row.weight_unit as string) : (fromName?.unit ?? null),
       prices: chain && price !== null ? { [chain]: price } : {},
     });
   }
@@ -150,9 +167,8 @@ export function bulkToPrices(rows: BulkRow[]): Record<string, ChainPrices> {
     if (!row?.ean) continue;
     const prices: ChainPrices = {};
     for (const store of row.stores ?? []) {
-      if (store?.store && typeof store.current_price === 'number' && store.current_price > 0) {
-        prices[store.store] = store.current_price;
-      }
+      const price = toPrice(store?.current_price);
+      if (store?.store && price !== null) prices[store.store] = price;
     }
     result[row.ean] = prices;
   }

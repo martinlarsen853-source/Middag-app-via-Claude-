@@ -63,13 +63,27 @@ export const MEALS: Meal[] = [
         "name": "Taco-skjell",
         "quantity": 12,
         "unit": "stk",
-        "section": "Tørrmat"
+        "section": "Tørrmat",
+        "product": {
+          "ean": "7035620045776",
+          "name": "Tacoskjell 12stk 135g First Price",
+          "image": null,
+          "packSize": 12,
+          "packUnit": "stk"
+        }
       },
       {
         "name": "Kjøttdeig",
         "quantity": 500,
         "unit": "g",
-        "section": "Kjøtt & fisk"
+        "section": "Kjøtt & fisk",
+        "product": {
+          "ean": "7037203635732",
+          "name": "Gilde Kjøttdeig 14% uten Salt og Vann 400g",
+          "image": null,
+          "packSize": 400,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Tacokrydder",
@@ -81,25 +95,53 @@ export const MEALS: Meal[] = [
         "name": "Rømme",
         "quantity": 200,
         "unit": "ml",
-        "section": "Meieri"
+        "section": "Meieri",
+        "product": {
+          "ean": "7038010005459",
+          "name": "Lettrømme 17% 300g Tine",
+          "image": null,
+          "packSize": 300,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Salsa",
         "quantity": 1,
         "unit": "glass",
-        "section": "Krydder & sauser"
+        "section": "Krydder & sauser",
+        "product": {
+          "ean": "7311312002112",
+          "name": "Tacosaus Medium 230g Santa Maria",
+          "image": null,
+          "packSize": 230,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Revet ost",
         "quantity": 200,
         "unit": "g",
-        "section": "Meieri"
+        "section": "Meieri",
+        "product": {
+          "ean": "7038010014307",
+          "name": "Revet Ost Original 300g Tine",
+          "image": null,
+          "packSize": 300,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Salat",
         "quantity": 0.5,
         "unit": "hode",
-        "section": "Frukt & grønt"
+        "section": "Frukt & grønt",
+        "product": {
+          "ean": "8437017206200",
+          "name": "Isbergsalat stykk",
+          "image": null,
+          "packSize": 1,
+          "packUnit": "stk"
+        }
       },
       {
         "name": "Tomat",
@@ -135,37 +177,79 @@ export const MEALS: Meal[] = [
         "name": "Pinsabunner",
         "quantity": 4,
         "unit": "stk",
-        "section": "Bakeri"
+        "section": "Bakeri",
+        "product": {
+          "ean": "7035620060243",
+          "name": "Pinsa 230g Eldorado",
+          "image": null,
+          "packSize": 1,
+          "packUnit": "stk"
+        }
       },
       {
         "name": "Pizzasaus",
         "quantity": 1,
         "unit": "boks",
-        "section": "Krydder & sauser"
+        "section": "Krydder & sauser",
+        "product": {
+          "ean": "7035620072369",
+          "name": "Pizzasaus 340g First Price",
+          "image": null,
+          "packSize": 340,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Mozzarella",
         "quantity": 250,
         "unit": "g",
-        "section": "Meieri"
+        "section": "Meieri",
+        "product": {
+          "ean": "7038010022364",
+          "name": "Mozzarella Norsk 250g Tine",
+          "image": null,
+          "packSize": 250,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Spekeskinke",
         "quantity": 100,
         "unit": "g",
-        "section": "Kjøtt & fisk"
+        "section": "Kjøtt & fisk",
+        "product": {
+          "ean": "7037203636852",
+          "name": "Spekeskinke Siliana 80g Gilde",
+          "image": null,
+          "packSize": 80,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Cherrytomater",
         "quantity": 200,
         "unit": "g",
-        "section": "Frukt & grønt"
+        "section": "Frukt & grønt",
+        "product": {
+          "ean": "7040515003229",
+          "name": "Røde cherrytomater Norge, 250 g",
+          "image": null,
+          "packSize": 250,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Ruccola",
         "quantity": 1,
         "unit": "pose",
-        "section": "Frukt & grønt"
+        "section": "Frukt & grønt",
+        "product": {
+          "ean": "7031540011495",
+          "name": "Ruccola 70g",
+          "image": null,
+          "packSize": 70,
+          "packUnit": "g"
+        }
       }
     ],
     "steps": [
@@ -195,13 +279,27 @@ export const MEALS: Meal[] = [
         "name": "Svinestrimler",
         "quantity": 400,
         "unit": "g",
-        "section": "Kjøtt & fisk"
+        "section": "Kjøtt & fisk",
+        "product": {
+          "ean": "7020098004554",
+          "name": "Svinestrimler 500g First Price",
+          "image": null,
+          "packSize": 500,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Pitabrød",
         "quantity": 8,
         "unit": "stk",
-        "section": "Bakeri"
+        "section": "Bakeri",
+        "product": {
+          "ean": "7035620065385",
+          "name": "Pitabrød Hvete 480g Eldorado",
+          "image": null,
+          "packSize": 480,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Pitakrydder",
@@ -213,7 +311,14 @@ export const MEALS: Meal[] = [
         "name": "Isbergsalat",
         "quantity": 0.5,
         "unit": "hode",
-        "section": "Frukt & grønt"
+        "section": "Frukt & grønt",
+        "product": {
+          "ean": "8437017206200",
+          "name": "Isbergsalat stykk",
+          "image": null,
+          "packSize": 1,
+          "packUnit": "stk"
+        }
       },
       {
         "name": "Tomat",
@@ -237,7 +342,14 @@ export const MEALS: Meal[] = [
         "name": "Hvitløksdressing",
         "quantity": 1,
         "unit": "flaske",
-        "section": "Krydder & sauser"
+        "section": "Krydder & sauser",
+        "product": {
+          "ean": "7043570004934",
+          "name": "Hvitløksdressing 300ml",
+          "image": null,
+          "packSize": 300,
+          "packUnit": "ml"
+        }
       }
     ],
     "steps": [
@@ -267,19 +379,40 @@ export const MEALS: Meal[] = [
         "name": "Spaghetti",
         "quantity": 400,
         "unit": "g",
-        "section": "Tørrmat"
+        "section": "Tørrmat",
+        "product": {
+          "ean": "8001250120120",
+          "name": "Spaghetti 500g De Cecco",
+          "image": null,
+          "packSize": 500,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Kjøttdeig",
         "quantity": 600,
         "unit": "g",
-        "section": "Kjøtt & fisk"
+        "section": "Kjøtt & fisk",
+        "product": {
+          "ean": "7037203635732",
+          "name": "Gilde Kjøttdeig 14% uten Salt og Vann 400g",
+          "image": null,
+          "packSize": 400,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Hermetiske tomater",
         "quantity": 2,
         "unit": "boks",
-        "section": "Tørrmat"
+        "section": "Tørrmat",
+        "product": {
+          "ean": "9800001078364",
+          "name": "Hakkede Tomater 400g",
+          "image": null,
+          "packSize": 400,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Løk",
@@ -297,7 +430,14 @@ export const MEALS: Meal[] = [
         "name": "Parmesan",
         "quantity": 100,
         "unit": "g",
-        "section": "Meieri"
+        "section": "Meieri",
+        "product": {
+          "ean": "5420024121126",
+          "name": "Michelangelo Parmesan stick 125g",
+          "image": null,
+          "packSize": 125,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Tomatpuré",
@@ -338,7 +478,14 @@ export const MEALS: Meal[] = [
         "name": "Fiskekaker",
         "quantity": 600,
         "unit": "g",
-        "section": "Kjøtt & fisk"
+        "section": "Kjøtt & fisk",
+        "product": {
+          "ean": "7035620049101",
+          "name": "Fiskekaker 80% 500g Fiskemannen",
+          "image": null,
+          "packSize": 500,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Poteter",
@@ -350,7 +497,14 @@ export const MEALS: Meal[] = [
         "name": "Melk",
         "quantity": 200,
         "unit": "ml",
-        "section": "Meieri"
+        "section": "Meieri",
+        "product": {
+          "ean": "7038010068065",
+          "name": "Lettmelk 0,5% 0,5l Tine",
+          "image": null,
+          "packSize": 500,
+          "packUnit": "ml"
+        }
       },
       {
         "name": "Smør",
@@ -398,13 +552,27 @@ export const MEALS: Meal[] = [
         "name": "Egg",
         "quantity": 4,
         "unit": "stk",
-        "section": "Meieri"
+        "section": "Meieri",
+        "product": {
+          "ean": "7035620050688",
+          "name": "Gårdsegg M/L 12stk Eldorado",
+          "image": null,
+          "packSize": 12,
+          "packUnit": "stk"
+        }
       },
       {
         "name": "Melk",
         "quantity": 600,
         "unit": "ml",
-        "section": "Meieri"
+        "section": "Meieri",
+        "product": {
+          "ean": "7038010068065",
+          "name": "Lettmelk 0,5% 0,5l Tine",
+          "image": null,
+          "packSize": 500,
+          "packUnit": "ml"
+        }
       },
       {
         "name": "Smør",
@@ -416,13 +584,27 @@ export const MEALS: Meal[] = [
         "name": "Rømme",
         "quantity": 200,
         "unit": "ml",
-        "section": "Meieri"
+        "section": "Meieri",
+        "product": {
+          "ean": "7038010005459",
+          "name": "Lettrømme 17% 300g Tine",
+          "image": null,
+          "packSize": 300,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Jordbærsyltetøy",
         "quantity": 1,
         "unit": "glass",
-        "section": "Tørrmat"
+        "section": "Tørrmat",
+        "product": {
+          "ean": "7070841005383",
+          "name": "Jordbærsyltetøy Klem 410g Lerum",
+          "image": null,
+          "packSize": 410,
+          "packUnit": "g"
+        }
       }
     ],
     "steps": [
@@ -451,7 +633,14 @@ export const MEALS: Meal[] = [
         "name": "Laksefilet",
         "quantity": 700,
         "unit": "g",
-        "section": "Kjøtt & fisk"
+        "section": "Kjøtt & fisk",
+        "product": {
+          "ean": "7055330036369",
+          "name": "Laksefilet 450g Fersk&Ferdig",
+          "image": null,
+          "packSize": 450,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Sitron",
@@ -469,7 +658,14 @@ export const MEALS: Meal[] = [
         "name": "Brokkoli",
         "quantity": 1,
         "unit": "hode",
-        "section": "Frukt & grønt"
+        "section": "Frukt & grønt",
+        "product": {
+          "ean": "7031540000277",
+          "name": "Brokkoli 400g",
+          "image": null,
+          "packSize": 400,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Dill",
@@ -510,25 +706,53 @@ export const MEALS: Meal[] = [
         "name": "Bakepoteter",
         "quantity": 4,
         "unit": "stk",
-        "section": "Frukt & grønt"
+        "section": "Frukt & grønt",
+        "product": {
+          "ean": "4367",
+          "name": "Bakepotet Bama",
+          "image": null,
+          "packSize": 1,
+          "packUnit": "stk"
+        }
       },
       {
         "name": "Bacon",
         "quantity": 200,
         "unit": "g",
-        "section": "Kjøtt & fisk"
+        "section": "Kjøtt & fisk",
+        "product": {
+          "ean": "5707196315844",
+          "name": "Bacon skivet Bøkeflisrøkt 125g Tulip",
+          "image": null,
+          "packSize": 125,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Rømme",
         "quantity": 300,
         "unit": "ml",
-        "section": "Meieri"
+        "section": "Meieri",
+        "product": {
+          "ean": "7038010005459",
+          "name": "Lettrømme 17% 300g Tine",
+          "image": null,
+          "packSize": 300,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Revet ost",
         "quantity": 150,
         "unit": "g",
-        "section": "Meieri"
+        "section": "Meieri",
+        "product": {
+          "ean": "7038010014307",
+          "name": "Revet Ost Original 300g Tine",
+          "image": null,
+          "packSize": 300,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Mais",
@@ -577,25 +801,53 @@ export const MEALS: Meal[] = [
         "name": "Lasagneplater",
         "quantity": 250,
         "unit": "g",
-        "section": "Tørrmat"
+        "section": "Tørrmat",
+        "product": {
+          "ean": "7035620041624",
+          "name": "Lasagneplater 500g Eldorado",
+          "image": null,
+          "packSize": 500,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Kjøttdeig",
         "quantity": 600,
         "unit": "g",
-        "section": "Kjøtt & fisk"
+        "section": "Kjøtt & fisk",
+        "product": {
+          "ean": "7037203635732",
+          "name": "Gilde Kjøttdeig 14% uten Salt og Vann 400g",
+          "image": null,
+          "packSize": 400,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Hermetiske tomater",
         "quantity": 2,
         "unit": "boks",
-        "section": "Tørrmat"
+        "section": "Tørrmat",
+        "product": {
+          "ean": "9800001078364",
+          "name": "Hakkede Tomater 400g",
+          "image": null,
+          "packSize": 400,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Melk",
         "quantity": 500,
         "unit": "ml",
-        "section": "Meieri"
+        "section": "Meieri",
+        "product": {
+          "ean": "7038010068065",
+          "name": "Lettmelk 0,5% 0,5l Tine",
+          "image": null,
+          "packSize": 500,
+          "packUnit": "ml"
+        }
       },
       {
         "name": "Mel",
@@ -613,7 +865,14 @@ export const MEALS: Meal[] = [
         "name": "Revet ost",
         "quantity": 200,
         "unit": "g",
-        "section": "Meieri"
+        "section": "Meieri",
+        "product": {
+          "ean": "7038010014307",
+          "name": "Revet Ost Original 300g Tine",
+          "image": null,
+          "packSize": 300,
+          "packUnit": "g"
+        }
       },
       {
         "name": "Løk",
