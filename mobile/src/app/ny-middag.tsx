@@ -480,7 +480,7 @@ function ItemRow({
           </Pressable>
           <Pressable
             accessibilityRole="checkbox"
-            accessibilityState={{ checked: pantry }}
+            aria-checked={pantry}
             accessibilityLabel={`Har hjemme: ${item.name}`}
             onPress={() => onChange({ pantry: !pantry })}
             hitSlop={6}

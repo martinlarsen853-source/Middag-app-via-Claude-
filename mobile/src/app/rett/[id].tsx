@@ -11,13 +11,15 @@ import { displayAmount, mealBase } from '@/lib/meals';
 import { useMeals } from '@/lib/meals-store';
 import { formatPrice, isPantry, mealEans, pricesByStore, usePrices } from '@/lib/prices';
 import { photoFor } from '@/lib/photos';
+import { useShopping } from '@/lib/shopping';
 import { useApp } from '@/lib/store';
 
 export default function MealDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { persons, setPersons, stores, setActiveList, ready } = useApp();
+  const { persons: defaultPersons, setPersons: setDefaultPersons, stores, ready } = useApp();
   const { findMeal, deleteMeal } = useMeals();
+  const { entryFor, addMeal, removeEntry, updateEntry, setStore } = useShopping();
   const { width } = useLayout();
   const twoColumns = width >= 900;
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -37,9 +39,16 @@ export default function MealDetailScreen() {
     );
   }
 
+  // Står middagen i uka, gjelder personene der. Ellers brukes standardvalget.
+  const entry = entryFor(meal.id);
+  const persons = entry?.persons ?? defaultPersons;
+  const setPersons = (next: number) => (entry ? updateEntry(entry.id, { persons: next }) : setDefaultPersons(next));
+
+  // «Står i butikken nå»: legg middagen i uka og gå rett til handlelista.
   function startShopping(storeId: string) {
     if (!meal) return;
-    setActiveList({ mealId: meal.id, storeId });
+    addMeal(meal.id, persons);
+    setStore(storeId);
     router.navigate('/handleliste');
   }
 
@@ -97,10 +106,15 @@ export default function MealDetailScreen() {
       {meal.description ? <Body>{meal.description}</Body> : null}
       <View style={styles.personRow}>
         <PersonStepper value={persons} onChange={setPersons} />
+        {entry ? (
+          <Button label="I uka" icon="checkmark" variant="secondary" onPress={() => removeEntry(entry.id)} accessibilityLabel={`Fjern ${meal.name} fra uka`} />
+        ) : (
+          <Button label="Legg i uka" icon="calendar-outline" variant="primary" onPress={() => addMeal(meal.id, persons)} />
+        )}
       </View>
 
       <View style={styles.shopSection}>
-        <Eyebrow>Lag handleliste i</Eyebrow>
+        <Eyebrow>Handle nå i</Eyebrow>
         <View style={styles.storeTiles}>
           {ready &&
             stores.map(store => {
@@ -293,6 +307,10 @@ const styles = StyleSheet.create({
   },
   personRow: {
     marginTop: spacing.xs,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: spacing.md,
   },
   shopSection: {
     gap: spacing.md,

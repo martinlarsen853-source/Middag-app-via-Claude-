@@ -42,7 +42,7 @@ export function isPantry(ingredient: Ingredient): boolean {
 }
 
 // Gjør om til felles grunnenhet så oppskriftens mengde kan sammenlignes med pakken.
-function toBase(value: number, unit: string | null | undefined): { value: number; unit: 'g' | 'ml' | 'stk' } | null {
+export function toBase(value: number, unit: string | null | undefined): { value: number; unit: 'g' | 'ml' | 'stk' } | null {
   switch ((unit ?? '').toLowerCase()) {
     case 'g':
       return { value, unit: 'g' };

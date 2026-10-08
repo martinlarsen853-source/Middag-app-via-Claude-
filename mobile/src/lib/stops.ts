@@ -80,11 +80,32 @@ const SECTION_FALLBACK: Record<string, StopId> = {
   Frys: 'frys',
 };
 
+// Varer du legger til selv har ingen seksjon fra en oppskrift. Da trengs flere
+// mønstre for vanlige dagligvarer, ellers havner de i «Annet».
+const EXTRA_RULES: [StopId, RegExp][] = [
+  ['hermetikk', /finhakk|hakkede tomater|knuste tomater|passata|hermetikk|tunfisk|makrell i tomat/],
+  ['egg', /\begg\b/],
+  ['palegg', /pålegg|leverpostei|kaviar|servelat|kokt skinke/],
+  ['frys', /\bis\b|iskrem|grandiosa|frossen|frosne/],
+  ['snacks', /sjokolade|godteri|godis|chips|snacks|nøtter|kjeks/],
+  ['brod', /brød|lompe|knekkebrød|rundstykk|boller|polarbrød/],
+  ['meieri', /yoghurt|kesam|cottage|skyr|kefir|fløte|melk|smør/],
+  [
+    'frukt-gront',
+    /tomat|agurk|løk|eple|banan|salat|potet|gulrot|paprika|brokkoli|blomkål|sitron|lime|avokado|appelsin|klementin|drue|bær|ruccola|spinat|squash|sopp|ingefær|chili|hvitløk|purre|selleri|kål|dill|persille|basilikum|koriander|pære|melon|ananas|mango/,
+  ],
+];
+
 export function stopFor(ingredient: Pick<Ingredient, 'name' | 'section'>): StopId {
   const name = ingredient.name.toLowerCase();
   if (ingredient.section === 'Frys') return 'frys';
   for (const [stop, pattern] of RULES) {
     if (pattern.test(name)) return stop;
+  }
+  if (!ingredient.section) {
+    for (const [stop, pattern] of EXTRA_RULES) {
+      if (pattern.test(name)) return stop;
+    }
   }
   return SECTION_FALLBACK[ingredient.section] ?? 'annet';
 }

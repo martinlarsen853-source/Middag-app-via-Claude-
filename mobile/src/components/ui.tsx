@@ -163,7 +163,7 @@ export function Chip({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ selected }}
+      aria-selected={selected}
       onPress={onPress}
       style={[styles.chip, selected && styles.chipSelected]}>
       <Text style={styles.chipText}>{label}</Text>

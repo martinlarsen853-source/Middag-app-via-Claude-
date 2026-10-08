@@ -6,24 +6,16 @@ import * as cloud from '@/lib/cloud';
 import { ALL_STOP_IDS, type StopId } from '@/lib/stops';
 
 const PERSONS_KEY = 'handleklar.persons';
-const CHECKED_KEY = 'handleklar.checked';
 // Gamle, lokale butikkrekkefølger fra før rekkefølgen ble felles. Lastes opp
 // én gang når eieren låser opp, og slettes så.
 const LEGACY_STORES_KEY = 'handleklar.stores';
 const SHARED_STORES_KEY = 'handleklar.sharedStores';
 const OWNER_KEY = 'handleklar.ownerKey';
-const ACTIVE_KEY = 'handleklar.activeList';
-
-export type ActiveList = { mealId: number | string; storeId: string };
 
 type AppState = {
-  activeList: ActiveList | null;
-  setActiveList: (next: ActiveList | null) => void;
+  // Standard antall personer for nye middager i uka.
   persons: number;
   setPersons: (next: number) => void;
-  checked: Record<string, boolean>;
-  toggleChecked: (key: string) => void;
-  clearChecked: (prefix: string) => void;
   stores: Store[];
   moveStop: (storeId: string, from: number, to: number) => void;
   renameStore: (storeId: string, name: string) => void;
@@ -61,9 +53,7 @@ function normalizeStores(saved: { id: string; name: string; stops: string[]; cus
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [persons, setPersonsState] = useState(2);
-  const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [stores, setStores] = useState<Store[]>(DEFAULT_STORES);
-  const [activeList, setActiveListState] = useState<ActiveList | null>(null);
   const [ownerKey, setOwnerKey] = useState<string | null>(null);
   const [storeSyncError, setStoreSyncError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -81,18 +71,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Leser lagrede valg én gang ved oppstart. Feiler dette bruker vi standardverdiene.
     (async () => {
       try {
-        const [storedPersons, storedChecked, storedShared, storedActive, storedOwner] = await AsyncStorage.multiGet([
+        const [storedPersons, storedShared, storedOwner] = await AsyncStorage.multiGet([
           PERSONS_KEY,
-          CHECKED_KEY,
           SHARED_STORES_KEY,
-          ACTIVE_KEY,
           OWNER_KEY,
         ]);
         const parsedPersons = Number(storedPersons[1]);
         if (Number.isFinite(parsedPersons) && parsedPersons >= 1) setPersonsState(parsedPersons);
-        if (storedChecked[1]) setChecked(JSON.parse(storedChecked[1]));
         if (storedShared[1]) applyStores(normalizeStores(JSON.parse(storedShared[1])));
-        if (storedActive[1]) setActiveListState(JSON.parse(storedActive[1]));
         if (storedOwner[1]) {
           ownerKeyRef.current = storedOwner[1];
           setOwnerKey(storedOwner[1]);
@@ -171,32 +157,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     AsyncStorage.removeItem(OWNER_KEY).catch(() => {});
   }, []);
 
-  const setActiveList = useCallback((next: ActiveList | null) => {
-    setActiveListState(next);
-    if (next) AsyncStorage.setItem(ACTIVE_KEY, JSON.stringify(next)).catch(() => {});
-    else AsyncStorage.removeItem(ACTIVE_KEY).catch(() => {});
-  }, []);
-
   const setPersons = useCallback((next: number) => {
     const clamped = Math.min(12, Math.max(1, next));
     setPersonsState(clamped);
     AsyncStorage.setItem(PERSONS_KEY, String(clamped)).catch(() => {});
-  }, []);
-
-  const toggleChecked = useCallback((key: string) => {
-    setChecked(current => {
-      const next = { ...current, [key]: !current[key] };
-      AsyncStorage.setItem(CHECKED_KEY, JSON.stringify(next)).catch(() => {});
-      return next;
-    });
-  }, []);
-
-  const clearChecked = useCallback((prefix: string) => {
-    setChecked(current => {
-      const next = Object.fromEntries(Object.entries(current).filter(([key]) => !key.startsWith(prefix)));
-      AsyncStorage.setItem(CHECKED_KEY, JSON.stringify(next)).catch(() => {});
-      return next;
-    });
   }, []);
 
   // Endringer gjelder bare for eieren; for alle andre er butikkene skrivebeskyttet.
@@ -271,13 +235,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      activeList,
-      setActiveList,
       persons,
       setPersons,
-      checked,
-      toggleChecked,
-      clearChecked,
       stores,
       moveStop,
       renameStore,
@@ -292,13 +251,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ready,
     }),
     [
-      activeList,
-      setActiveList,
       persons,
       setPersons,
-      checked,
-      toggleChecked,
-      clearChecked,
       stores,
       moveStop,
       renameStore,

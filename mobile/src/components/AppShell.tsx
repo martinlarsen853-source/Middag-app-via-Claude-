@@ -6,11 +6,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, fonts, MAX_WIDTH, radius, spacing } from '@/constants/theme';
 import { useLayout } from '@/lib/layout';
-import { useMeals } from '@/lib/meals-store';
-import { useApp } from '@/lib/store';
+import { useShoppingList } from '@/lib/shopping';
 
 type Tab = {
-  key: 'middager' | 'handleliste' | 'butikker';
+  key: 'middager' | 'uka' | 'handleliste' | 'butikker';
   label: string;
   href: Href;
   icon: keyof typeof Ionicons.glyphMap;
@@ -19,23 +18,21 @@ type Tab = {
 
 const TABS: Tab[] = [
   { key: 'middager', label: 'Middager', href: '/', icon: 'restaurant-outline', iconActive: 'restaurant' },
+  { key: 'uka', label: 'Uka', href: '/uka', icon: 'calendar-outline', iconActive: 'calendar' },
   { key: 'handleliste', label: 'Handleliste', href: '/handleliste', icon: 'basket-outline', iconActive: 'basket' },
   { key: 'butikker', label: 'Butikker', href: '/butikker', icon: 'storefront-outline', iconActive: 'storefront' },
 ];
 
 function activeTab(pathname: string): Tab['key'] {
   if (pathname.startsWith('/handleliste')) return 'handleliste';
+  if (pathname.startsWith('/uka')) return 'uka';
   if (pathname.startsWith('/butikker')) return 'butikker';
   return 'middager';
 }
 
-// Hvor mange varer som gjenstår på den aktive lista, vist som et lite merke på fanen.
+// Hvor mange varer som gjenstår på handlelista, vist som et lite merke på fanen.
 function useRemaining(): number {
-  const { activeList, checked } = useApp();
-  const { findMeal } = useMeals();
-  const meal = findMeal(activeList?.mealId);
-  if (!meal) return 0;
-  return meal.ingredients.filter((_, index) => !checked[`${meal.id}:${index}`]).length;
+  return useShoppingList().remaining;
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -81,7 +78,7 @@ function TopBar() {
                 <Pressable
                   key={tab.key}
                   accessibilityRole="link"
-                  accessibilityState={{ selected: active }}
+                  aria-selected={active}
                   onPress={() => router.navigate(tab.href)}
                   style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
                     styles.topNavItem,
@@ -120,7 +117,7 @@ function BottomBar() {
           <Pressable
             key={tab.key}
             accessibilityRole="tab"
-            accessibilityState={{ selected: active }}
+            aria-selected={active}
             accessibilityLabel={tab.label}
             onPress={() => router.navigate(tab.href)}
             style={styles.bottomItem}>

@@ -10,12 +10,14 @@ import type { Meal } from '@/data/meals';
 import { useLayout } from '@/lib/layout';
 import { useMeals } from '@/lib/meals-store';
 import { formatPrice, mealEans, pricesByStore, usePrices, type PriceBook } from '@/lib/prices';
+import { useShopping } from '@/lib/shopping';
 import { photoFor } from '@/lib/photos';
 import { useApp } from '@/lib/store';
 
 export default function MealListScreen() {
   const router = useRouter();
-  const { persons, setPersons, activeList, stores } = useApp();
+  const { persons, setPersons, stores } = useApp();
+  const { entryFor, addMeal, removeEntry } = useShopping();
   const { meals: allMeals } = useMeals();
   const { contentWidth, columns, wide } = useLayout();
   const [query, setQuery] = useState('');
@@ -43,7 +45,7 @@ export default function MealListScreen() {
           <Eyebrow>Deres faste middager</Eyebrow>
           <Title size="xl">Hva blir det til middag?</Title>
           <Body style={styles.heroBody}>
-            Velg en rett, så får du handlelista i den rekkefølgen du går gjennom butikken.
+            Trykk + for å legge middager i uka, eller velg én og handle med en gang. Lista følger alltid butikkens rute.
           </Body>
         </View>
         <View style={[styles.controls, wide && styles.controlsWide]}>
@@ -86,7 +88,12 @@ export default function MealListScreen() {
               persons={persons}
               stores={stores}
               book={book}
-              onList={String(activeList?.mealId) === String(meal.id)}
+              inWeek={Boolean(entryFor(meal.id))}
+              onToggleWeek={() => {
+                const entry = entryFor(meal.id);
+                if (entry) removeEntry(entry.id);
+                else addMeal(meal.id, persons);
+              }}
               onPress={() => router.push(`/rett/${meal.id}`)}
             />
           ))}
@@ -102,7 +109,8 @@ function MealCard({
   persons,
   stores,
   book,
-  onList,
+  inWeek,
+  onToggleWeek,
   onPress,
 }: {
   meal: Meal;
@@ -110,7 +118,8 @@ function MealCard({
   persons: number;
   stores: ReturnType<typeof useApp>['stores'];
   book: PriceBook;
-  onList: boolean;
+  inWeek: boolean;
+  onToggleWeek: () => void;
   onPress: () => void;
 }) {
   const tint = categoryTints[meal.category] ?? defaultTint;
@@ -133,10 +142,10 @@ function MealCard({
               accessibilityLabel={meal.name}
             />
             <View style={styles.tags}>
-              {onList && (
+              {inWeek && (
                 <View style={styles.onListTag}>
-                  <Ionicons name="basket" size={13} color={colors.ink} />
-                  <Text style={styles.onListText}>På handlelista</Text>
+                  <Ionicons name="calendar" size={13} color={colors.ink} />
+                  <Text style={styles.onListText}>I uka</Text>
                 </View>
               )}
               {meal.custom && (
@@ -146,6 +155,14 @@ function MealCard({
                 </View>
               )}
             </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={inWeek ? `Fjern ${meal.name} fra uka` : `Legg ${meal.name} i uka`}
+              onPress={onToggleWeek}
+              hitSlop={6}
+              style={[styles.weekButton, inWeek && styles.weekButtonOn]}>
+              <Ionicons name={inWeek ? 'checkmark' : 'add'} size={24} color={inWeek ? colors.limeStrong : colors.ink} />
+            </Pressable>
           </View>
           <View style={styles.cardBody}>
             <View style={styles.metaRow}>
@@ -238,6 +255,20 @@ const styles = StyleSheet.create({
     left: spacing.md,
     flexDirection: 'row',
     gap: spacing.xs,
+  },
+  weekButton: {
+    position: 'absolute',
+    top: spacing.md,
+    right: spacing.md,
+    width: 44,
+    height: 44,
+    borderRadius: radius.round,
+    backgroundColor: colors.limeStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  weekButtonOn: {
+    backgroundColor: colors.ink,
   },
   customTag: {
     backgroundColor: colors.lavender,
