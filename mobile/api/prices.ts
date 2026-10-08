@@ -13,7 +13,7 @@ export async function GET(request: Request): Promise<Response> {
   try {
     const result = await kassalapp<{ data?: unknown[] }>('/products/prices-bulk', {
       method: 'POST',
-      body: JSON.stringify({ eans, days: 14 }),
+      body: JSON.stringify({ eans, days: 90 }),
     });
     return json(
       { prices: bulkToPrices((result.data ?? []) as never[]), checkedAt: new Date().toISOString() },
