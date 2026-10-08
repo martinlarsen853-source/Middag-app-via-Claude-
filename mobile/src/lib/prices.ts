@@ -107,7 +107,7 @@ export function packsNeeded(ingredient: Ingredient, persons: number, base = BASE
   return COUNT_UNITS.includes(unit) ? Math.max(1, Math.round(quantity)) : 1;
 }
 
-export type PriceSource = 'exact' | 'other-chain' | 'estimate' | 'pantry';
+export type PriceSource = 'exact' | 'old' | 'other-chain' | 'estimate' | 'pantry';
 
 export type ItemPrice = { amount: number; packs: number; source: PriceSource; unitPrice: number | null };
 
@@ -123,7 +123,11 @@ export function ingredientCost(
 
   const prices = ingredient.product ? book[ingredient.product.ean] : undefined;
   const exact = chainPrice(prices, chain);
-  if (exact) return { amount: exact * packs, packs, source: 'exact', unitPrice: exact };
+  if (exact) {
+    // En gammel pris fra riktig kjede er bedre enn en fersk fra en annen kjede, men den er et anslag.
+    const source = isStalePrice(ingredient.product?.ean, chain) ? 'old' : 'exact';
+    return { amount: exact * packs, packs, source, unitPrice: exact };
+  }
 
   // Kjeden mangler pris (vanlig for Coop): snittet fra de andre kjedene er et godt anslag.
   const others = prices ? Object.values(prices) : [];
@@ -177,10 +181,26 @@ export function mealEans(meals: Meal[]): string[] {
 
 const CACHE_KEY = 'handleklar.prices';
 const TTL_MS = 6 * 60 * 60 * 1000;
-type CacheEntry = { prices: ChainPrices; at: number; image?: string | null };
+type CacheEntry = { prices: ChainPrices; at: number; image?: string | null; dates?: Record<string, string> };
 const memory = new Map<string, CacheEntry>();
 // Produktbilder kommer med prisoppslaget, så faste middager også får bilder i lista.
 const images = new Map<string, string>();
+
+// Når prisen i hver kjede sist ble sjekket. Kiwi- og Rema-priser hos Kassalapp kan
+// være flere år gamle; de brukes, men regnes som anslag («ca.»).
+const priceDates = new Map<string, Record<string, string>>();
+const STALE_MS = 60 * 86400000;
+
+export function priceDate(ean: string | undefined | null, chain: string | null): string | null {
+  if (!ean || !chain) return null;
+  const dates = priceDates.get(ean);
+  return dates?.[chain] ?? dates?.[CHAIN_FALLBACK[chain] ?? ''] ?? null;
+}
+
+export function isStalePrice(ean: string | undefined | null, chain: string | null): boolean {
+  const date = priceDate(ean, chain);
+  return Boolean(date) && Date.now() - new Date(date as string).getTime() > STALE_MS;
+}
 
 export function productImage(ean: string | undefined | null): string | null {
   return ean ? (images.get(ean) ?? null) : null;
@@ -201,6 +221,7 @@ function loadDisk(): Promise<void> {
       for (const [ean, entry] of Object.entries(saved)) {
         if (!memory.has(ean)) memory.set(ean, entry);
         if (entry.image) images.set(ean, entry.image);
+        if (entry.dates) priceDates.set(ean, entry.dates);
       }
     })
     .catch(() => {});
@@ -236,13 +257,20 @@ async function fetchPrices(eans: string[]) {
     for (let i = 0; i < stale.length; i += 100) {
       const chunk = stale.slice(i, i + 100);
       const response = await fetch(`${API_ORIGIN}/api/prices?eans=${chunk.join(',')}`);
-      const body = (await response.json()) as { prices?: PriceBook; images?: Record<string, string>; unavailable?: string };
+      const body = (await response.json()) as {
+        prices?: PriceBook;
+        images?: Record<string, string>;
+        dates?: Record<string, Record<string, string>>;
+        unavailable?: string;
+      };
       unavailable = body.unavailable ?? null;
       if (!response.ok || body.unavailable) continue;
       for (const ean of chunk) {
         const image = body.images?.[ean] ?? null;
+        const dates = body.dates?.[ean];
         if (image) images.set(ean, image);
-        memory.set(ean, { prices: body.prices?.[ean] ?? {}, at: Date.now(), image });
+        if (dates) priceDates.set(ean, dates);
+        memory.set(ean, { prices: body.prices?.[ean] ?? {}, at: Date.now(), image, dates });
       }
     }
     persist();
@@ -292,4 +320,25 @@ export function pricesByStore(meal: Meal, persons: number, stores: Store[], book
   return stores
     .map(store => ({ store, price: mealPrice(meal, persons, chainFor(store), book) }))
     .sort((a, b) => a.price.total - b.price.total);
+}
+
+const MONTH = new Intl.DateTimeFormat('nb-NO', { month: 'long', year: 'numeric' });
+
+// «Kiwi-prisene er fra april 2023 …» når en butikk bare har gamle priser.
+export function stalePriceNote(meals: Meal[], stores: Store[]): string | null {
+  const notes: string[] = [];
+  for (const store of stores) {
+    const chain = chainFor(store);
+    let oldest: string | null = null;
+    for (const meal of meals) {
+      for (const ingredient of meal.ingredients) {
+        const ean = ingredient.product?.ean;
+        if (!isStalePrice(ean, chain)) continue;
+        const date = priceDate(ean, chain);
+        if (date && (!oldest || date < oldest)) oldest = date;
+      }
+    }
+    if (oldest) notes.push(`${store.name}-prisene er fra ${MONTH.format(new Date(oldest))}`);
+  }
+  return notes.length ? `${notes.join(', ')}, så de kan være høyere nå.` : null;
 }

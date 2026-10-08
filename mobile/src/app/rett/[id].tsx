@@ -9,7 +9,7 @@ import { categoryTints, colors, defaultTint, fonts, radius, spacing } from '@/co
 import { useLayout } from '@/lib/layout';
 import { displayAmount, mealBase } from '@/lib/meals';
 import { useMeals } from '@/lib/meals-store';
-import { formatPrice, isPantry, mealEans, pricesByStore, usePrices } from '@/lib/prices';
+import { formatPrice, isPantry, mealEans, pricesByStore, stalePriceNote, usePrices } from '@/lib/prices';
 import { photoFor } from '@/lib/photos';
 import { useShopping } from '@/lib/shopping';
 import { useApp } from '@/lib/store';
@@ -148,6 +148,7 @@ export default function MealDetailScreen() {
               ? 'Dagens priser fra butikkene, regnet i hele pakker.'
               : `${priced} av ${toBuy} varer har dagens pris, resten er anslått.`}
           {meal.ingredients.some(isPantry) ? ' Det du har hjemme er ikke med.' : ''}
+          {stalePriceNote([meal], stores) ? ` ${stalePriceNote([meal], stores)}` : ''}
         </Text>
       </View>
 
