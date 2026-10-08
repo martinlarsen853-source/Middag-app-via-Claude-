@@ -177,8 +177,14 @@ export function mealEans(meals: Meal[]): string[] {
 
 const CACHE_KEY = 'handleklar.prices';
 const TTL_MS = 6 * 60 * 60 * 1000;
-type CacheEntry = { prices: ChainPrices; at: number };
+type CacheEntry = { prices: ChainPrices; at: number; image?: string | null };
 const memory = new Map<string, CacheEntry>();
+// Produktbilder kommer med prisoppslaget, så faste middager også får bilder i lista.
+const images = new Map<string, string>();
+
+export function productImage(ean: string | undefined | null): string | null {
+  return ean ? (images.get(ean) ?? null) : null;
+}
 const listeners = new Set<() => void>();
 let diskLoaded: Promise<void> | null = null;
 let unavailable: string | null = null;
@@ -192,7 +198,10 @@ function loadDisk(): Promise<void> {
     .then(raw => {
       if (!raw) return;
       const saved = JSON.parse(raw) as Record<string, CacheEntry>;
-      for (const [ean, entry] of Object.entries(saved)) if (!memory.has(ean)) memory.set(ean, entry);
+      for (const [ean, entry] of Object.entries(saved)) {
+        if (!memory.has(ean)) memory.set(ean, entry);
+        if (entry.image) images.set(ean, entry.image);
+      }
     })
     .catch(() => {});
   return diskLoaded;
@@ -227,10 +236,14 @@ async function fetchPrices(eans: string[]) {
     for (let i = 0; i < stale.length; i += 100) {
       const chunk = stale.slice(i, i + 100);
       const response = await fetch(`${API_ORIGIN}/api/prices?eans=${chunk.join(',')}`);
-      const body = (await response.json()) as { prices?: PriceBook; unavailable?: string };
+      const body = (await response.json()) as { prices?: PriceBook; images?: Record<string, string>; unavailable?: string };
       unavailable = body.unavailable ?? null;
       if (!response.ok || body.unavailable) continue;
-      for (const ean of chunk) memory.set(ean, { prices: body.prices?.[ean] ?? {}, at: Date.now() });
+      for (const ean of chunk) {
+        const image = body.images?.[ean] ?? null;
+        if (image) images.set(ean, image);
+        memory.set(ean, { prices: body.prices?.[ean] ?? {}, at: Date.now(), image });
+      }
     }
     persist();
   } catch {

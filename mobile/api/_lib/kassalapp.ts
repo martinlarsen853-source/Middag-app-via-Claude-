@@ -175,6 +175,36 @@ export function bulkToPrices(rows: BulkRow[]): Record<string, ChainPrices> {
   return result;
 }
 
+type EanProduct = {
+  image?: string | null;
+  store?: { code?: string | null } | null;
+  current_price?: { price?: number | string | null; date?: string | null } | number | string | null;
+};
+
+export type EanPrices = { prices: ChainPrices; dates: Record<string, string>; image: string | null };
+
+// Siste kjente pris i hver butikk for én vare, uansett hvor gammel den er.
+// Kiwi og Rema sjekkes sjeldnere enn Meny, men en gammel Kiwi-pris er mer
+// nyttig enn en fersk Meny-pris når du handler på Kiwi.
+export function eanToPrices(products: EanProduct[]): EanPrices {
+  const prices: ChainPrices = {};
+  const dates: Record<string, string> = {};
+  let image: string | null = null;
+  for (const product of products) {
+    if (!image && product?.image) image = product.image;
+    const chain = product?.store?.code;
+    const current = product?.current_price;
+    const price = toPrice(typeof current === 'object' && current !== null ? current.price : current);
+    const date = typeof current === 'object' && current !== null ? (current.date ?? '') : '';
+    if (!chain || price === null) continue;
+    if (!dates[chain] || date > dates[chain]) {
+      prices[chain] = price;
+      dates[chain] = date;
+    }
+  }
+  return { prices, dates, image };
+}
+
 export function json(body: unknown, init: { status?: number; cacheSeconds?: number } = {}): Response {
   const headers: Record<string, string> = { 'Content-Type': 'application/json; charset=utf-8' };
   if (init.cacheSeconds) {

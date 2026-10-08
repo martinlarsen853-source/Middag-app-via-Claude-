@@ -10,7 +10,7 @@ import { Body, Button, Chip, Eyebrow, Page, Title } from '@/components/ui';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 import { useHistory } from '@/lib/history';
 import { useMeals } from '@/lib/meals-store';
-import { formatPrice, usePrices } from '@/lib/prices';
+import { formatPrice, productImage, usePrices } from '@/lib/prices';
 import { sizeText } from '@/lib/search';
 import { lineEans, listPrice, storeChain, useShopping, useShoppingList, type ListLine } from '@/lib/shopping';
 import { useApp } from '@/lib/store';
@@ -302,6 +302,7 @@ function LineRow({
   onRemove?: () => void;
 }) {
   const size = line.product ? sizeText(line.product.packSize, line.product.packUnit) : null;
+  const image = line.product?.image ?? productImage(line.product?.ean);
   const hint = line.swapped
     ? `I stedet for ${line.originalName}`
     : line.pantry
@@ -317,9 +318,9 @@ function LineRow({
         onPress={onCheck}
         style={styles.itemMain}>
         <View style={[styles.checkbox, !isNext && styles.checkboxLater]} />
-        {line.product?.image ? (
+        {image ? (
           <View style={styles.itemImage}>
-            <Image source={{ uri: line.product.image }} style={StyleSheet.absoluteFill} contentFit="contain" />
+            <Image source={{ uri: image }} style={StyleSheet.absoluteFill} contentFit="contain" />
           </View>
         ) : null}
         <View style={styles.itemText}>
