@@ -1,5 +1,10 @@
 # Middag App - Development Guidelines
 
+## Appen Handleklar (mobile/) – les først
+- Den nye appen ligger i `mobile/` og er live på https://handleklar-omega.vercel.app
+- Planen, statusen og eierens ønsker står i `mobile/PLAN.md`. Les den før du gjør endringer.
+- Resten av denne fila gjelder den gamle nettsiden (`frontend/`, `api/`).
+
 ## Deployment
 - **Production URL:** https://middag-app-via-claude.vercel.app
 - **Vercel's production branch is `claude/meal-planning-app-saCrQ`** (verified June 2026 in the Vercel dashboard — NOT `main`)
