@@ -27,7 +27,7 @@ const TABS: Tab[] = [
 function activeTab(pathname: string): Tab['key'] {
   if (pathname.startsWith('/handleliste')) return 'handleliste';
   if (pathname.startsWith('/uka')) return 'uka';
-  if (/^\/(mer|butikker|samboer|historikk|eier|bli-med)/.test(pathname)) return 'mer';
+  if (/^\/(mer|butikker|samboer|historikk|eier|bli-med|kjoleskap)/.test(pathname)) return 'mer';
   return 'middager';
 }
 

@@ -12,7 +12,18 @@ import { useHistory } from '@/lib/history';
 import { useMeals } from '@/lib/meals-store';
 import { formatPrice, productImage, usePrices } from '@/lib/prices';
 import { sizeText } from '@/lib/search';
-import { lineEans, listPrice, storeChain, useShopping, useShoppingList, type ListLine } from '@/lib/shopping';
+import {
+  defaultExpiry,
+  fridgeMatch,
+  leftovers,
+  lineEans,
+  listPrice,
+  storeChain,
+  useShopping,
+  useShoppingList,
+  type FridgeItem,
+  type ListLine,
+} from '@/lib/shopping';
 import { useApp } from '@/lib/store';
 
 // Lista er snudd opp ned i forhold til en vanlig liste: det du skal hente neste
@@ -35,7 +46,9 @@ export default function ShoppingListScreen() {
     finishShopping,
     removeExtras,
     commit,
+    addFridgeItems,
   } = useShopping();
+  const [leftoversSaved, setLeftoversSaved] = useState(false);
   const { lines, stops, store } = useShoppingList();
   const [lastChecked, setLastChecked] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -80,6 +93,20 @@ export default function ShoppingListScreen() {
     .filter(stop => stop.lines.length > 0);
   const inBasket = stops.flatMap(stop => stop.lines.filter(line => isDone(line.key)));
   const undoLine = lastChecked ? lines.find(line => line.key === lastChecked && state.checked[line.key]) : undefined;
+  const fridge = Object.values(state.fridge);
+  const rest = allDone ? leftovers(lines, state.skipped) : [];
+
+  function saveLeftovers() {
+    addFridgeItems(
+      rest.map(item => ({
+        name: item.name,
+        amount: item.amount,
+        expires: defaultExpiry(item.stop),
+        addedBy: memberName.trim() || null,
+      })),
+    );
+    setLeftoversSaved(true);
+  }
 
   const meals = activeEntries
     .map(entry => ({ entry, meal: findMeal(entry.mealId) }))
@@ -178,6 +205,17 @@ export default function ShoppingListScreen() {
           <View style={styles.doneCard}>
             <Title size="md">Alt er i kurven</Title>
             <Body>God middag! Trykk ferdig, så blir middagene stående som handlet i uka.</Body>
+            {rest.length > 0 && (
+              <View style={styles.leftovers}>
+                <Text style={styles.leftoversTitle}>Til overs etter middagene</Text>
+                <Text style={styles.leftoversText}>{rest.map(item => `${item.amount} ${item.name.toLowerCase()}`).join(', ')}</Text>
+                {leftoversSaved ? (
+                  <Text style={styles.leftoversDone}>Lagt i kjøleskapet ✓</Text>
+                ) : (
+                  <Button label="Legg restene i kjøleskapet" icon="snow-outline" variant="secondary" onPress={saveLeftovers} style={styles.doneButton} />
+                )}
+              </View>
+            )}
             <Button label="Ferdig handlet" icon="checkmark" onPress={finish} style={styles.doneButton} />
           </View>
         )}
@@ -201,6 +239,7 @@ export default function ShoppingListScreen() {
                   <LineRow
                     key={line.key}
                     line={line}
+                    atHome={fridgeMatch(line.originalName, fridge)}
                     isNext={isNext}
                     showSources={meals.length > 1}
                     onCheck={() => check(line.key)}
@@ -288,6 +327,7 @@ export default function ShoppingListScreen() {
 
 function LineRow({
   line,
+  atHome,
   isNext,
   showSources,
   onCheck,
@@ -295,6 +335,7 @@ function LineRow({
   onRemove,
 }: {
   line: ListLine;
+  atHome?: FridgeItem;
   isNext: boolean;
   showSources: boolean;
   onCheck: () => void;
@@ -305,7 +346,9 @@ function LineRow({
   const image = line.product?.image ?? productImage(line.product?.ean);
   const hint = line.swapped
     ? `I stedet for ${line.originalName}`
-    : line.pantry
+    : atHome
+      ? `Du har ${atHome.amount ? `${atHome.amount} ` : ''}hjemme`
+      : line.pantry
       ? 'Sjekk om du har hjemme'
       : [size, showSources || line.mealCount === 0 ? line.sources.join(' + ') : null].filter(Boolean).join(' · ');
 
@@ -447,6 +490,31 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     gap: spacing.sm,
     marginBottom: spacing.lg,
+  },
+  leftovers: {
+    marginTop: spacing.sm,
+    gap: spacing.xs,
+    backgroundColor: colors.bg,
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
+  leftoversTitle: {
+    fontFamily: fonts.monoMedium,
+    fontSize: 12,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: colors.inkSoft,
+  },
+  leftoversText: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    lineHeight: 21,
+    color: colors.ink,
+  },
+  leftoversDone: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 15,
+    color: colors.green,
   },
   doneButton: {
     alignSelf: 'flex-start',

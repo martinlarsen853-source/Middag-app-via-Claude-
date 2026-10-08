@@ -40,6 +40,17 @@ export type ExtraItem = {
 // Erstatning når butikken ikke har varen.
 export type Swap = { name: string; product?: Product | null };
 
+// Det dere har hjemme. Delt med husstanden, og brukt til sparemiddag og «har hjemme» i lista.
+export type FridgeItem = {
+  id: string;
+  name: string;
+  amount: string;
+  // Dato varen går ut, som ÅÅÅÅ-MM-DD. null betyr at den holder seg.
+  expires: string | null;
+  addedAt: number;
+  addedBy?: string | null;
+};
+
 export type ShoppingMeta = {
   storeId?: string | null;
   // Hvem som står i butikken nå. Vises som en melding hos samboer.
@@ -53,14 +64,23 @@ export type ShoppingState = {
   swaps: Record<string, Swap>;
   skipped: Record<string, true>;
   meta: ShoppingMeta;
+  fridge: Record<string, FridgeItem>;
 };
 
 type Section = keyof ShoppingState;
 export type Patch = Partial<Record<Section, Record<string, unknown>>>;
 
-const SECTIONS: Section[] = ['entries', 'extras', 'checked', 'swaps', 'skipped', 'meta'];
+const SECTIONS: Section[] = ['entries', 'extras', 'checked', 'swaps', 'skipped', 'meta', 'fridge'];
 
-export const EMPTY_STATE: ShoppingState = { entries: {}, extras: {}, checked: {}, swaps: {}, skipped: {}, meta: {} };
+export const EMPTY_STATE: ShoppingState = {
+  entries: {},
+  extras: {},
+  checked: {},
+  swaps: {},
+  skipped: {},
+  meta: {},
+  fridge: {},
+};
 
 // En verdi på null i en patch betyr «fjern nøkkelen».
 export function applyPatch(state: ShoppingState, patch: Patch): ShoppingState {
@@ -294,6 +314,87 @@ export function listPrice(lines: ListLine[], chain: string | null, book: PriceBo
   return { total: Math.round(total), exact: toBuy > 0 && priced === toBuy, priced, toBuy };
 }
 
+// ---- Rester og kjøleskap ----
+
+export type Leftover = { key: string; name: string; amount: string; stop: StopId };
+
+const LEFTOVER_CONTAINERS = ['boks', 'glass', 'flaske', 'pose', 'pk', 'pakke', 'beger'];
+
+// Hva som blir til overs fordi pakkene kommer hele: 300 g rømme kjøpt, 100 g brukt.
+export function leftovers(lines: ListLine[], skipped: Record<string, true> = {}): Leftover[] {
+  const result: Leftover[] = [];
+  for (const line of lines) {
+    if (skipped[line.key] || line.pantry || line.mealCount === 0) continue;
+    const ingredient = line.ingredient;
+    const unit = ingredient.unit.toLowerCase();
+    const product = ingredient.product;
+    if (product?.packSize) {
+      const need = toBase(ingredient.quantity, ingredient.unit);
+      const pack = toBase(product.packSize, product.packUnit);
+      if (need && pack && pack.value > 0 && (need.unit === pack.unit || (need.unit !== 'stk' && pack.unit !== 'stk'))) {
+        const packs = Math.max(1, Math.ceil(need.value / pack.value - 0.05));
+        const left = packs * pack.value - need.value;
+        if (left >= pack.value * 0.1) {
+          result.push({ key: line.key, name: line.name, amount: formatQuantity(left, need.unit), stop: line.stop });
+        }
+        continue;
+      }
+    }
+    if (LEFTOVER_CONTAINERS.includes(unit)) {
+      const left = Math.ceil(ingredient.quantity - 0.05) - ingredient.quantity;
+      if (left >= 0.2) result.push({ key: line.key, name: line.name, amount: formatQuantity(left, ingredient.unit), stop: line.stop });
+    }
+  }
+  return result;
+}
+
+// Hvor lenge en åpnet vare holder seg, grovt anslått ut fra hvor den står i butikken.
+const SHELF_DAYS: Partial<Record<StopId, number>> = {
+  kjott: 2,
+  fisk: 2,
+  brod: 3,
+  meieri: 5,
+  ost: 7,
+  palegg: 5,
+  ferdigmat: 3,
+  'frukt-gront': 5,
+  egg: 14,
+  hermetikk: 4,
+  sauser: 14,
+};
+
+export function defaultExpiry(stop: StopId): string | null {
+  const days = SHELF_DAYS[stop];
+  if (days === undefined) return null;
+  const date = new Date(Date.now() + days * 86400000);
+  return date.toISOString().slice(0, 10);
+}
+
+export function daysUntil(date: string | null): number | null {
+  if (!date) return null;
+  const today = new Date(new Date().toISOString().slice(0, 10)).getTime();
+  return Math.round((new Date(date).getTime() - today) / 86400000);
+}
+
+export function expiryText(date: string | null): string | null {
+  const days = daysUntil(date);
+  if (days === null) return null;
+  if (days < 0) return 'gått ut';
+  if (days === 0) return 'går ut i dag';
+  if (days === 1) return 'går ut i morgen';
+  return `går ut om ${days} dager`;
+}
+
+// Finner varer i kjøleskapet som passer en ingrediens, f.eks. «Rømme» og «Lettrømme».
+export function fridgeMatch(name: string, fridge: FridgeItem[]): FridgeItem | undefined {
+  const target = normalizeName(name);
+  return fridge.find(item => {
+    const have = normalizeName(item.name);
+    if (have.length < 3 || target.length < 3) return false;
+    return target.includes(have) || have.includes(target) || target.split(' ')[0] === have.split(' ')[0];
+  });
+}
+
 export function lineEans(lines: ListLine[]): string[] {
   return [...new Set(lines.map(line => line.product?.ean).filter((ean): ean is string => Boolean(ean)))].sort();
 }
@@ -329,6 +430,9 @@ type ShoppingContext = {
   skipLine: (key: string, value: boolean) => void;
   finishShopping: () => void;
   clearBought: () => void;
+  addFridge: (item: Omit<FridgeItem, 'id' | 'addedAt'>) => void;
+  addFridgeItems: (items: Omit<FridgeItem, 'id' | 'addedAt'>[]) => void;
+  removeFridge: (id: string) => void;
   // Settes av synkroniseringen i etappe 2. Får alle patcher som gjøres lokalt.
   commit: (patch: Patch) => void;
   replaceState: (next: ShoppingState) => void;
@@ -497,6 +601,25 @@ export function ShoppingProvider({ children }: { children: ReactNode }) {
     });
   }, [commit]);
 
+  const addFridgeItems = useCallback(
+    (items: Omit<FridgeItem, 'id' | 'addedAt'>[]) => {
+      const now = Date.now();
+      commit({
+        fridge: Object.fromEntries(
+          items.map(item => {
+            const id = newId('k');
+            return [id, { ...item, id, addedAt: now }];
+          }),
+        ),
+      });
+    },
+    [commit],
+  );
+
+  const addFridge = useCallback((item: Omit<FridgeItem, 'id' | 'addedAt'>) => addFridgeItems([item]), [addFridgeItems]);
+
+  const removeFridge = useCallback((id: string) => commit({ fridge: { [id]: null } }), [commit]);
+
   const clearBought = useCallback(() => {
     const current = stateRef.current;
     commit({
@@ -528,6 +651,9 @@ export function ShoppingProvider({ children }: { children: ReactNode }) {
       skipLine,
       finishShopping,
       clearBought,
+      addFridge,
+      addFridgeItems,
+      removeFridge,
       commit,
       replaceState,
       onLocalPatch,
@@ -551,6 +677,9 @@ export function ShoppingProvider({ children }: { children: ReactNode }) {
       skipLine,
       finishShopping,
       clearBought,
+      addFridge,
+      addFridgeItems,
+      removeFridge,
       commit,
       replaceState,
     ],
@@ -575,4 +704,26 @@ export function useShoppingList() {
   const stops = useMemo(() => groupByStops(lines, store?.stops ?? []), [lines, store]);
   const remaining = lines.filter(line => !state.checked[line.key] && !state.skipped[line.key]).length;
   return { lines, stops, store, remaining };
+}
+
+export type SaveMeal = { meal: Meal; uses: FridgeItem[]; soonest: number | null };
+
+// Sparemiddag: middager som bruker opp det dere har hjemme, det som går ut først øverst.
+export function saveMeals(meals: Meal[], fridge: FridgeItem[]): SaveMeal[] {
+  if (fridge.length === 0) return [];
+  const result: SaveMeal[] = [];
+  for (const meal of meals) {
+    const uses: FridgeItem[] = [];
+    for (const ingredient of meal.ingredients) {
+      if (isPantry(ingredient)) continue;
+      const match = fridgeMatch(ingredient.name, fridge);
+      if (match && !uses.includes(match)) uses.push(match);
+    }
+    if (uses.length === 0) continue;
+    const days = uses.map(item => daysUntil(item.expires)).filter((d): d is number => d !== null);
+    result.push({ meal, uses, soonest: days.length ? Math.min(...days) : null });
+  }
+  return result.sort(
+    (a, b) => (a.soonest ?? 99) - (b.soonest ?? 99) || b.uses.length - a.uses.length,
+  );
 }

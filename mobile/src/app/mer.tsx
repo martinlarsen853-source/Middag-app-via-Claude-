@@ -6,6 +6,7 @@ import { Eyebrow, Page, Title } from '@/components/ui';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 import { useHistory } from '@/lib/history';
 import { useMeals } from '@/lib/meals-store';
+import { daysUntil, useShopping } from '@/lib/shopping';
 import { useApp } from '@/lib/store';
 import { useSync } from '@/lib/sync';
 
@@ -17,8 +18,19 @@ export default function MoreScreen() {
   const { status } = useSync();
   const { trips } = useHistory();
   const { isOwner } = useApp();
+  const { state } = useShopping();
+  const fridge = Object.values(state.fridge);
+  const soon = fridge.filter(item => (daysUntil(item.expires) ?? 99) <= 2).length;
 
   const items: Item[] = [
+    {
+      href: '/kjoleskap',
+      icon: 'snow-outline',
+      title: 'Kjøleskap',
+      text: fridge.length
+        ? `${fridge.length} ${fridge.length === 1 ? 'vare' : 'varer'}${soon ? `, ${soon} går snart ut` : ''}`
+        : 'Rester og sparemiddag',
+    },
     {
       href: '/samboer',
       icon: 'people-outline',

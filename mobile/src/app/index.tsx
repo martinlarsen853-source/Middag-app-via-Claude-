@@ -12,7 +12,7 @@ import { daysAgo, useHistory } from '@/lib/history';
 import { useLayout } from '@/lib/layout';
 import { useMeals } from '@/lib/meals-store';
 import { formatPrice, mealEans, pricesByStore, usePrices, type StorePrice } from '@/lib/prices';
-import { useShopping } from '@/lib/shopping';
+import { expiryText, saveMeals, useShopping } from '@/lib/shopping';
 import { photoFor } from '@/lib/photos';
 import { useApp } from '@/lib/store';
 
@@ -32,7 +32,7 @@ const PRICE_MAX = 150;
 export default function MealListScreen() {
   const router = useRouter();
   const { persons, setPersons, stores } = useApp();
-  const { entryFor, addMeal, removeEntry } = useShopping();
+  const { entryFor, addMeal, removeEntry, state } = useShopping();
   const { meals: allMeals } = useMeals();
   const { contentWidth, columns, wide } = useLayout();
   const [query, setQuery] = useState('');
@@ -89,6 +89,9 @@ export default function MealListScreen() {
   }, [query, enriched, sort, maxTime, maxPrice]);
 
   const activeFilters = (maxTime < TIME_MAX ? 1 : 0) + (maxPrice < PRICE_MAX ? 1 : 0);
+  // Går noe i kjøleskapet ut snart, foreslår vi en middag som bruker det opp.
+  const saver = saveMeals(allMeals, Object.values(state.fridge)).find(item => item.soonest !== null && item.soonest <= 3);
+  const saverItem = saver?.uses.reduce((a, b) => ((a.expires ?? '9') <= (b.expires ?? '9') ? a : b));
 
   const gap = wide ? spacing.xl : spacing.lg;
   const cardWidth = Math.floor((contentWidth - gap * (columns - 1)) / columns);
@@ -141,6 +144,23 @@ export default function MealListScreen() {
           <Text style={styles.filterButtonText}>Filter{activeFilters ? ` (${activeFilters})` : ''}</Text>
         </Pressable>
       </View>
+
+      {saver && saverItem && (
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel={`Sparemiddag: ${saver.meal.name}`}
+          onPress={() => router.push(`/rett/${saver.meal.id}`)}
+          style={styles.saver}>
+          <Ionicons name="leaf-outline" size={22} color={colors.ink} />
+          <View style={styles.saverText}>
+            <Text style={styles.saverTitle}>Sparemiddag: {saver.meal.name}</Text>
+            <Text style={styles.saverBody}>
+              Bruker opp {saverItem.name.toLowerCase()}, som {expiryText(saverItem.expires)}.
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.ink} />
+        </Pressable>
+      )}
 
       {filterOpen && (
         <View style={[styles.filterPanel, wide && styles.filterPanelWide]}>
@@ -348,6 +368,30 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: -spacing.lg,
     marginBottom: spacing.xl,
+  },
+  saver: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: colors.limeStrong,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  saverText: {
+    flex: 1,
+    gap: 2,
+  },
+  saverTitle: {
+    fontFamily: fonts.display,
+    fontSize: 22,
+    lineHeight: 24,
+    color: colors.ink,
+  },
+  saverBody: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.ink,
   },
   filterButton: {
     flexDirection: 'row',

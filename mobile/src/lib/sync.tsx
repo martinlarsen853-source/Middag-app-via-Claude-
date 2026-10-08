@@ -136,6 +136,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
             swaps: current.swaps,
             skipped: current.skipped,
             meta: current.meta as Record<string, unknown>,
+            fridge: current.fridge,
           });
           saveQueue();
         } else if (queue.current.length === 0) {
